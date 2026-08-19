@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_47885670ad501dd2",
-  "content_sha256": "47885670ad501dd21f56e7db3cce28300e359bdfd9fd0963b88d4002b1fee6c7",
+  "sdd_id": "sdd_c730b4e64c75c319",
+  "content_sha256": "c730b4e64c75c31901dbc4dab1e442ceac2aebf5f301637cc5daa802e2eabe26",
   "requirements": [
     {
       "name": "AI-trace inventory reaches zero in the exported tree",
