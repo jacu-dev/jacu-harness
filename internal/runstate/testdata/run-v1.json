@@ -1,0 +1,50 @@
+{
+  "schema_version": "1",
+  "run_id": "run_0000000000000010",
+  "mission_id": "msn_fixture",
+  "mission_input": {
+    "objective": "Update fixture file",
+    "context": {},
+    "acceptance_criteria": [
+      "fixture updated"
+    ],
+    "verification_commands": [
+      [
+        "go",
+        "test",
+        "./..."
+      ]
+    ],
+    "allowed_paths": [
+      "README.md"
+    ],
+    "risk_hint": "write"
+  },
+  "mission": {
+    "mission_id": "msn_fixture",
+    "ceremony": "light",
+    "objective": "Update fixture file",
+    "acceptance_criteria": [
+      "fixture updated"
+    ],
+    "verification_commands": [
+      [
+        "go",
+        "test",
+        "./..."
+      ]
+    ],
+    "allowed_paths": [
+      "README.md"
+    ],
+    "forbidden_paths": null,
+    "risk": "write",
+    "lint": []
+  },
+  "status": "open",
+  "created_at": "2026-07-30T12:00:00Z",
+  "base_sha": "0123456789abcdef",
+  "branch": "jacu/run_0000000000000010",
+  "worktree": "/tmp/run_0000000000000010",
+  "reviewed_at": "0001-01-01T00:00:00Z"
+}

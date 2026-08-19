@@ -1,0 +1,18 @@
+---
+name: jacu-report
+description: "Use when the host needs a deterministic headless audit projection or statusline for the open project."
+---
+
+# Project a headless report
+
+Call `jacu_report` to read the structured workspace state and receive the
+typed audit report, its deterministic Markdown projection, and its digest.
+
+- Treat the JSON report as the source of truth; Markdown is output only.
+- Use the projection for runs, missions, programs, flow, and measured counts.
+- The metrics block includes local telemetry v1 measurements when available; `jacu stats [--since 30d]` is the CLI diagnostic for the same data.
+- Treat `apply_reverted_pct_heuristic` as a Git-history heuristic, never as an execution gate.
+- Do not infer model or cost values when the report says `not measured`.
+- Preserve warnings and the digest when presenting the result.
+- This capability is read-only. It does not start HTTP, open a browser, or
+  write report files.

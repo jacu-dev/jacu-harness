@@ -1,0 +1,70 @@
+version: "2"
+
+run:
+  timeout: 8m
+  modules-download-mode: readonly
+  # Without this the e2e suite is invisible to the linter: its files are behind
+  # a build tag, and an unlinted test package is exactly where sloppy code hides.
+  build-tags:
+    - e2e
+    # Same rationale as e2e: the host-eval harness lives behind a build tag, and
+    # an unlinted package is exactly where sloppy code hides.
+    - hosteval
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - gosec
+    - govet
+    - ineffassign
+    - misspell
+    - staticcheck
+  settings:
+    govet:
+      enable:
+        - shadow
+  exclusions:
+    rules:
+      # These inert credential-like strings are the test corpus for the secret detector.
+      - path: internal/capability/(memory/lint|projectinspect/scan)_test\.go
+        text: "G101:"
+        linters:
+          - gosec
+      # These test helpers execute a fixed command or the current test binary, not user input.
+      - path: (cmd/jacu/(serve|main)|internal/capability/memory/store)_test\.go
+        text: "G204:"
+        linters:
+          - gosec
+      # The e2e suite exists to run git and the binary it just built.
+      - path: test/e2e/.*_test\.go
+        text: "G204:"
+        linters:
+          - gosec
+      # Same rationale: this helper asks ps about a pid the test itself spawned.
+      - path: internal/capability/verify/.*_test\.go
+        text: "G204:"
+        linters:
+          - gosec
+      # Same rationale: these helpers run git against a test-owned temp repo.
+      - path: internal/mcpadapter/server_test\.go
+        text: "G204:"
+        linters:
+          - gosec
+      # ADR-003 forbids advertising MCP Logging, deprecated since 2026-07-28.
+      # The assertion that it is absent has to read the deprecated field — that
+      # is the point of the test, and it must keep compiling until the SDK
+      # removes the field.
+      - path: internal/mcpadapter/server_test\.go
+        text: "SA1019"
+        linters:
+          - staticcheck
+      # syscall.Flock requires converting the descriptor returned by os.File.Fd to int.
+      - path: internal/capability/memory/filelock_unix\.go
+        text: "G115:"
+        linters:
+          - gosec
+
+issues:
+  new-from-merge-base: origin/main
+  whole-files: true

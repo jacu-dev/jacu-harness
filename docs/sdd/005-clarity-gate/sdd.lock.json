@@ -1,0 +1,129 @@
+{
+  "sdd_id": "sdd_56111e05f09fa9cc",
+  "content_sha256": "56111e05f09fa9cc5ee14ddb8a53b56bf1643d84a976d4fe1d46174a227ccf16",
+  "requirements": [
+    {
+      "name": "Divergence is reported per field",
+      "delta": "ADDED"
+    },
+    {
+      "name": "The readback is a closed structure",
+      "delta": "ADDED"
+    },
+    {
+      "name": "The rewrite loop cannot grow the spec",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Variance across three runs decides the verdict",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`wc -l` under 120; owner ratifies separately",
+      "status": "todo"
+    },
+    {
+      "number": "T2",
+      "verify": "`go test ./internal/capability/clarity -race` fails on absence",
+      "status": "todo"
+    },
+    {
+      "number": "T3",
+      "verify": "`go test ./internal/capability/clarity -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T4",
+      "verify": "`go test ./internal/capability/clarity -run Fuzz -fuzztime=30s` fails",
+      "status": "todo"
+    },
+    {
+      "number": "T5",
+      "verify": "fuzz clean",
+      "status": "todo"
+    },
+    {
+      "number": "T6",
+      "verify": "`go test ./internal/capability/clarity -race` fails",
+      "status": "todo"
+    },
+    {
+      "number": "T7",
+      "verify": "`go test ./... -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T8",
+      "verify": "`go test ./internal/capability/clarity -race` fails",
+      "status": "todo"
+    },
+    {
+      "number": "T9",
+      "verify": "`go test ./internal/capability/clarity -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T10",
+      "verify": "`go test ./internal/capability/clarity -race` fails",
+      "status": "todo"
+    },
+    {
+      "number": "T11",
+      "verify": "`go test ./internal/capability/clarity -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T12",
+      "verify": "`go test ./internal/capability/clarity -race` fails",
+      "status": "todo"
+    },
+    {
+      "number": "T13",
+      "verify": "`go test ./... -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T14",
+      "verify": "verdict`, exit codes 0/1/2, `--json` on stdout, diagnostics on stderr",
+      "status": "`cmd/jacu/clarity.go`, `cmd/jacu/clarity_test.go`"
+    },
+    {
+      "number": "T15",
+      "verify": "`jacu_verify` returns a verdict for that argv",
+      "status": "todo"
+    },
+    {
+      "number": "T16",
+      "verify": "`go test ./internal/mcpadapter -run Skills -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T17",
+      "verify": "`go run ./cmd/jacu sdd lint --all` exits 0",
+      "status": "todo"
+    },
+    {
+      "number": "T18",
+      "verify": "table of tier by detection rate, with n",
+      "status": "todo"
+    },
+    {
+      "number": "T19",
+      "verify": "verdict and round count for a real SDD",
+      "status": "todo"
+    },
+    {
+      "number": "T20",
+      "verify": "`go test -tags=e2e ./test/e2e/ -run Governed` reports 13 tools",
+      "status": "todo"
+    },
+    {
+      "number": "T21",
+      "verify": "PR with the hosted run link",
+      "status": "todo"
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+{"ts":"2026-08-12T03:00:00Z","project_id":"prj_fixture","trace_id":"tr_0123456789abcdef","run_id":"run_0123456789abcdef","mission_id":"msn_0123456789abcdef","event":"verify","tool":"jacu_verify","status":"ok","duration_ms":29,"verdict":"pass","iteration":1}
+{"ts":"2026-08-12T03:00:00Z","project_id":"prj_fixture","trace_id":"tr_0123456789abcdef","event":"tool_call","tool":"jacu_workspace_open","status":"blocked"}

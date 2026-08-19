@@ -1,0 +1,163 @@
+name: Weekly fuzz and vuln
+
+on:
+  schedule:
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: weekly-fuzz-and-vuln
+  cancel-in-progress: false
+
+jobs:
+  # Nine targets at 3m each ran serially inside one 30-minute job: 27m of
+  # fuzzing plus checkout, toolchain and a from-source govulncheck build. It
+  # exceeded the timeout and was killed most weeks, so the fuzz corpus stopped
+  # growing without anyone being told.
+  #
+  # Three shards of three targets: ~3m of fuzzing per leg, ~4m wall clock, and
+  # fewer total job-minutes than nine separate legs would cost in setup.
+  #
+  # `-fuzztime=1m`, not 3m. Nine targets at three minutes was ~170 billed
+  # minutes a month — 4% of the whole org budget — spent re-fuzzing a corpus
+  # that already covers the seeds. One minute a week per target still grows the
+  # corpus; when a target starts finding things again, raise its own number
+  # rather than everyone's.
+  fuzz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: memory-and-mission
+            targets: >-
+              ./internal/capability/memory:FuzzMemorySaveInput
+              ./internal/capability/memory:FuzzMemoryRecallQuery
+              ./internal/capability/missioncompile:FuzzMissionInput
+          - shard: workspace-and-state
+            targets: >-
+              ./internal/capability/workspace:FuzzApplyInput
+              ./internal/capability/projectinspect:FuzzInputDecode
+              ./internal/runstate:FuzzRunStateDecode
+          - shard: verify
+            targets: >-
+              ./internal/capability/verify:FuzzAllowlistCheck
+              ./internal/capability/verify:FuzzRunCommandArgv
+              ./internal/capability/verify:FuzzVerifyRunID
+    steps:
+      # Pinned by commit SHA; see the note in ci.yml.
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      # The toolchain comes from .go-version, not go.mod; see verify.yml.
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache: true
+      - name: Fuzz ${{ matrix.shard }}
+        run: |
+          set -euo pipefail
+          for target in ${{ matrix.targets }}; do
+            pkg="${target%%:*}"
+            fn="${target##*:}"
+            echo "::group::$fn ($pkg)"
+            go test "$pkg" -run='^$' -fuzz="^${fn}$" -fuzztime=1m
+            echo "::endgroup::"
+          done
+      # A crasher is written into testdata/fuzz/ inside the workspace and dies
+      # with the runner. Without this the failure says "a crash happened" and
+      # not "here is the input", which is the only part that matters.
+      - name: Upload crashers
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: fuzz-crashers-${{ matrix.shard }}
+          path: "**/testdata/fuzz/**"
+          if-no-files-found: ignore
+
+  vuln:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      # The toolchain comes from .go-version, not go.mod; see verify.yml. This
+      # job is what catches the next stdlib advisory against that pin.
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache: true
+      # Pinned, not @latest: an unpinned tool is both a rebuild every run and a
+      # third party choosing what executes in this job.
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.7.0
+      - name: Run govulncheck
+        run: govulncheck ./...
+
+  # The full-history secret scan lives here, not on every pull request: history
+  # that already merged does not change between pushes, so re-scanning it on
+  # each PR paid minutes for an answer that could not differ. The PR job scans
+  # the commits the PR actually adds.
+  secrets-history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.1
+        run: |
+          set -euo pipefail
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL -o "/tmp/${archive}" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${archive}"
+          curl -sSfL -o /tmp/gitleaks_checksums.txt \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          (cd /tmp && sha256sum --ignore-missing --check gitleaks_checksums.txt | grep 'gitleaks_8.30.1_linux_x64.tar.gz: OK')
+          tar -xzf "/tmp/${archive}" -C /tmp gitleaks
+          sudo install -m 0755 /tmp/gitleaks /usr/local/bin/gitleaks
+      - name: Full-history secret scan
+        run: gitleaks git . --redact -v
+
+  report:
+    needs: [fuzz, vuln, secrets-history]
+    if: ${{ always() && contains(needs.*.result, 'failure') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # One issue per run, not one per shard: the matrix made this step run
+      # three times and the dedupe by title was the only thing preventing three
+      # identical issues. Making it a single downstream job says what was meant.
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        with:
+          script: |
+            const title = `Weekly fuzz/vuln failure (${context.runId})`;
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const { data: openIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100,
+            });
+            if (!openIssues.some((issue) => issue.title === title)) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body: [
+                  'The weekly fuzz and vulnerability workflow failed.',
+                  '',
+                  `Run: ${runUrl}`,
+                  `Commit: ${context.sha}`,
+                ].join('\n'),
+              });
+            }

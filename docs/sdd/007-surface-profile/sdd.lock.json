@@ -1,0 +1,95 @@
+{
+  "sdd_id": "sdd_5a6d60997ddd0d7a",
+  "content_sha256": "5a6d60997ddd0d7a3b36754c32372f379491b4ddd9289e5af49247432eb80a8d",
+  "requirements": [
+    {
+      "name": "A profile narrows the advertised catalogue only",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Init writes only where it was pointed",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Skill descriptions survive catalogue pressure",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`wc -l` under 120; owner ratifies separately",
+      "status": "todo"
+    },
+    {
+      "number": "T2",
+      "verify": "`go test ./internal/capability/surface -race` fails on absence",
+      "status": "todo"
+    },
+    {
+      "number": "T3",
+      "verify": "`go test ./... -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T4",
+      "verify": "`go test ./... -race` fails",
+      "status": "todo"
+    },
+    {
+      "number": "T5",
+      "verify": "`go test ./... -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T6",
+      "verify": "`go test -tags=e2e ./test/e2e/` fails",
+      "status": "todo"
+    },
+    {
+      "number": "T7",
+      "verify": "`go test -tags=e2e ./test/e2e/`",
+      "status": "todo"
+    },
+    {
+      "number": "T8",
+      "verify": "`go test ./cmd/... -race` fails",
+      "status": "todo"
+    },
+    {
+      "number": "T9",
+      "verify": "`go test ./cmd/... -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T10",
+      "verify": "`go test ./internal/mcpadapter -run Skills -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T11",
+      "verify": "`bash scripts/hosteval.sh --case 4.1-inspect` passes without reducing the host catalogue",
+      "status": "todo"
+    },
+    {
+      "number": "T12",
+      "verify": "human read",
+      "status": "todo"
+    },
+    {
+      "number": "T13",
+      "verify": "`go run ./cmd/jacu sdd lint --all` exits 0",
+      "status": "todo"
+    },
+    {
+      "number": "T14",
+      "verify": "outcome recorded, including where they got stuck",
+      "status": "todo"
+    },
+    {
+      "number": "T15",
+      "verify": "PR with the hosted run link",
+      "status": "todo"
+    }
+  ]
+}

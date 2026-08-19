@@ -1,0 +1,71 @@
+{
+  "sdd_id": "sdd_541134b17ed9c7c0",
+  "content_sha256": "541134b17ed9c7c06b295d86c7af55d41f0190af3bd5715ddd816f493c290d92",
+  "requirements": [
+    {
+      "name": "Catalogue survives the host round-trip",
+      "delta": "ADDED"
+    },
+    {
+      "name": "One cloud bootstrap for every VM host",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Release proof closes P6-P8",
+      "delta": "ADDED"
+    },
+    {
+      "name": "claude-desktop host pack anchors the repository",
+      "delta": "MODIFIED"
+    },
+    {
+      "name": "install.sh fetches its own assets",
+      "delta": "MODIFIED"
+    },
+    {
+      "name": "jacu init configures a named host in one command",
+      "delta": "ADDED"
+    },
+    {
+      "name": "repo-scoped tools block outside a git work tree",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`bash scripts/release-test.sh`",
+      "status": "todo"
+    },
+    {
+      "number": "T2",
+      "verify": "`bash scripts/e2e.sh`",
+      "status": "todo"
+    },
+    {
+      "number": "T3",
+      "verify": "`go test ./cmd/...`",
+      "status": "todo"
+    },
+    {
+      "number": "T4",
+      "verify": "`go test ./... -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T5",
+      "verify": "scripted VM matrix",
+      "status": "todo"
+    },
+    {
+      "number": "T6",
+      "verify": "`bash scripts/hosteval.sh`",
+      "status": "todo"
+    },
+    {
+      "number": "T7",
+      "verify": "fresh-machine install log",
+      "status": "todo"
+    }
+  ]
+}

@@ -1,0 +1,218 @@
+{
+  "sdd_id": "sdd_064af10d21ee744c",
+  "content_sha256": "064af10d21ee744ccc849a84d60b3dee8d765a50e0e13c560397ae1520b82d49",
+  "requirements": [
+    {
+      "name": "CLI contract",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Canonical SDD layout",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Deterministic SDD identity",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Host reaches the lint without a new tool",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Lock file detects drift",
+      "delta": "ADDED"
+    },
+    {
+      "name": "OpenSpec is removed",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Out-of-scope enforcement shares one scope function",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Parser is total",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Single typed lint",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Skill ships with the capability",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`wc -l docs/sdd/CONVENTIONS.md` under 30; report the path and the count, not the content",
+      "status": "done"
+    },
+    {
+      "number": "T2",
+      "verify": "`wc -l` under 60; report the path and the count, not the content",
+      "status": "done"
+    },
+    {
+      "number": "T2.5",
+      "verify": "status`, with archive deferred as a follow-up",
+      "status": "`docs/adr/adr-019-sdd-nativo.md`"
+    },
+    {
+      "number": "T3",
+      "verify": "`go test ./internal/capability/sdd/ -race` fails on absence",
+      "status": "done"
+    },
+    {
+      "number": "T4",
+      "verify": "`go test ./internal/capability/sdd/ -race`",
+      "status": "done"
+    },
+    {
+      "number": "T5",
+      "verify": "`go test ./internal/capability/sdd/ -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T6",
+      "verify": "`go test ./internal/capability/sdd/ -race`",
+      "status": "done"
+    },
+    {
+      "number": "T7",
+      "verify": "`go test ./internal/capability/sdd/ -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T8",
+      "verify": "`go test ./internal/capability/sdd/ -race`",
+      "status": "done"
+    },
+    {
+      "number": "T9",
+      "verify": "`go test ./internal/capability/sdd/ -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T10",
+      "verify": "`go test ./internal/capability/sdd/ -race`",
+      "status": "done"
+    },
+    {
+      "number": "T11",
+      "verify": "`go test ./internal/capability/sdd/ -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T12",
+      "verify": "`go test ./internal/capability/sdd/ -race`",
+      "status": "done"
+    },
+    {
+      "number": "T13",
+      "verify": "`go test ./internal/capability/sdd/ -run Fuzz -fuzztime=30s`",
+      "status": "done"
+    },
+    {
+      "number": "T14",
+      "verify": "fuzz clean",
+      "status": "done"
+    },
+    {
+      "number": "T15",
+      "verify": "`go test ./internal/... -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T16",
+      "verify": "`go test ./... -race`",
+      "status": "done"
+    },
+    {
+      "number": "T17",
+      "verify": "`go test ./cmd/... -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T18",
+      "verify": "status`, wired into `main.go`",
+      "status": "`cmd/jacu/sdd.go`, `cmd/jacu/main.go`"
+    },
+    {
+      "number": "T19",
+      "verify": "`jacu_verify` with argv `[\"jacu\",\"sdd\",\"lint\",\"--all\"]` returns a verdict",
+      "status": "done"
+    },
+    {
+      "number": "T20",
+      "verify": "`bash scripts/verify.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T21",
+      "verify": "`go test ./internal/mcpadapter -run Skills -race`",
+      "status": "done"
+    },
+    {
+      "number": "T22",
+      "verify": "`go test ./internal/mcpadapter -run Skills -race`",
+      "status": "done"
+    },
+    {
+      "number": "T23",
+      "verify": "host-smoke across the five hosts, owner present",
+      "status": "blocked"
+    },
+    {
+      "number": "T24",
+      "verify": "`jacu sdd lint --all` exits 0",
+      "status": "done"
+    },
+    {
+      "number": "T25",
+      "verify": "the named OpenSpec source/config paths are absent; historical references in `docs/heranca/` and `docs/adr/` are permitted",
+      "status": "done"
+    },
+    {
+      "number": "T26",
+      "verify": "human read",
+      "status": "superseded"
+    },
+    {
+      "number": "T27",
+      "verify": "human read",
+      "status": "superseded"
+    },
+    {
+      "number": "T28",
+      "verify": "`go test -tags=e2e ./test/e2e/ -run Governed` reports 13 tools under the ratchet",
+      "status": "done"
+    },
+    {
+      "number": "T29",
+      "verify": "PR",
+      "status": "done"
+    },
+    {
+      "number": "T30",
+      "verify": "`go test ./internal/capability/sdd/ ./cmd/jacu -race` fails for the stated gaps",
+      "status": "done"
+    },
+    {
+      "number": "T31",
+      "verify": "`go test ./internal/capability/sdd/ ./cmd/jacu -race`",
+      "status": "done"
+    },
+    {
+      "number": "T32",
+      "verify": "`gh run view 31729489044 --repo jacu-dev/jacu --job 94546109948 --log-failed` reports the lint diagnostics",
+      "status": "done"
+    },
+    {
+      "number": "T33",
+      "verify": "`gh pr checks 56 --repo jacu-dev/jacu`",
+      "status": "done"
+    }
+  ]
+}

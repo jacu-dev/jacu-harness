@@ -1,0 +1,52 @@
+name: CI
+
+# Only pull requests. There is no `push: branches: [main]` because the ruleset
+# on main sets `strict_required_status_checks_policy`, which means a branch has
+# to be up to date with main before it can merge — so the pull request already
+# ran this exact tree. Re-running it after the squash paid for an answer that
+# could not differ. It cost ~68 runs a month.
+#
+# `workflow_dispatch` stays as the emergency exit: when a check has to be
+# re-attached to a head that has no new commit to push.
+#
+# The seven parallel jobs used to be required by name. That billed seven
+# minutes of rounding for work that fit in one sequential job, and renaming
+# any of them blocked every pull request. The organization reusable verify
+# detects scripts/verify.sh, hygiene.sh, e2e.sh and mcp-smoke.sh; this file
+# only points. weekly.yml and release.yml stay here — they are not the PR gate.
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Check context is `verify / verify`. Do not rename: leftover rulesets still
+  # looking for that name would block the organization.
+  verify:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/verify.yml
+
+  all-checks-passed:
+    if: always()
+    needs: [verify]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Aggregate the verify job
+        env:
+          RESULT: ${{ needs.verify.result }}
+        run: |
+          set -euo pipefail
+          echo "verify: ${RESULT}"
+          case "${RESULT}" in
+            success|skipped) exit 0 ;;
+            *) echo "::error::verify result=${RESULT}"; exit 1 ;;
+          esac

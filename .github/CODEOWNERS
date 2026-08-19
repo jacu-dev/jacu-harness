@@ -1,0 +1,6 @@
+# Harness — owner review only when these paths change.
+# All other PRs stay at 0 required approvals (ADR-007).
+/.github/ @ecouto
+/scripts/ @ecouto
+/.golangci.yml @ecouto
+/.jacu/verify-allowlist.json @ecouto
