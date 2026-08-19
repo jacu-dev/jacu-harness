@@ -10,6 +10,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/jacu-dev/jacu-harness/internal/userstate"
 )
 
 func TestStoreWritesProtectedMonthlyJSONL(t *testing.T) {
@@ -320,6 +322,27 @@ func TestStoreRejectsSegmentSwappedToSymlinkDuringRemoval(t *testing.T) {
 	}
 	if content, err := os.ReadFile(target); err != nil || string(content) != "safe\n" { // #nosec G304 -- target is created in this test's TempDir-backed telemetry directory.
 		t.Fatalf("target changed after refused removal: %q, %v", content, err)
+	}
+}
+
+func TestNewStoreWithoutHomeDoesNotCreateHarnessInWorkingDirectory(t *testing.T) {
+	t.Setenv(userstate.HomeEnv, "")
+	t.Setenv("HOME", "")
+	t.Setenv("JACU_TELEMETRY", "on")
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	leak := filepath.Join(cwd, userstate.Name)
+	event, err := NewEvent(validEventInput())
+	if err != nil {
+		t.Fatalf("NewEvent: %v", err)
+	}
+	if emitErr := NewStore().Emit(event); emitErr != nil {
+		t.Fatalf("Emit: %v", emitErr)
+	}
+	if _, statErr := os.Stat(leak); !os.IsNotExist(statErr) {
+		t.Fatalf("HOME-less Emit created %s", leak)
 	}
 }
 

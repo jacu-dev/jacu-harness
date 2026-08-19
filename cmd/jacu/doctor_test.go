@@ -16,6 +16,7 @@ func TestDoctorReportsVersions(t *testing.T) {
 		t.Fatalf("git --version: %v", err)
 	}
 	cmd := exec.Command("go", "run", "-buildvcs=false", ".", "doctor")
+	cmd.Env = isolatedUserStateEnv(t)
 	output, err := cmd.Output()
 	if err != nil {
 		t.Fatalf("doctor: %v", err)

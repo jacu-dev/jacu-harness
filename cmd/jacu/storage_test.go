@@ -11,6 +11,7 @@ func TestStorageCLIRejectsApplyAndDryRunTogether(t *testing.T) {
 	// #nosec G204 -- binary is built by buildBinary and receives fixed test argv.
 	command := exec.Command(binary, "storage", "prune", "--apply", "--dry-run")
 	command.Dir = t.TempDir()
+	command.Env = isolatedUserStateEnv(t)
 	output, err := command.CombinedOutput()
 	if err == nil {
 		t.Fatalf("storage accepted conflicting flags: %s", output)

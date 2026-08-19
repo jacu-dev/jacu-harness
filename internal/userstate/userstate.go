@@ -39,7 +39,9 @@ func DirOrLocal() string {
 	if dir, err := Dir(); err == nil && dir != "" {
 		return dir
 	}
-	return filepath.Join(".", Name)
+	// Never the process working directory: tests and HOME-less runs would
+	// otherwise leave .jacu-harness inside a checkout.
+	return filepath.Join(os.TempDir(), Name)
 }
 
 func DirIn(home string) string {

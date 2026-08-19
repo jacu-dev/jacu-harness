@@ -57,7 +57,7 @@ func TestStatusCommandPrintsParkedRunWithObjective(t *testing.T) {
 		t.Fatalf("exit = %d, want 0; stderr=%q", code, stderr.String())
 	}
 	out := stdout.String()
-	for _, want := range []string{"run_abcdef0", "reviewed", "5h", "vitrine", "endurecer a vitrine", "1 run parado"} {
+	for _, want := range []string{"run_abcdef0", "reviewed", "5h", "vitrine", "endurecer a vitrine", "1 parked run"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("output missing %q:\n%s", want, out)
 		}
@@ -98,7 +98,7 @@ func TestStatusCommandExitsZeroWhetherOrNotWorkIsParked(t *testing.T) {
 	if withWork != 0 || without != 0 {
 		t.Fatalf("exits: with work %d, without %d; both must be 0", withWork, without)
 	}
-	if !strings.Contains(empty.String(), "nenhum run parado") {
+	if !strings.Contains(empty.String(), "no parked runs") {
 		t.Fatalf("empty output = %q", empty.String())
 	}
 }
@@ -106,7 +106,7 @@ func TestStatusCommandExitsZeroWhetherOrNotWorkIsParked(t *testing.T) {
 func TestStatusCommandRejectsUnknownOptionWithTwo(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 
-	code := runStatus([]string{"--all-the-things"}, &stdout, &stderr, storagecap.StatusOptions{})
+	code := runStatus([]string{"--all-the-things"}, &stdout, &stderr, storagecap.StatusOptions{WorktreesRoot: filepath.Join(t.TempDir(), "worktrees")})
 
 	if code != 2 {
 		t.Fatalf("exit = %d, want 2", code)

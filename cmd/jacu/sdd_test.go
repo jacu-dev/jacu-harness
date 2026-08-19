@@ -19,6 +19,7 @@ func TestSDDCLIExitCodesAndJSONStreams(t *testing.T) {
 	writeNativeSDD(t, root, filepath.Join("docs", "sdd", "001-broken", "sdd.md"), []byte("# broken\n"))
 	// #nosec G204 -- binary is built by buildBinary and receives fixed test argv.
 	jsonCommand := exec.Command(binary, "sdd", "lint", "--json")
+	jsonCommand.Env = isolatedUserStateEnv(t)
 	jsonCommand.Dir = root
 	jsonOutput, jsonErr := jsonCommand.Output()
 	if jsonErr == nil {
@@ -37,6 +38,7 @@ func TestSDDCLIExitCodesAndJSONStreams(t *testing.T) {
 
 	// #nosec G204 -- binary is built by buildBinary and receives fixed test argv.
 	badUsage := exec.Command(binary, "sdd", "lint", "--bad")
+	badUsage.Env = isolatedUserStateEnv(t)
 	badUsage.Dir = root
 	badOutput, badErr := badUsage.CombinedOutput()
 	if badErr == nil || badErr.(*exec.ExitError).ExitCode() != 2 {
@@ -57,6 +59,7 @@ func TestSDDCLIDirectoryTargetAndDerivedStatus(t *testing.T) {
 	writeNativeSDD(t, root, filepath.Join("docs", "sdd", "001-example", "sdd.md"), []byte(validSDDForCLITest()))
 	// #nosec G204 -- binary is built by buildBinary and receives fixed test argv.
 	writeLock := exec.Command(binary, "sdd", "lint", "--all", "--write-lock")
+	writeLock.Env = isolatedUserStateEnv(t)
 	writeLock.Dir = root
 	if output, err := writeLock.CombinedOutput(); err != nil {
 		t.Fatalf("write-lock failed: %v\n%s", err, output)
@@ -64,6 +67,7 @@ func TestSDDCLIDirectoryTargetAndDerivedStatus(t *testing.T) {
 
 	// #nosec G204 -- binary is built by buildBinary and receives fixed test argv.
 	lint := exec.Command(binary, "sdd", "lint", "docs/sdd/001-example", "--json")
+	lint.Env = isolatedUserStateEnv(t)
 	lint.Dir = root
 	jsonOutput, err := lint.Output()
 	if err != nil {
@@ -76,6 +80,7 @@ func TestSDDCLIDirectoryTargetAndDerivedStatus(t *testing.T) {
 
 	// #nosec G204 -- binary is built by buildBinary and receives fixed test argv.
 	status := exec.Command(binary, "sdd", "status")
+	status.Env = isolatedUserStateEnv(t)
 	status.Dir = root
 	statusOutput, err := status.Output()
 	if err != nil {
@@ -101,6 +106,7 @@ func TestSDDCLILintAllReportsMalformedDirectory(t *testing.T) {
 	writeNativeSDD(t, root, filepath.Join("docs", "sdd", "001-example", "sdd.md"), []byte("# broken\n"))
 	// #nosec G204 -- binary is built by buildBinary and receives fixed test argv.
 	command := exec.Command(binary, "sdd", "lint", "--all", "--json")
+	command.Env = isolatedUserStateEnv(t)
 	command.Dir = root
 	output, err := command.Output()
 	if err == nil || err.(*exec.ExitError).ExitCode() != 1 {
@@ -142,6 +148,7 @@ func TestSDDCLintRejectsSymlinkedDocumentOutsideProject(t *testing.T) {
 	}
 	// #nosec G204 -- binary is built by buildBinary and receives fixed test argv.
 	command := exec.Command(binary, "sdd", "lint", "docs/sdd/001-example", "--write-lock")
+	command.Env = isolatedUserStateEnv(t)
 	command.Dir = root
 	if output, err := command.CombinedOutput(); err == nil {
 		t.Fatalf("symlinked SDD unexpectedly passed: %s", output)
@@ -169,6 +176,7 @@ func TestSDDCLintRejectsSymlinkedLockOutsideProject(t *testing.T) {
 	}
 	// #nosec G204 -- binary is built by buildBinary and receives fixed test argv.
 	command := exec.Command(binary, "sdd", "lint", "docs/sdd/001-example", "--write-lock")
+	command.Env = isolatedUserStateEnv(t)
 	command.Dir = root
 	if output, err := command.CombinedOutput(); err == nil {
 		t.Fatalf("symlinked lock unexpectedly passed: %s", output)

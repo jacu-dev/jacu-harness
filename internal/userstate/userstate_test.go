@@ -236,6 +236,66 @@ func TestDirOrLocalHonorsHomeEnv(t *testing.T) {
 	}
 }
 
+func TestDirOrLocalDoesNotFallBackToWorkingDirectory(t *testing.T) {
+	t.Setenv(HomeEnv, "")
+	t.Setenv("HOME", "")
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := DirOrLocal()
+	if got == filepath.Join(".", Name) || got == filepath.Join(cwd, Name) {
+		t.Fatalf("DirOrLocal() = %q; must not use the working directory", got)
+	}
+	if filepath.Base(got) != Name {
+		t.Fatalf("DirOrLocal() = %q, want a path ending in %s", got, Name)
+	}
+}
+
+func TestModuleRootHasNoHarnessDirectory(t *testing.T) {
+	root := moduleRoot(t)
+	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if !entry.IsDir() {
+			return nil
+		}
+		if entry.Name() == ".git" {
+			return filepath.SkipDir
+		}
+		if entry.Name() == Name {
+			rel, relErr := filepath.Rel(root, path)
+			if relErr != nil {
+				rel = path
+			}
+			t.Errorf("working tree contains %s", rel)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func moduleRoot(t *testing.T) string {
+	t.Helper()
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for {
+		if _, statErr := os.Stat(filepath.Join(dir, "go.mod")); statErr == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			t.Fatal("go.mod not found above working directory")
+		}
+		dir = parent
+	}
+}
+
 func TestPathHelpers(t *testing.T) {
 	home := filepath.Join("home", "user")
 	if got, want := DirIn(home), filepath.Join(home, Name); got != want {

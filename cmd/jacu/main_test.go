@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -25,7 +26,9 @@ func TestUsageNamesTheSubcommandsThatExist(t *testing.T) {
 		if len(args) > 0 {
 			label = args[0]
 		}
-		output, err := exec.Command(binary, args...).CombinedOutput()
+		command := exec.Command(binary, args...)
+		command.Env = isolatedUserStateEnv(t)
+		output, err := command.CombinedOutput()
 		if err == nil {
 			t.Errorf("%s: exited 0; a usage error must fail", label)
 		}
@@ -50,7 +53,9 @@ func TestUsageNamesTheSubcommandsThatExist(t *testing.T) {
 	}
 
 	// An unknown subcommand says which one, so the reader sees their own typo.
-	output, _ := exec.Command(binary, "nonsense").CombinedOutput()
+	unknown := exec.Command(binary, "nonsense")
+	unknown.Env = isolatedUserStateEnv(t)
+	output, _ := unknown.CombinedOutput()
 	if !strings.Contains(string(output), "nonsense") {
 		t.Errorf("usage does not name the rejected subcommand: %q", output)
 	}
@@ -77,4 +82,17 @@ func buildBinary(t *testing.T) string {
 		t.Fatalf("build: %v: %s", err, output)
 	}
 	return binary
+}
+
+func isolatedUserStateEnv(t *testing.T) []string {
+	t.Helper()
+	env := os.Environ()
+	filtered := make([]string, 0, len(env)+1)
+	for _, entry := range env {
+		if strings.HasPrefix(entry, "JACU_HOME=") {
+			continue
+		}
+		filtered = append(filtered, entry)
+	}
+	return append(filtered, "JACU_HOME="+t.TempDir())
 }

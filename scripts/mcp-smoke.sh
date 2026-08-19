@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Smoke MCP mais barato que existe (herança 10): pipe um initialize no binário
-# e asserte EXATAMENTE uma linha JSON no stdout. Pega quebra de protocolo e
-# qualquer log vazando no stdout que teste unitário não vê.
+# Cheapest MCP smoke (heritage 10): pipe one initialize into the binary and
+# assert EXACTLY one JSON line on stdout. Catches protocol breaks and any
+# log leaking on stdout that a unit test would miss.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -12,24 +12,24 @@ fi
 
 REQ='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2026-07-28","capabilities":{},"clientInfo":{"name":"smoke","version":"0"}}}'
 
-# stdin precisa ficar aberto até a resposta chegar: EOF imediato derruba o
-# transporte STDIO antes de ele escrever a linha. Envia, segura o pipe, e lê
-# o stdout linha a linha saindo na primeira.
+# stdin must stay open until the response arrives: an immediate EOF tears
+# down the STDIO transport before it writes the line. Send, hold the pipe,
+# and read stdout line by line, leaving on the first.
 OUT="$( { printf '%s\n' "$REQ"; sleep 5; } | timeout 15 "$BIN" serve 2>/dev/null | head -n 1 || true )"
 
 if [ -z "$OUT" ]; then
-  echo "mcp-smoke: nenhuma linha no stdout (esperada exatamente 1)" >&2
+  echo "mcp-smoke: no line on stdout (expected exactly 1)" >&2
   exit 1
 fi
 case "$OUT" in
   *'"result"'*'"protocolVersion"'*) ;;
-  *) echo "mcp-smoke: resposta de initialize inválida" >&2; printf '%s\n' "$OUT" >&2; exit 1 ;;
+  *) echo "mcp-smoke: invalid initialize response" >&2; printf '%s\n' "$OUT" >&2; exit 1 ;;
 esac
 
-# Não pode haver uma segunda linha (log vazando no canal do protocolo).
+# A second line means a log leaked onto the protocol channel.
 SECOND="$( { printf '%s\n' "$REQ"; sleep 5; } | timeout 15 "$BIN" serve 2>/dev/null | sed -n '2p' || true )"
 if [ -n "$SECOND" ]; then
-  echo "mcp-smoke: mais de 1 linha no stdout — log vazando no protocolo" >&2
+  echo "mcp-smoke: more than 1 line on stdout — log leaking onto the protocol" >&2
   printf '%s\n' "$SECOND" >&2
   exit 1
 fi

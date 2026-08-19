@@ -21,6 +21,7 @@ func TestDeprecatedAlias(t *testing.T) {
 
 	var aliasStdout, aliasStderr bytes.Buffer
 	aliasCommand := exec.Command(alias, "version") // #nosec G204 -- alias is a symlink this test just created next to the built binary.
+	aliasCommand.Env = isolatedUserStateEnv(t)
 	aliasCommand.Stdout = &aliasStdout
 	aliasCommand.Stderr = &aliasStderr
 	if err := aliasCommand.Run(); err != nil {
@@ -35,6 +36,7 @@ func TestDeprecatedAlias(t *testing.T) {
 
 	var binaryStderr bytes.Buffer
 	binaryCommand := exec.Command(binary, "version") // #nosec G204 -- binary is the path returned by buildBinary.
+	binaryCommand.Env = isolatedUserStateEnv(t)
 	binaryCommand.Stderr = &binaryStderr
 	if err := binaryCommand.Run(); err != nil {
 		t.Fatalf("run canonical binary: %v", err)

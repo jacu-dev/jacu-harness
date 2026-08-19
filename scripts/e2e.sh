@@ -20,7 +20,7 @@ status=${PIPESTATUS[0]}
 if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
   {
     echo "### jacu e2e"
-    grep -oE '(MCP surface|cold start|operation [a-z_]+): .*' "$log" | sed 's/^/- /' || echo "- (nenhuma medição no log; rode com -v)"
+    grep -oE '(MCP surface|cold start|operation [a-z_]+): .*' "$log" | sed 's/^/- /' || echo "- (no measurements in the log; rerun with -v)"
   } >>"$GITHUB_STEP_SUMMARY"
 fi
 
