@@ -9,7 +9,7 @@ cd "$(dirname "$0")/.."
 
 status=0
 fail() {
-  printf 'higiene: %s\n' "$1" >&2
+  printf 'hygiene: %s\n' "$1" >&2
   status=1
 }
 
@@ -17,14 +17,14 @@ fail() {
 if tidy_diff=$(go mod tidy -diff 2>&1); then
   :
 else
-  fail "go mod tidy -diff encontrou drift — proposta (nenhum arquivo foi alterado):"
+  fail "go mod tidy -diff found drift — proposal (no files were changed):"
   printf '%s\n' "$tidy_diff" >&2
 fi
 
 # 2. No unannotated TODO/FIXME. docs/hygiene.md accepts them only with an issue
 #    attached, so TODO(#12) passes and a bare TODO does not.
 if bare_todos=$(grep -rnE '(TODO|FIXME)([^(]|$)' --include='*.go' . 2>/dev/null); then
-  fail "TODO/FIXME sem issue anotada (use TODO(#123)):"
+  fail "TODO/FIXME without an annotated issue (use TODO(#123)):"
   printf '%s\n' "$bare_todos" >&2
 fi
 
@@ -33,7 +33,7 @@ fi
 #    actually tracked rather than against what happens to be in the working tree.
 if tracked=$(git ls-files -- 'bin/**' 'dist/**' '*.test' 'coverage.out' '*.prof' | head -20); then
   if [ -n "$tracked" ]; then
-    fail "artefato de build rastreado pelo git:"
+    fail "build artifact tracked by git:"
     printf '%s\n' "$tracked" >&2
   fi
 fi
@@ -44,12 +44,12 @@ while IFS= read -r file; do
   [ -f "$file" ] || continue
   case "$(head -c 4 "$file" | od -An -tx1 | tr -d ' \n')" in
     7f454c46 | cffaedfe | cefaedfe | feedfacf | feedface)
-      fail "binário rastreado pelo git: $file"
+      fail "binary tracked by git: $file"
       ;;
   esac
 done < <(git ls-files)
 
 if [ "$status" -eq 0 ]; then
-  echo "higiene: OK"
+  echo "hygiene: OK"
 fi
 exit "$status"
