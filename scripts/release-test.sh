@@ -21,6 +21,49 @@ if grep -Ehn '^\s*(curl|wget).+\|[[:space:]]*(ba)?sh' README.md docs/install.md 
   echo "release test: living install docs must not teach curl|sh" >&2
   exit 1
 fi
+if ! grep -q 'brew install' README.md || ! grep -q 'brew install' docs/install.md; then
+  echo "release test: living install docs must teach brew install" >&2
+  exit 1
+fi
+if ! grep -q 'exclude-drafts' scripts/install.sh; then
+  echo "release test: install.sh must ignore draft GitHub Releases" >&2
+  exit 1
+fi
+if ! grep -q 'scripts/install.sh' .github/workflows/release.yml || ! grep -q 'release-assets/install.sh' .github/workflows/release.yml; then
+  echo "release test: release workflow must publish install.sh as a release asset" >&2
+  exit 1
+fi
+if ! grep -q -- '--draft=false' .github/workflows/release.yml; then
+  echo "release test: release workflow must publish a non-draft GitHub Release" >&2
+  exit 1
+fi
+
+formula="Formula/jacu.rb"
+if [ ! -f "$formula" ]; then
+  echo "release test: missing $formula" >&2
+  exit 1
+fi
+for needle in \
+  'class Jacu < Formula' \
+  'license "MIT"' \
+  'jacu_0.2.0_darwin_amd64.tar.gz' \
+  'jacu_0.2.0_darwin_arm64.tar.gz' \
+  'jacu_0.2.0_linux_amd64.tar.gz' \
+  'jacu_0.2.0_linux_arm64.tar.gz' \
+  'bin.install "jacu"' \
+  'bin.install_symlink "jacu" => "jacu-mcp"' \
+  'https://github.com/jacu-dev/jacu-harness/releases/download/v0.2.0/'
+do
+  if ! grep -Fq "$needle" "$formula"; then
+    echo "release test: $formula is missing: $needle" >&2
+    exit 1
+  fi
+done
+sha_count="$(grep -cE 'sha256 "[a-f0-9]{64}"' "$formula" || true)"
+if [ "$sha_count" -lt 4 ]; then
+  echo "release test: $formula must pin sha256 for every platform tarball" >&2
+  exit 1
+fi
 
 bash scripts/release-verify.sh "$version"
 if bash scripts/install.sh --dry-run --version "$version" --prefix "$prefix" >"$test_root/dry-run.log"; then
@@ -125,4 +168,29 @@ if ! grep -q 'unreachable host: jacu-unreachable.example' "$bad_host_log"; then
 fi
 
 bash scripts/install.sh --dry-run --rollback --prefix "$prefix" >"$test_root/rollback-dry-run.log"
+
+printf '#!/bin/sh\nexit 1\n' >"$fakebin/gh"
+printf '%s\n' '#!/bin/sh' \
+  'if printf "%s\n" "$*" | grep -q releases/latest; then' \
+  '  echo "curl: HTTP 404" >&2' \
+  '  exit 22' \
+  'fi' \
+  'if printf "%s\n" "$*" | grep -q "/releases"; then' \
+  '  printf "%s\n" "[]"' \
+  '  exit 0' \
+  'fi' \
+  'echo "unexpected curl: $*" >&2' \
+  'exit 1' >"$fakebin/curl"
+chmod 0755 "$fakebin/gh" "$fakebin/curl"
+no_latest_log="$test_root/no-latest.log"
+if PATH="$fakebin:$PATH" bash scripts/install.sh --prefix "$test_root/no-latest" 2>"$no_latest_log"; then
+  echo "release test: latest resolution succeeded with no published release" >&2
+  exit 1
+fi
+if ! grep -q 'no published GitHub Release' "$no_latest_log"; then
+  echo "release test: missing-release failure must say no published GitHub Release" >&2
+  cat "$no_latest_log" >&2
+  exit 1
+fi
+
 echo "release-test: OK"

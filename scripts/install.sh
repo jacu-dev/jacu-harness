@@ -13,8 +13,9 @@ usage: install.sh [--version vX.Y.Z|latest] [--prefix DIR] [--dry-run]
        install.sh --rollback [--prefix DIR] [--dry-run]
 
 Download a signed GitHub Release, verify it, then install jacu.
-Omit --version (or pass latest) to install the newest public release.
-There is no curl|sh installer. Review this script, then run it.
+Omit --version (or pass latest) to install the newest published release.
+Drafts are ignored. There is no curl|sh installer. Review this script,
+then run it.
 
 Offline assets: set JACU_RELEASE_DIR to a directory that already contains
 the tarball, checksums.txt and checksums.txt.sigstore.json.
@@ -110,23 +111,26 @@ resolve_latest_version() {
     printf '%s\n' "$JACU_LATEST_TAG"
     return 0
   fi
+  # Drafts are not installable. `gh release view` would return one.
   if command -v gh >/dev/null 2>&1; then
-    if tag="$(gh release view -R "$release_repo" --json tagName -q .tagName 2>/dev/null)" && [ -n "$tag" ]; then
+    if tag="$(gh release list -R "$release_repo" --exclude-drafts --limit 1 --json tagName -q '.[0].tagName' 2>/dev/null)" && [ -n "$tag" ]; then
       printf '%s\n' "$tag"
       return 0
     fi
   fi
   api_url="https://api.github.com/repos/${release_repo}/releases/latest"
-  body="$(curl --fail --location --silent --show-error "$api_url")" || {
-    echo "install.sh: could not resolve the latest release from github.com" >&2
-    exit 1
-  }
-  tag="$(printf '%s\n' "$body" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)"
-  if [ -z "$tag" ]; then
+  if body="$(curl --fail --location --silent --show-error "$api_url")" && [ -n "$body" ]; then
+    tag="$(printf '%s\n' "$body" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)"
+    if [ -n "$tag" ]; then
+      printf '%s\n' "$tag"
+      return 0
+    fi
     echo "install.sh: latest release response did not include tag_name" >&2
     exit 1
   fi
-  printf '%s\n' "$tag"
+  echo "install.sh: no published GitHub Release (drafts are not installable)" >&2
+  echo "install.sh: publish the release or pass --version vX.Y.Z" >&2
+  exit 1
 }
 
 if [ -z "$version" ] || [ "$version" = latest ]; then

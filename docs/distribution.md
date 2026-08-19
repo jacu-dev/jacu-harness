@@ -1,15 +1,16 @@
 # Distribution
 
 JACU distributes as GitHub Release assets (GoReleaser + cosign keyless +
-SPDX SBOM). The recommended one-command install is
+SPDX SBOM). The easy install paths are Homebrew
+(`brew install --formula` the `Formula/jacu.rb` in this repo) and
+`scripts/install.sh` downloaded with curl, reviewed, then run.
 
-`go install github.com/jacu-dev/jacu-harness/cmd/jacu@v0.2.0`.
-
-There is no `curl | sh` instruction. For a verified binary, download
-`scripts/install.sh`, review it, then run it (omit `--version` for latest).
+There is no `curl | sh` instruction. Draft GitHub Releases are not
+installable: `/releases/latest` ignores them, and the installer says so.
 
 The first public release is `v0.2.0`. Tag pushes remain an owner keystroke
-(`actor == ecouto`). See [release.md](release.md).
+(`actor == ecouto`). The publish job attaches `install.sh` and forces the
+GitHub Release out of draft. See [release.md](release.md).
 
 Cloud VMs should prefer a verified release binary (only `github.com`
 egress). Build-from-source is the fallback when the module proxy is

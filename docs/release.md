@@ -17,12 +17,18 @@ actor. This is the owner keystroke that publishes `v0.2.0`.
    git push origin v0.2.0
    ```
 
-5. Confirm `.github/workflows/release.yml` published:
+5. Confirm `.github/workflows/release.yml` published a **non-draft**
+   release (otherwise `/releases/latest` is 404 and curl/brew cannot
+   resolve it):
 
    - `jacu_0.2.0_{darwin,linux}_{amd64,arm64}.tar.gz`
    - `checksums.txt`
    - `checksums.txt.sigstore.json`
    - `jacu.spdx.json`
+   - `install.sh`
+
+   Then refresh `Formula/jacu.rb` `url`/`sha256` for the four tarballs
+   so `brew install` tracks the new tag.
 
 6. On a machine that is not the dev laptop:
 
