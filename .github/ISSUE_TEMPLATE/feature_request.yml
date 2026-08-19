@@ -1,0 +1,30 @@
+name: Feature request
+description: Propose a capability or a change in behavior.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read [docs/decisions/will-not-do.md](../../docs/decisions/will-not-do.md) first —
+        some requests are refused by design (network access, credentials, deploy,
+        `execute_shell(string)`). New capability enters as a CLI subcommand, not as
+        a new MCP tool (see CONTRIBUTING.md).
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What can't you do today, and in which real workflow does it bite?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: What JACU should do, stated as observable behavior — not implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: boundary
+    attributes:
+      label: Governance impact
+      description: Does this touch the workspace boundary, the allowlist, verification, or run state? If yes, how does it fail closed?
