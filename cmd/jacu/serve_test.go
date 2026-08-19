@@ -21,6 +21,7 @@ func stopProcess(cmd *exec.Cmd) {
 
 func TestServeSpeaksOnlyJSONRPCOnStdout(t *testing.T) {
 	cmd := exec.Command("go", "run", "-buildvcs=false", ".", "serve")
+	cmd.Env = isolatedUserStateEnv(t)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		t.Fatalf("stdin: %v", err)
@@ -68,6 +69,7 @@ func TestServeShutsDownCleanlyOnSIGINT(t *testing.T) {
 	}
 
 	cmd := exec.Command(binary, "serve")
+	cmd.Env = isolatedUserStateEnv(t)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		t.Fatalf("stdin: %v", err)

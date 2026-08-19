@@ -106,7 +106,7 @@ func TestStatusCommandExitsZeroWhetherOrNotWorkIsParked(t *testing.T) {
 func TestStatusCommandRejectsUnknownOptionWithTwo(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 
-	code := runStatus([]string{"--all-the-things"}, &stdout, &stderr, storagecap.StatusOptions{})
+	code := runStatus([]string{"--all-the-things"}, &stdout, &stderr, storagecap.StatusOptions{WorktreesRoot: filepath.Join(t.TempDir(), "worktrees")})
 
 	if code != 2 {
 		t.Fatalf("exit = %d, want 2", code)
