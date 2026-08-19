@@ -19,9 +19,16 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      # The toolchain is pinned here, not read from go.mod. The `go` directive
+      # is a floor (ADR-028 §7), and setup-go reads a floor as an exact version:
+      # it installed go1.25.0, whose crypto/tls, encoding/asn1 and net/url fixes
+      # only landed in go1.25.13, so govulncheck failed on the toolchain rather
+      # than on this tree. Pinning the newest patch of the floor's own minor
+      # keeps the floor exercised, keeps release builds reproducible and keeps
+      # go.mod free of a toolchain line.
       - uses: actions/setup-go@v6
         with:
-          go-version-file: go.mod
+          go-version-file: .go-version
           cache: true
 
       - name: Pin the module toolchain

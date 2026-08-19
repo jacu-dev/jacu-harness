@@ -56,7 +56,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
-          go-version-file: go.mod
+          go-version-file: .go-version
           cache: true
       - name: Run release self-tests (manual dry-run)
         if: ${{ github.event_name == 'workflow_dispatch' }}
