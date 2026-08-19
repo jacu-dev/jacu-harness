@@ -1,0 +1,125 @@
+{
+  "sdd_id": "sdd_df644eaa6d72265f",
+  "content_sha256": "df644eaa6d72265fd0df9ec5960656423aa1babed5e40fe139589058e02f2b6d",
+  "requirements": [
+    {
+      "name": "Every predictable interruption class is checked before dispatch",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Interruptions are counted",
+      "delta": "ADDED"
+    },
+    {
+      "name": "The human is asked once",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`wc -l` under 120; owner ratifies separately",
+      "status": "done"
+    },
+    {
+      "number": "T2",
+      "verify": "`go test ./internal/capability/preflight -race` fails on absence",
+      "status": "done"
+    },
+    {
+      "number": "T3",
+      "verify": "`go test ./internal/capability/preflight -race`",
+      "status": "done"
+    },
+    {
+      "number": "T4",
+      "verify": "`go test ./internal/capability/preflight -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T5",
+      "verify": "`go test ./... -race`",
+      "status": "done"
+    },
+    {
+      "number": "T6",
+      "verify": "`go test ./internal/capability/preflight -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T7",
+      "verify": "`go test ./internal/capability/preflight -race`",
+      "status": "done"
+    },
+    {
+      "number": "T8",
+      "verify": "`go test ./internal/capability/preflight -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T9",
+      "verify": "`go test ./internal/capability/preflight -race`",
+      "status": "done"
+    },
+    {
+      "number": "T10",
+      "verify": "`go test ./internal/capability/preflight -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T11",
+      "verify": "`go test ./internal/capability/preflight -race`",
+      "status": "done"
+    },
+    {
+      "number": "T12",
+      "verify": "`go test ./internal/capability/preflight -run Fuzz -fuzztime=30s` fails",
+      "status": "done"
+    },
+    {
+      "number": "T13",
+      "verify": "fuzz clean",
+      "status": "done"
+    },
+    {
+      "number": "T14",
+      "verify": "`go test ./... -race`",
+      "status": "done"
+    },
+    {
+      "number": "T15",
+      "verify": "`go test ./cmd/... -race`",
+      "status": "done"
+    },
+    {
+      "number": "T16",
+      "verify": "`jacu_verify` returns a verdict for that argv",
+      "status": "done"
+    },
+    {
+      "number": "T17",
+      "verify": "`go test ./internal/mcpadapter -run Skills -race`",
+      "status": "done"
+    },
+    {
+      "number": "T18",
+      "verify": "`go run ./cmd/jacu sdd lint --all` exits 0",
+      "status": "done"
+    },
+    {
+      "number": "T19",
+      "verify": "report with n and the per-class counts",
+      "status": "todo"
+    },
+    {
+      "number": "T20",
+      "verify": "`go test -tags=e2e ./test/e2e/ -run Governed` reports 13 tools",
+      "status": "done"
+    },
+    {
+      "number": "T21",
+      "verify": "PR with the hosted run link",
+      "status": "done"
+    }
+  ]
+}

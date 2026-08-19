@@ -1,0 +1,148 @@
+{
+  "sdd_id": "sdd_02f487a5552e1320",
+  "content_sha256": "02f487a5552e1320b8c77a34e8848d5ee30da0f3bc75152fa0516d2785599b16",
+  "requirements": [
+    {
+      "name": "Content is unrepresentable at every level",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Cost numbers name their measurement",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Module scorecard reports honestly",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Run state persistence owns its own shape",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Versioned event envelope",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`go test ./internal/runstate -race` fails on absence",
+      "status": "done"
+    },
+    {
+      "number": "T2",
+      "verify": "`go test ./... -race`",
+      "status": "done"
+    },
+    {
+      "number": "T3",
+      "verify": "`go list -deps ./internal/runstate \\",
+      "status": "grep -c capability` reports 0"
+    },
+    {
+      "number": "T4",
+      "verify": "`go test ./internal/telemetry -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T5",
+      "verify": "`go test ./internal/telemetry -race`",
+      "status": "done"
+    },
+    {
+      "number": "T6",
+      "verify": "`go test ./internal/telemetry -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T7",
+      "verify": "`go test ./internal/telemetry -race`",
+      "status": "done"
+    },
+    {
+      "number": "T8",
+      "verify": "`go test ./internal/telemetry -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T9",
+      "verify": "`go test ./internal/telemetry -race`",
+      "status": "done"
+    },
+    {
+      "number": "T10",
+      "verify": "`go test ./internal/telemetry -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T11",
+      "verify": "`go test ./internal/telemetry -race`",
+      "status": "done"
+    },
+    {
+      "number": "T12",
+      "verify": "`go test ./internal/runtime -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T13",
+      "verify": "`go test ./internal/runtime -race`",
+      "status": "done"
+    },
+    {
+      "number": "T14",
+      "verify": "`go test ./... -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T15",
+      "verify": "`go test ./... -race`",
+      "status": "done"
+    },
+    {
+      "number": "T16",
+      "verify": "`go test ./internal/telemetry -run Fuzz -fuzztime=30s` fails",
+      "status": "done"
+    },
+    {
+      "number": "T17",
+      "verify": "fuzz clean",
+      "status": "done"
+    },
+    {
+      "number": "T18",
+      "verify": "`go test ./... -race`",
+      "status": "done"
+    },
+    {
+      "number": "T19",
+      "verify": "`go test ./cmd/... -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T20",
+      "verify": "`go test ./cmd/... -race`",
+      "status": "done"
+    },
+    {
+      "number": "T21",
+      "verify": "`go test ./internal/report -race`",
+      "status": "done"
+    },
+    {
+      "number": "T22",
+      "verify": "`go run ./cmd/jacu sdd lint --all` exits 0",
+      "status": "done"
+    },
+    {
+      "number": "T23",
+      "verify": "`go test -tags=e2e ./test/e2e/ -run Governed` reports 13 tools under the ratchet",
+      "status": "done"
+    },
+    {
+      "number": "T24",
+      "verify": "PR with the hosted run link",
+      "status": "done"
+    }
+  ]
+}

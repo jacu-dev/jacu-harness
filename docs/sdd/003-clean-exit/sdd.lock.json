@@ -1,0 +1,134 @@
+{
+  "sdd_id": "sdd_0dd1d88a7184ba25",
+  "content_sha256": "0dd1d88a7184ba2575dff0f99d23b593559d423c441284a17511b92f2533b053",
+  "requirements": [
+    {
+      "name": "An SDD cannot close over unfinished work",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Clean exit detects every class of leftover",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Clean exit removes only what JACU created",
+      "delta": "ADDED"
+    },
+    {
+      "name": "The workspace slice declares its dependencies",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`wc -l` under 120; owner ratifies separately",
+      "status": "done"
+    },
+    {
+      "number": "T2",
+      "verify": "`go test ./internal/capability/cleanexit -race` fails on absence",
+      "status": "done"
+    },
+    {
+      "number": "T3",
+      "verify": "`go test ./internal/capability/cleanexit -race`",
+      "status": "done"
+    },
+    {
+      "number": "T4",
+      "verify": "`go test ./internal/capability/cleanexit -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T5",
+      "verify": "`go test ./internal/capability/cleanexit -race`",
+      "status": "done"
+    },
+    {
+      "number": "T6",
+      "verify": "`go test ./internal/capability/cleanexit -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T7",
+      "verify": "`go test ./internal/capability/cleanexit -race`",
+      "status": "done"
+    },
+    {
+      "number": "T8",
+      "verify": "`go test ./internal/capability/cleanexit -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T9",
+      "verify": "`go test ./internal/capability/cleanexit -race`",
+      "status": "done"
+    },
+    {
+      "number": "T10",
+      "verify": "`go test ./internal/capability/cleanexit -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T11",
+      "verify": "`go test ./... -race`",
+      "status": "done"
+    },
+    {
+      "number": "T12",
+      "verify": "`go test ./cmd/... -race` fails",
+      "status": "done"
+    },
+    {
+      "number": "T13",
+      "verify": "`go test ./cmd/... -race`",
+      "status": "done"
+    },
+    {
+      "number": "T14",
+      "verify": "`go test ./internal/capability/workspace -race` fails when a package is added",
+      "status": "done"
+    },
+    {
+      "number": "T15",
+      "verify": "`go test ./... -race`",
+      "status": "done"
+    },
+    {
+      "number": "T16",
+      "verify": "`jacu_verify` with that argv returns a verdict rather than an allowlist denial",
+      "status": "done"
+    },
+    {
+      "number": "T17",
+      "verify": "`bash scripts/verify.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T18",
+      "verify": "`go test ./internal/mcpadapter -run Skills -race`",
+      "status": "done"
+    },
+    {
+      "number": "T19",
+      "verify": "`go run ./cmd/jacu sdd lint --all` exits 0",
+      "status": "done"
+    },
+    {
+      "number": "T20",
+      "verify": "receipt attached, `sdd close` exits 0 on a real change",
+      "status": "todo"
+    },
+    {
+      "number": "T21",
+      "verify": "`go test -tags=e2e ./test/e2e/ -run Governed` reports 13 tools",
+      "status": "done"
+    },
+    {
+      "number": "T22",
+      "verify": "PR with the hosted run link",
+      "status": "done"
+    }
+  ]
+}

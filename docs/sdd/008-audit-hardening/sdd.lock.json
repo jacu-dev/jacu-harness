@@ -1,0 +1,190 @@
+{
+  "sdd_id": "sdd_fdb15bac2e13bfdd",
+  "content_sha256": "fdb15bac2e13bfdd1120b3127ff5aba6a202dbc6b1f225ae537f573fb2b5e574",
+  "requirements": [
+    {
+      "name": "CI verifies downloaded executables before execution",
+      "delta": "MODIFIED"
+    },
+    {
+      "name": "CI watch timeout is a deterministic policy state",
+      "delta": "MODIFIED"
+    },
+    {
+      "name": "Living documentation distinguishes every delivery state",
+      "delta": "MODIFIED"
+    },
+    {
+      "name": "Native SDD filesystem operations are root-confined",
+      "delta": "MODIFIED"
+    },
+    {
+      "name": "Promotion ends in a verified installable release",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Repository-state uncertainty fails closed",
+      "delta": "MODIFIED"
+    },
+    {
+      "name": "Required network state is enforced without probing",
+      "delta": "MODIFIED"
+    },
+    {
+      "name": "SDD status reports only provable associations",
+      "delta": "MODIFIED"
+    },
+    {
+      "name": "Storage lifecycle is inspectable and dry-run first",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Telemetry storage and read work are bounded",
+      "delta": "MODIFIED"
+    },
+    {
+      "name": "Terminal task storage is physically bounded",
+      "delta": "MODIFIED"
+    },
+    {
+      "name": "Test and hygiene gates are observational",
+      "delta": "MODIFIED"
+    },
+    {
+      "name": "The Go and CI baseline has one patched source of truth",
+      "delta": "MODIFIED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T0",
+      "verify": "owner reply names `008-audit-hardening` and authorizes local commits without push",
+      "status": "done"
+    },
+    {
+      "number": "T1",
+      "verify": "`rtk zsh -c 'test \"$(git merge-base HEAD origin/main)\" = 4a846296f5efa6305ae0ee03fe420844f1b28ed2 \u0026\u0026 test -z \"$(git status --porcelain)\"'`",
+      "status": "done"
+    },
+    {
+      "number": "T2",
+      "verify": "`rtk zsh -c 'test \"$(go list -m -f \"{{.GoVersion}}\")\" = 1.26.6 \u0026\u0026 go mod tidy -diff \u0026\u0026 go mod verify \u0026\u0026 go run golang.org/x/vuln/cmd/govulncheck@v1.7.0 ./...'`",
+      "status": "done"
+    },
+    {
+      "number": "T3",
+      "verify": "`rtk zsh -c '! rg -n \"curl.*sh\" .github/workflows \u0026\u0026 ! rg -n \"gitleaks detect\" .github/workflows \u0026\u0026 bash scripts/verify.sh'`",
+      "status": "done"
+    },
+    {
+      "number": "T4",
+      "verify": "`rtk go test -race -count=1 ./cmd/jacu ./internal/capability/sdd`",
+      "status": "done"
+    },
+    {
+      "number": "T5",
+      "verify": "`rtk zsh -c 'go test -race -count=1 ./cmd/jacu ./internal/capability/sdd \u0026\u0026 go vet ./cmd/jacu ./internal/capability/sdd \u0026\u0026 bash scripts/e2e.sh -v'`",
+      "status": "done"
+    },
+    {
+      "number": "T6",
+      "verify": "`rtk go test -race -count=1 ./internal/capability/cleanexit ./cmd/jacu`",
+      "status": "done"
+    },
+    {
+      "number": "T7",
+      "verify": "`rtk zsh -c 'go test -race -count=1 ./internal/capability/cleanexit ./cmd/jacu \u0026\u0026 go test -race -count=20 ./internal/capability/cleanexit'`",
+      "status": "done"
+    },
+    {
+      "number": "T8",
+      "verify": "`rtk go test -race -count=1 ./internal/capability/preflight ./cmd/jacu`",
+      "status": "done"
+    },
+    {
+      "number": "T9",
+      "verify": "`rtk zsh -c 'go test -race -count=1 ./internal/capability/preflight ./cmd/jacu \u0026\u0026 JACU_TELEMETRY=off go run ./cmd/jacu preflight --json --network-required --network-declared'`",
+      "status": "done"
+    },
+    {
+      "number": "T10",
+      "verify": "`rtk go test -race -count=1 ./internal/capability/sdd ./cmd/jacu`",
+      "status": "done"
+    },
+    {
+      "number": "T11",
+      "verify": "`rtk zsh -c 'go test -race -count=1 ./internal/capability/sdd ./cmd/jacu \u0026\u0026 go run ./cmd/jacu sdd lint docs/sdd/008-audit-hardening'`",
+      "status": "done"
+    },
+    {
+      "number": "T12",
+      "verify": "`rtk go test -race -count=1 ./internal/capability/verify ./internal/capability/workspace ./internal/runstate`",
+      "status": "done"
+    },
+    {
+      "number": "T13",
+      "verify": "`rtk zsh -c 'go test -race -count=1 ./internal/capability/verify ./internal/capability/workspace ./internal/runstate \u0026\u0026 go test -race -count=20 ./internal/capability/verify -run Task \u0026\u0026 go test -race -count=20 ./internal/capability/verify -run Retention \u0026\u0026 go test -race -count=20 ./internal/capability/verify -run Prune'`",
+      "status": "done"
+    },
+    {
+      "number": "T14",
+      "verify": "`rtk go test -race -count=1 ./internal/telemetry ./cmd/jacu ./internal/report`",
+      "status": "done"
+    },
+    {
+      "number": "T15",
+      "verify": "`rtk zsh -c 'go test -race -count=1 ./internal/telemetry ./cmd/jacu ./internal/report \u0026\u0026 JACU_TELEMETRY=off go run ./cmd/jacu stats --since 30d'`",
+      "status": "done"
+    },
+    {
+      "number": "T16",
+      "verify": "`rtk go test -race -count=1 ./internal/runner ./internal/capability/workspace`",
+      "status": "done"
+    },
+    {
+      "number": "T17",
+      "verify": "`rtk zsh -c 'go test -race -count=1 ./internal/runner ./internal/capability/workspace \u0026\u0026 go test -race -count=100 ./internal/runner -run WatchCheckEvidence'`",
+      "status": "done"
+    },
+    {
+      "number": "T18",
+      "verify": "`rtk go test -race -count=1 ./internal/capability/sdd ./cmd/jacu ./internal/runstate`",
+      "status": "done"
+    },
+    {
+      "number": "T19",
+      "verify": "`rtk zsh -c 'go test -race -count=1 ./internal/capability/sdd ./cmd/jacu ./internal/runstate \u0026\u0026 go run ./cmd/jacu sdd status'`",
+      "status": "done"
+    },
+    {
+      "number": "T20",
+      "verify": "`rtk zsh -c 'go test -race -count=1 ./internal/gitx ./internal/capability/workspace ./internal/capability/sdd ./internal/telemetry ./internal/mcpadapter \u0026\u0026 go test -count=50 ./internal/gitx -run TestRevParseHeadAndHasCommits \u0026\u0026 go test -count=1 ./test/hosteval/...'`",
+      "status": "done"
+    },
+    {
+      "number": "T21",
+      "verify": "`rtk zsh -c 'before=$(git status --porcelain); bash scripts/hygiene.sh; after=$(git status --porcelain); test \"$before\" = \"$after\" \u0026\u0026 go mod tidy -diff'`",
+      "status": "done"
+    },
+    {
+      "number": "T22",
+      "verify": "`rtk go test -race -count=1 ./cmd/jacu ./internal/capability/storage ./internal/capability/workspace ./internal/capability/cleanexit ./internal/runstate`",
+      "status": "done"
+    },
+    {
+      "number": "T23",
+      "verify": "`rtk zsh -c 'go test -race -count=1 ./cmd/jacu ./internal/capability/storage ./internal/capability/workspace ./internal/capability/cleanexit ./internal/runstate \u0026\u0026 go run ./cmd/jacu storage inspect --json \u0026\u0026 go run ./cmd/jacu storage prune --dry-run --json \u0026\u0026 bash scripts/e2e.sh -v'`",
+      "status": "done"
+    },
+    {
+      "number": "T24",
+      "verify": "`rtk zsh -c '! rg -n \"TBD - created by archiving\" docs/sdd/specs \u0026\u0026 go run ./cmd/jacu sdd lint docs/sdd/008-audit-hardening \u0026\u0026 bash scripts/verify.sh'`",
+      "status": "done"
+    },
+    {
+      "number": "T25",
+      "verify": "`rtk zsh -c 'go run ./cmd/jacu help \u0026\u0026 bash scripts/mcp-smoke.sh \u0026\u0026 go test ./... -race \u0026\u0026 bash scripts/e2e.sh -v \u0026\u0026 bash scripts/hygiene.sh \u0026\u0026 bash scripts/verify.sh \u0026\u0026 git diff --check'`",
+      "status": "done"
+    }
+  ]
+}

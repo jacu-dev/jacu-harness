@@ -1,0 +1,72 @@
+{
+  "sdd_id": "sdd_47885670ad501dd2",
+  "content_sha256": "47885670ad501dd21f56e7db3cce28300e359bdfd9fd0963b88d4002b1fee6c7",
+  "requirements": [
+    {
+      "name": "AI-trace inventory reaches zero in the exported tree",
+      "delta": "ADDED"
+    },
+    {
+      "name": "CI is self-contained and gates the first PR",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Full-history secrets sweep gates the export",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Mechanical rename is grep-verifiable",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Public history is curated Conventional Commits",
+      "delta": "ADDED"
+    },
+    {
+      "name": "go.mod floor supports restricted VMs",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`gitleaks git --no-banner`",
+      "status": "done"
+    },
+    {
+      "number": "T2",
+      "verify": "`bash scripts/export/trace-scan.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T3",
+      "verify": "`bash scripts/export/export.sh --dry-run`",
+      "status": "done"
+    },
+    {
+      "number": "T4",
+      "verify": "`bash scripts/verify.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T5",
+      "verify": "`GOTOOLCHAIN=local go test ./... -race`",
+      "status": "done"
+    },
+    {
+      "number": "T6",
+      "verify": "`bash scripts/hygiene.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T7",
+      "verify": "first public PR green",
+      "status": "in-progress"
+    },
+    {
+      "number": "T8",
+      "verify": "`git log` scan = zero traces",
+      "status": "todo"
+    }
+  ]
+}
