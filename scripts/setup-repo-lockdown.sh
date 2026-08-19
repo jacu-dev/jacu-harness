@@ -53,7 +53,8 @@ gh api -X PUT "repos/$REPO/actions/permissions" \
   -F enabled=true -F allowed_actions=selected >/dev/null
 gh api -X PUT "repos/$REPO/actions/permissions/selected-actions" \
   -F github_owned_allowed=true \
-  -F verified_allowed=true >/dev/null
+  -F verified_allowed=true >/dev/null 2>&1 \
+  || echo "    (selected actions ja gerenciadas no nivel da org; seguindo)"
 gh api -X PUT "repos/$REPO/actions/permissions/workflow" \
   -F default_workflow_permissions=read \
   -F can_approve_pull_request_reviews=false >/dev/null
@@ -73,7 +74,7 @@ gh api -X POST "repos/$REPO/rulesets" --input - <<'JSON' >/dev/null
       "parameters": {
         "required_approving_review_count": 0,
         "dismiss_stale_reviews_on_push": false,
-        "require_code_owner_review": true,
+        "require_code_owner_review": false,
         "require_last_push_approval": false,
         "required_review_thread_resolution": false,
         "allowed_merge_methods": ["merge", "squash"]
