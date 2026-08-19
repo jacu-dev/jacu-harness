@@ -3,10 +3,8 @@ package projectinspect
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
-	"github.com/jacu-dev/jacu-harness/internal/gitx"
 	capabilityruntime "github.com/jacu-dev/jacu-harness/internal/runtime"
 	"github.com/jacu-dev/jacu-harness/internal/telemetry"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -72,18 +70,7 @@ func RegisterTool(server *mcp.Server, root string) {
 }
 
 func inspectHandler(root string) capabilityruntime.Handler {
-	return func(ctx context.Context, rawInput json.RawMessage) (capabilityruntime.Result, error) {
-		git, err := gitx.New()
-		if err != nil || !git.InsideWorkTree(ctx, root) {
-			return capabilityruntime.Result{
-				Status:  "blocked",
-				Summary: fmt.Sprintf("cwd %q is not inside a git work tree; start jacu serve from a repository (or emit an anchored host pack: jacu doctor --emit claude-desktop --repo <repo>)", root),
-				NextActions: []string{
-					"cd into the repository and restart the MCP server",
-					"or register a host pack that anchors cwd to the repository",
-				},
-			}, nil
-		}
+	return capabilityruntime.RequireWorkTree(root, func(ctx context.Context, rawInput json.RawMessage) (capabilityruntime.Result, error) {
 		var input Input
 		if unmarshalErr := json.Unmarshal(rawInput, &input); unmarshalErr != nil {
 			return capabilityruntime.Result{}, unmarshalErr
@@ -104,5 +91,5 @@ func inspectHandler(root string) capabilityruntime.Handler {
 			Warnings:    warnings,
 			NextActions: []string{},
 		}, nil
-	}
+	})
 }

@@ -7,7 +7,7 @@ import (
 )
 
 func TestFlowToolAdvertisesOneCompactContractAndBlocksBeforeExecution(t *testing.T) {
-	srv := NewServer("test", t.TempDir())
+	srv := NewServer("test", initGitRepository(t))
 	session, ctx := connectMCPTestServer(t, srv, "flow-test")
 	tools, err := session.ListTools(ctx, &mcp.ListToolsParams{})
 	if err != nil {

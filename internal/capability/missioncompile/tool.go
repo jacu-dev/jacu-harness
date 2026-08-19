@@ -104,7 +104,7 @@ func RegisterTool(server *mcp.Server, root string) {
 			MaxInputBytes:  256 * 1024,
 			MaxOutputBytes: 16 * 1024,
 		},
-		Handler: compileHandler(root),
+		Handler: capabilityruntime.RequireWorkTree(root, compileHandler(root)),
 	}
 
 	mcp.AddTool(server, &mcp.Tool{

@@ -413,7 +413,7 @@ func TestWorkspaceToolsReturnRuntimeEnvelopesAndSanitizeApplyHost(t *testing.T) 
 }
 
 func TestMissionCompileToolCalls(t *testing.T) {
-	root := t.TempDir()
+	root := initGitRepository(t)
 	srv := NewServer("test", root)
 	session, ctx := connectMCPTestServer(t, srv, "test-client")
 
@@ -784,5 +784,58 @@ func TestMissionCompileAnnouncesRiskHintEnum(t *testing.T) {
 	}
 	if _, required := properties["objective"]; !required {
 		t.Fatal("inputSchema lost objective; the explicit schema must keep the whole input")
+	}
+}
+
+func TestRepoScopedToolsBlockOutsideAGitWorkTree(t *testing.T) {
+	root := t.TempDir()
+	srv := NewServer("test", root)
+	session, ctx := connectMCPTestServer(t, srv, "cwd-guard")
+
+	repoScoped := []string{
+		"jacu_project_inspect",
+		"jacu_mission_compile",
+		"jacu_workspace_open",
+		"jacu_diff",
+		"jacu_apply",
+		"jacu_discard",
+		"jacu_report",
+	}
+	for _, name := range repoScoped {
+		args := map[string]any{}
+		switch name {
+		case "jacu_mission_compile":
+			args = map[string]any{"objective": "Fix the parser output correctly"}
+		case "jacu_flow_run":
+			args = map[string]any{"flow": map[string]any{"nodes": []map[string]any{{"id": "n1", "uses": "unknown"}}}}
+		case "jacu_workspace_open":
+			args = map[string]any{
+				"mission_id": "msn_test",
+				"mission_input": map[string]any{
+					"objective": "Update the project readme safely",
+					"risk_hint": "write",
+				},
+			}
+		case "jacu_diff", "jacu_apply", "jacu_discard", "jacu_verify":
+			args = map[string]any{"run_id": "run_0000000000000000"}
+		}
+		envelope := callToolEnvelope(t, ctx, session, name, args)
+		if envelope["status"] != "blocked" {
+			t.Fatalf("%s status = %v; want blocked outside a git work tree", name, envelope["status"])
+		}
+		summary, _ := envelope["summary"].(string)
+		if !strings.Contains(summary, root) {
+			t.Fatalf("%s summary %q does not name the cwd", name, summary)
+		}
+		if !strings.Contains(strings.ToLower(summary), "git") {
+			t.Fatalf("%s summary %q does not instruct anchoring to a git work tree", name, summary)
+		}
+	}
+
+	status := callToolEnvelope(t, ctx, session, "jacu_status", map[string]any{})
+	if status["status"] == "blocked" {
+		if summary, _ := status["summary"].(string); strings.Contains(strings.ToLower(summary), "git work tree") {
+			t.Fatalf("jacu_status is user-scoped and must not use the work-tree guard: %q", summary)
+		}
 	}
 }

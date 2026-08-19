@@ -212,7 +212,7 @@ func workspaceOpenCapability(root string) capabilityruntime.Capability {
 	return capabilityruntime.Capability{
 		ProjectID: telemetry.ProjectID(root),
 		Spec:      workspaceSpec(WorkspaceOpenToolName, capabilityruntime.RiskWrite, false, false, false, time.Minute, 16*1024),
-		Handler: func(ctx context.Context, rawInput json.RawMessage) (capabilityruntime.Result, error) {
+		Handler: capabilityruntime.RequireWorkTree(root, func(ctx context.Context, rawInput json.RawMessage) (capabilityruntime.Result, error) {
 			var input OpenInput
 			if err := json.Unmarshal(rawInput, &input); err != nil {
 				return capabilityruntime.Result{}, err
@@ -225,7 +225,7 @@ func workspaceOpenCapability(root string) capabilityruntime.Capability {
 				Status: result.Status, Summary: result.Summary, Data: result.Data,
 				Artifacts: []string{}, Warnings: nonNilStrings(result.Warnings), NextActions: []string{},
 			}, nil
-		},
+		}),
 	}
 }
 
@@ -261,7 +261,7 @@ func workspaceDiffCapability(root string) capabilityruntime.Capability {
 		// state. Refreshing reviewed_at is intentional freshness, so this remains
 		// idempotent despite its real state and index writes.
 		Spec: workspaceSpec(DiffToolName, capabilityruntime.RiskWrite, false, true, false, time.Minute, maxDiffOutputBytes),
-		Handler: func(ctx context.Context, rawInput json.RawMessage) (capabilityruntime.Result, error) {
+		Handler: capabilityruntime.RequireWorkTree(root, func(ctx context.Context, rawInput json.RawMessage) (capabilityruntime.Result, error) {
 			var input DiffInput
 			if err := json.Unmarshal(rawInput, &input); err != nil {
 				return capabilityruntime.Result{}, err
@@ -271,7 +271,7 @@ func workspaceDiffCapability(root string) capabilityruntime.Capability {
 				return capabilityruntime.Result{}, err
 			}
 			return workspaceDiffRuntimeResult(result), nil
-		},
+		}),
 	}
 }
 
@@ -282,7 +282,7 @@ func workspaceApplyCapability(root, hostName string) capabilityruntime.Capabilit
 		// not prevent network access. A future sandbox/network guard makes these
 		// runs closed-world and returns OpenWorld to false.
 		Spec: workspaceSpec(ApplyToolName, capabilityruntime.RiskWrite, false, false, true, 10*time.Minute, 16*1024),
-		Handler: func(ctx context.Context, rawInput json.RawMessage) (capabilityruntime.Result, error) {
+		Handler: capabilityruntime.RequireWorkTree(root, func(ctx context.Context, rawInput json.RawMessage) (capabilityruntime.Result, error) {
 			var input ApplyInput
 			if err := json.Unmarshal(rawInput, &input); err != nil {
 				return capabilityruntime.Result{}, err
@@ -295,7 +295,7 @@ func workspaceApplyCapability(root, hostName string) capabilityruntime.Capabilit
 				Status: result.Status, Summary: result.Summary, Data: result.Data,
 				Artifacts: []string{}, Warnings: nonNilStrings(result.Warnings), NextActions: nonNilStrings(result.NextActions),
 			}, nil
-		},
+		}),
 	}
 }
 
@@ -303,7 +303,7 @@ func workspaceDiscardCapability(root string) capabilityruntime.Capability {
 	return capabilityruntime.Capability{
 		ProjectID: telemetry.ProjectID(root),
 		Spec:      workspaceSpec(DiscardToolName, capabilityruntime.RiskWrite, false, false, false, 2*time.Minute, 16*1024),
-		Handler: func(ctx context.Context, rawInput json.RawMessage) (capabilityruntime.Result, error) {
+		Handler: capabilityruntime.RequireWorkTree(root, func(ctx context.Context, rawInput json.RawMessage) (capabilityruntime.Result, error) {
 			var input DiscardInput
 			if err := json.Unmarshal(rawInput, &input); err != nil {
 				return capabilityruntime.Result{}, err
@@ -316,7 +316,7 @@ func workspaceDiscardCapability(root string) capabilityruntime.Capability {
 				Status: result.Status, Summary: result.Summary, Data: result.Data,
 				Artifacts: []string{}, Warnings: nonNilStrings(result.Warnings), NextActions: nonNilStrings(result.NextActions),
 			}, nil
-		},
+		}),
 	}
 }
 
