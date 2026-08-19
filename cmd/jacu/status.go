@@ -52,9 +52,9 @@ func runStatus(args []string, stdout, stderr io.Writer, options storagecap.Statu
 	}
 
 	if report.TotalRuns == 0 {
-		_, _ = fmt.Fprintln(stdout, "nenhum run parado.")
+		_, _ = fmt.Fprintln(stdout, "no parked runs.")
 		if len(report.Failed) > 0 {
-			_, _ = fmt.Fprintln(stderr, "status: falhou em", strings.Join(report.Failed, ", "))
+			_, _ = fmt.Fprintln(stderr, "status: failed at", strings.Join(report.Failed, ", "))
 			return 1
 		}
 		return 0
@@ -67,10 +67,10 @@ func runStatus(args []string, stdout, stderr io.Writer, options storagecap.Statu
 		}
 		flag := ""
 		if run.Terminal() {
-			flag = "  <- worktree sobrou de run encerrado"
+			flag = "  <- leftover worktree from a finished run"
 		}
 		if run.Status == storagecap.StatusOrphan {
-			flag = "  <- sem run que reivindique"
+			flag = "  <- no run claims this"
 		}
 		_, _ = fmt.Fprintf(stdout, "%s  %-9s  %6s  %8s  %s%s\n",
 			shortRunID(run.RunID), run.Status, formatAge(run.AgeSeconds), size, run.RepoName, flag)
@@ -79,13 +79,13 @@ func runStatus(args []string, stdout, stderr io.Writer, options storagecap.Statu
 		}
 	}
 
-	_, _ = fmt.Fprintf(stdout, "\n%s . %s em worktree\n",
+	_, _ = fmt.Fprintf(stdout, "\n%s . %s in worktrees\n",
 		pluralRuns(report.TotalRuns), formatBytes(report.TotalBytes))
 	if report.Truncated {
-		_, _ = fmt.Fprintln(stdout, "algum tamanho ficou incompleto e esta marcado com >")
+		_, _ = fmt.Fprintln(stdout, "some sizes are incomplete and marked with >")
 	}
 	if len(report.Failed) > 0 {
-		_, _ = fmt.Fprintln(stderr, "status: falhou em", strings.Join(report.Failed, ", "))
+		_, _ = fmt.Fprintln(stderr, "status: failed at", strings.Join(report.Failed, ", "))
 		return 1
 	}
 	return 0
@@ -93,9 +93,9 @@ func runStatus(args []string, stdout, stderr io.Writer, options storagecap.Statu
 
 func pluralRuns(n int) string {
 	if n == 1 {
-		return "1 run parado"
+		return "1 parked run"
 	}
-	return fmt.Sprintf("%d runs parados", n)
+	return fmt.Sprintf("%d parked runs", n)
 }
 
 func shortRunID(runID string) string {
@@ -134,8 +134,8 @@ func formatAge(seconds int64) string {
 	}
 }
 
-// truncateObjective cuts on a rune boundary: mission objectives are written in
-// Portuguese and slicing bytes would split an accent in half.
+// truncateObjective cuts on a rune boundary: mission objectives may contain
+// non-ASCII text and slicing bytes would split a rune.
 func truncateObjective(objective string, limit int) string {
 	objective = strings.Join(strings.Fields(objective), " ")
 	runes := []rune(objective)
