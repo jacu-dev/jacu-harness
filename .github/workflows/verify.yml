@@ -91,8 +91,13 @@ jobs:
       - name: provenance-lint files
         run: go run ./cmd/jacu provenance --files --json
 
+      # HEAD on a pull_request event is the merge commit GitHub builds for the
+      # run, and `Merge <sha> into <sha>` is not a Conventional Commit subject.
+      # That commit belongs to the run, not to the pull request, so the range
+      # is base..head and never touches it.
       - name: provenance-lint history
         if: github.event_name == 'pull_request' && github.repository == 'jacu-dev/jacu-harness'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: go run ./cmd/jacu provenance --history "${BASE_SHA}..HEAD" --json
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: go run ./cmd/jacu provenance --history "${BASE_SHA}..${HEAD_SHA}" --json
