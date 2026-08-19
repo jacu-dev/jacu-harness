@@ -1,10 +1,12 @@
 # Distribution
 
 JACU distributes as GitHub Release assets (GoReleaser + cosign keyless +
-SPDX SBOM) and as `go install github.com/jacu-dev/jacu-harness/cmd/jacu@latest`.
+SPDX SBOM). The recommended one-command install is
 
-There is no `curl | sh` instruction. Download `scripts/install.sh`, review
-it, then run `bash install.sh --version vX.Y.Z`.
+`go install github.com/jacu-dev/jacu-harness/cmd/jacu@v0.2.0`.
+
+There is no `curl | sh` instruction. For a verified binary, download
+`scripts/install.sh`, review it, then run it (omit `--version` for latest).
 
 The first public release is `v0.2.0`. Tag pushes remain an owner keystroke
 (`actor == ecouto`). See [release.md](release.md).
