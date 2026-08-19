@@ -1,0 +1,102 @@
+[
+  {
+    "query": "How should I structure the Go server and its internal packages?",
+    "expected": ["mem_0000000000000001", "mem_000000000000000d"],
+    "k": 3
+  },
+  {
+    "query": "Where should MCP protocol and SDK code live?",
+    "expected": ["mem_0000000000000002", "mem_0000000000000010"],
+    "k": 3
+  },
+  {
+    "query": "Which MCP versions and deprecated capabilities do we support?",
+    "expected": ["mem_0000000000000003", "mem_0000000000000024"],
+    "k": 3
+  },
+  {
+    "query": "How should the local MCP server communicate with hosts and where do logs go?",
+    "expected": ["mem_0000000000000004", "mem_000000000000000e"],
+    "k": 3
+  },
+  {
+    "query": "What execution pipeline must every tool follow?",
+    "expected": ["mem_0000000000000005"],
+    "k": 3
+  },
+  {
+    "query": "Can verification commands use a shell string or sh -c?",
+    "expected": ["mem_000000000000000a", "mem_0000000000000006"],
+    "k": 3
+  },
+  {
+    "query": "How do untracked files become visible in the reviewed diff without staging the real index?",
+    "expected": ["mem_000000000000000b", "mem_000000000000001b", "mem_0000000000000014"],
+    "k": 3
+  },
+  {
+    "query": "Why must apply revalidate the tree after verification commands?",
+    "expected": ["mem_000000000000000c", "mem_000000000000001c"],
+    "k": 3
+  },
+  {
+    "query": "Why must envelope data use a value object instead of a pointer?",
+    "expected": ["mem_0000000000000019", "mem_0000000000000009", "mem_0000000000000023"],
+    "k": 3
+  },
+  {
+    "query": "How do we prevent a hostile hostName from forging commit trailers?",
+    "expected": ["mem_000000000000001a", "mem_0000000000000016"],
+    "k": 3
+  },
+  {
+    "query": "Why are patch and numstat captured in one Git invocation?",
+    "expected": ["mem_0000000000000015", "mem_000000000000001d"],
+    "k": 3
+  },
+  {
+    "query": "Can workspace status touch the Git index or persist corrupted state?",
+    "expected": ["mem_0000000000000017", "mem_000000000000001e"],
+    "k": 3
+  },
+  {
+    "query": "Who performs the final merge and should the PR be squashed?",
+    "expected": ["mem_0000000000000025"],
+    "k": 3
+  },
+  {
+    "query": "May I copy implementation code from jacu-code into this repository?",
+    "expected": ["mem_0000000000000026"],
+    "k": 3
+  },
+  {
+    "query": "Should I add several speculative capabilities at once?",
+    "expected": ["mem_0000000000000027"],
+    "k": 3
+  },
+  {
+    "query": "When may the agent call apply after showing a workspace diff?",
+    "expected": ["mem_0000000000000028", "mem_0000000000000007"],
+    "k": 3
+  },
+  {
+    "query": "Can a skill promise that host native tools obey jacu policy?",
+    "expected": ["mem_0000000000000029", "mem_0000000000000013"],
+    "k": 3
+  },
+  {
+    "query": "Kubernetes HPA GPU tuning?",
+    "expected": [],
+    "k": 3
+  },
+  {
+    "query": "PostgreSQL vacuum bloat remediation?",
+    "expected": [],
+    "k": 3
+  },
+  {
+    "query": "Tailwind masonry breakpoint recipe?",
+    "expected": [],
+    "k": 3
+  }
+]
