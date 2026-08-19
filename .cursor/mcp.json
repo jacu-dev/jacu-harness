@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "jacu": {
+      "command": "jacu",
+      "args": [
+        "serve"
+      ]
+    }
+  }
+}

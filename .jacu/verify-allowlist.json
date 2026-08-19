@@ -1,0 +1,29 @@
+{
+  "allow": [
+    {
+      "program": "jacu",
+      "required_arg_prefix": [
+        "sdd"
+      ]
+    },
+    {
+      "program": "jacu",
+      "required_arg_prefix": [
+        "sdd",
+        "close"
+      ]
+    },
+    {
+      "program": "jacu",
+      "required_arg_prefix": [
+        "preflight"
+      ]
+    },
+    {
+      "program": "jacu",
+      "required_arg_prefix": [
+        "provenance"
+      ]
+    }
+  ]
+}

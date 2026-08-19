@@ -1,0 +1,12 @@
+/bin/
+/dist/
+*.test
+coverage.out
+*.prof
+.DS_Store
+/.jacu/bin/
+/.cursor/*
+!/.cursor/environment.json
+!/.cursor/mcp.json
+!/.cursor/install.sh
+!/.cursor/README.md
