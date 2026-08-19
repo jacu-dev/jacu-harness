@@ -1,0 +1,8 @@
+[extend]
+# Path-scoped allowlist only; every gitleaks default rule stays active.
+
+[allowlist]
+description = "Inert secret-detector test corpus transcribed from the retired jacu-code (see PR #16 review notes). Historical, read-only documents."
+paths = [
+  '''docs/heranca/.*''',
+]

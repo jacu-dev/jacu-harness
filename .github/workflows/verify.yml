@@ -1,0 +1,89 @@
+name: verify
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Pin the module toolchain
+        run: |
+          set -euo pipefail
+          echo "GOTOOLCHAIN=local" >> "$GITHUB_ENV"
+          go env GOVERSION GOTOOLCHAIN
+
+      - name: History secrets sweep
+        env:
+          GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          set -euo pipefail
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL --retry 3 -o "$tarball" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${tarball}"
+          echo "${GITLEAKS_SHA256}  ${tarball}" | sha256sum -c -
+          tar -xzf "$tarball" gitleaks
+          ./gitleaks git --no-banner --redact --exit-code 1 --log-opts="--all"
+          ./gitleaks dir --no-banner --redact --exit-code 1 .
+          rm -f gitleaks "$tarball"
+
+      - name: scripts/verify.sh
+        if: hashFiles('scripts/verify.sh') != ''
+        run: bash scripts/verify.sh
+
+      - name: golangci-lint
+        if: hashFiles('.golangci.yml') != ''
+        env:
+          GOLANGCI_VERSION: v2.11.4
+        run: |
+          set -euo pipefail
+          go install "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${GOLANGCI_VERSION}"
+          "$(go env GOPATH)/bin/golangci-lint" run
+
+      - name: govulncheck
+        run: |
+          set -euo pipefail
+          go install golang.org/x/vuln/cmd/govulncheck@v1.7.0
+          "$(go env GOPATH)/bin/govulncheck" ./...
+
+      - name: scripts/hygiene.sh
+        if: hashFiles('scripts/hygiene.sh') != ''
+        run: bash scripts/hygiene.sh
+
+      - name: scripts/e2e.sh
+        if: hashFiles('scripts/e2e.sh') != ''
+        run: bash scripts/e2e.sh -v
+
+      - name: scripts/mcp-smoke.sh
+        if: hashFiles('scripts/mcp-smoke.sh') != ''
+        run: bash scripts/mcp-smoke.sh
+
+      # File scan runs everywhere: the HEAD tree must stay trace-clean.
+      # History scan is public-only. ADR-028 keeps AI authorship in the
+      # private archive; a PR-range lint here would fail every agent commit.
+      - name: provenance-lint files
+        run: go run ./cmd/jacu provenance --files --json
+
+      - name: provenance-lint history
+        if: github.event_name == 'pull_request' && github.repository == 'jacu-dev/jacu-harness'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: go run ./cmd/jacu provenance --history "${BASE_SHA}..HEAD" --json

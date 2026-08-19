@@ -1,0 +1,24 @@
+version: 2
+
+# Action pins are immutable; monthly Dependabot updates keep them current
+# without creating weekly CI noise. Go modules remain on the faster cadence.
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    # PRs do Dependabot caem na mesma esteira (ADR-007): CI verde ⇒ auto-merge.
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "ci"
