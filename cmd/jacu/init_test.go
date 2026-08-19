@@ -109,6 +109,46 @@ func TestInitPrintsSnippetWhenConfigIsUnnamed(t *testing.T) {
 	}
 }
 
+func TestInitJSONIsOnlyMachineReadableOutput(t *testing.T) {
+	t.Parallel()
+	stdout, stderr := &bytes.Buffer{}, &bytes.Buffer{}
+	code := runInit([]string{"--host", "cursor", "--from", testdataSkills(t), "--skills-dir", t.TempDir(), "--json"}, stdout, stderr)
+	if code != 0 {
+		t.Fatalf("init exit %d: %s", code, stderr.String())
+	}
+	var result map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &result); err != nil {
+		t.Fatalf("stdout is not exclusive JSON: %v\n%s", err, stdout.String())
+	}
+	if result["host"] != "cursor" || result["config"] != "printed" {
+		t.Fatalf("json = %#v", result)
+	}
+	pack, _ := result["pack"].(string)
+	if !strings.Contains(pack, `"command"`) || !strings.Contains(pack, "jacu") {
+		t.Fatalf("pack missing host snippet: %#v", result["pack"])
+	}
+	path, _ := result["config_path"].(string)
+	if !strings.Contains(path, ".cursor/mcp.json") {
+		t.Fatalf("config_path = %q", path)
+	}
+}
+
+func TestInitDryRunDoesNotWriteSkillsOrConfig(t *testing.T) {
+	t.Parallel()
+	skills := filepath.Join(t.TempDir(), "skills")
+	config := filepath.Join(t.TempDir(), "mcp.json")
+	code := runInit([]string{"--host", "generic", "--from", testdataSkills(t), "--skills-dir", skills, "--config", config, "--dry-run"}, &bytes.Buffer{}, &bytes.Buffer{})
+	if code != 0 {
+		t.Fatal("dry-run init failed")
+	}
+	if _, err := os.Stat(filepath.Join(skills, "using-jacu", "SKILL.md")); err == nil {
+		t.Fatal("dry-run wrote skills")
+	}
+	if _, err := os.Stat(config); err == nil {
+		t.Fatal("dry-run wrote config")
+	}
+}
+
 func testdataSkills(t *testing.T) string {
 	t.Helper()
 	return filepath.Join("testdata", "skills")
