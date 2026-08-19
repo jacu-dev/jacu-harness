@@ -11,9 +11,9 @@
 #   scripts/hosteval.sh --case 4.1-inspect       # one case
 #   scripts/hosteval.sh --host codex --case 4.1-inspect
 #
-# Required: JACU_HOSTEVAL_PROJECT_ID, the prj_ id of the throwaway project.
-# The harness refuses to guess it — a filter that matches nothing would make
-# every case look like "no tools called", which is a silently passing 4.4.
+# Live hosts also need JACU_HOSTEVAL_PROJECT_ID. The catalogue assert below
+# does not: a filter that matches nothing would make every routing case look
+# like "no tools called", which is a silently passing 4.4.
 set -euo pipefail
 
 hosts=""
@@ -27,10 +27,12 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+# Catalogue fidelity is a machine assert and does not need a live host.
+go test -count=1 ./test/hosteval/ -run 'TestCatalogue|TestTruncating|TestEmptyHost'
+
 if [ -z "${JACU_HOSTEVAL_PROJECT_ID:-}" ]; then
-  echo "hosteval: JACU_HOSTEVAL_PROJECT_ID is unset." >&2
-  echo "  Run jacu_project_inspect once in the throwaway project and copy project_id." >&2
-  exit 2
+  echo "hosteval: catalogue assert OK; set JACU_HOSTEVAL_PROJECT_ID to drive live hosts"
+  exit 0
 fi
 
 export JACU_HOSTEVAL=1

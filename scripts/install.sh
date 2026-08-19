@@ -5,11 +5,19 @@ version=""
 prefix="${JACU_INSTALL_PREFIX:-${HOME}/.local/bin}"
 dry_run=false
 rollback=false
+release_repo="jacu-dev/jacu-harness"
 
 usage() {
   cat >&2 <<'EOF'
-usage: install.sh --version vX.Y.Z [--prefix DIR] [--dry-run]
+usage: install.sh [--version vX.Y.Z|latest] [--prefix DIR] [--dry-run]
        install.sh --rollback [--prefix DIR] [--dry-run]
+
+Download a signed GitHub Release, verify it, then install jacu.
+Omit --version (or pass latest) to install the newest public release.
+There is no curl|sh installer. Review this script, then run it.
+
+Offline assets: set JACU_RELEASE_DIR to a directory that already contains
+the tarball, checksums.txt and checksums.txt.sigstore.json.
 EOF
 }
 
@@ -48,24 +56,33 @@ done
 target="$prefix/jacu"
 previous="$prefix/jacu.previous"
 
-# Hosts that still launch the old binary name keep working after the rename.
+# Hosts that still launch the retired binary name keep working after the rename.
 install_legacy_alias() {
   dest_dir="$1"
-  alias_path="$dest_dir/jacu"
-  previous_path="$dest_dir/jacu.previous"
+  alias_path="$dest_dir/jacu-mcp"
   if [ -e "$alias_path" ] && [ ! -L "$alias_path" ]; then
     if [ -d "$alias_path" ]; then
       echo "install.sh: refusing to replace directory $alias_path" >&2
       return 1
     fi
-    # Pre-rename hosts only have a regular-file jacu. Seed the existing
-    # rollback artifact so --rollback is not left without jacu.previous.
-    if [ ! -e "$previous_path" ] || [ -L "$previous_path" ]; then
-      install -m 0755 "$alias_path" "$previous_path"
-    fi
     rm -f "$alias_path"
   fi
   ln -sfn jacu "$alias_path"
+}
+
+release_host() {
+  case "$1" in
+    https://*|http://*)
+      host="${1#*://}"
+      printf '%s\n' "${host%%/*}"
+      ;;
+    file://*)
+      printf 'local-file\n'
+      ;;
+    *)
+      printf '%s\n' "$1"
+      ;;
+  esac
 }
 
 if [ "$rollback" = true ]; then
@@ -88,6 +105,37 @@ if [ "$rollback" = true ]; then
   exit 0
 fi
 
+resolve_latest_version() {
+  if [ -n "${JACU_LATEST_TAG:-}" ]; then
+    printf '%s\n' "$JACU_LATEST_TAG"
+    return 0
+  fi
+  if command -v gh >/dev/null 2>&1; then
+    if tag="$(gh release view -R "$release_repo" --json tagName -q .tagName 2>/dev/null)" && [ -n "$tag" ]; then
+      printf '%s\n' "$tag"
+      return 0
+    fi
+  fi
+  api_url="https://api.github.com/repos/${release_repo}/releases/latest"
+  body="$(curl --fail --location --silent --show-error "$api_url")" || {
+    echo "install.sh: could not resolve the latest release from github.com" >&2
+    exit 1
+  }
+  tag="$(printf '%s\n' "$body" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)"
+  if [ -z "$tag" ]; then
+    echo "install.sh: latest release response did not include tag_name" >&2
+    exit 1
+  fi
+  printf '%s\n' "$tag"
+}
+
+if [ -z "$version" ] || [ "$version" = latest ]; then
+  if [ -n "${JACU_RELEASE_DIR:-}" ] && [ -z "${JACU_LATEST_TAG:-}" ]; then
+    echo "install.sh: --version vX.Y.Z is required when JACU_RELEASE_DIR is set" >&2
+    exit 2
+  fi
+  version="$(resolve_latest_version)"
+fi
 if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
   echo "install.sh: --version must be a semver tag vX.Y.Z" >&2
   exit 2
@@ -105,19 +153,23 @@ case "$(uname -m)" in
 esac
 
 asset="jacu_${version#v}_${os_name}_${arch_name}.tar.gz"
-base_url="${JACU_RELEASE_BASE_URL:-https://github.com/jacu-dev/jacu-harness/releases/download/${version}}"
+base_url="${JACU_RELEASE_BASE_URL:-https://github.com/${release_repo}/releases/download/${version}}"
 bundle="checksums.txt.sigstore.json"
-identity_regexp="${JACU_COSIGN_IDENTITY_REGEXP:-^https://github.com/jacu-dev/jacu-harness/.github/workflows/release.yml@refs/tags/v.*$}"
+identity_regexp="${JACU_COSIGN_IDENTITY_REGEXP:-^https://github.com/${release_repo}/.github/workflows/release.yml@refs/tags/v.*$}"
 
 if [ "$dry_run" = true ]; then
   echo "dry-run: download $base_url/$asset"
   echo "dry-run: verify $bundle and sha256 for $asset"
   echo "dry-run: backup $target to $previous and install into $prefix"
-  echo "dry-run: link $prefix/jacu -> jacu"
+  echo "dry-run: link $prefix/jacu-mcp -> jacu"
   exit 0
 fi
 
-for command_name in curl cosign shasum tar install; do
+required_commands=(cosign shasum tar install)
+if [ -z "${JACU_RELEASE_DIR:-}" ]; then
+  required_commands+=(curl)
+fi
+for command_name in "${required_commands[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "install.sh: required command missing: $command_name" >&2
     exit 1
@@ -130,23 +182,29 @@ fi
 
 download_dir="$(mktemp -d)"
 trap 'rm -rf "$download_dir"' EXIT
-# The repository is private, so the anonymous GitHub endpoint answers 404 for
-# every asset. Trying it first cost three 404s per install and printed a
-# "download failed" line before the path that actually works. gh goes first
-# whenever it is available and the caller did not override the base URL;
-# curl stays as the fallback for a custom or public mirror.
+
+# Public GitHub Releases are fetched with curl. JACU_RELEASE_DIR is the
+# offline path (assets already on disk). gh is a fallback for the same
+# public repository when anonymous download is blocked.
 fetch() {
   file_name="$1"
-  if [ -z "${JACU_RELEASE_BASE_URL:-}" ] && command -v gh >/dev/null 2>&1; then
-    if gh release download "$version" -R jacu-dev/jacu -p "$file_name" -D "$download_dir" 2>/dev/null; then
-      return 0
+  if [ -n "${JACU_RELEASE_DIR:-}" ]; then
+    if [ ! -f "$JACU_RELEASE_DIR/$file_name" ]; then
+      echo "install.sh: local asset missing: $JACU_RELEASE_DIR/$file_name" >&2
+      exit 1
     fi
-    echo "install.sh: gh could not fetch $file_name; falling back to a direct download" >&2
+    cp "$JACU_RELEASE_DIR/$file_name" "$download_dir/$file_name"
+    return 0
   fi
   if curl --fail --location --silent --show-error "$base_url/$file_name" -o "$download_dir/$file_name"; then
     return 0
   fi
-  echo "install.sh: download failed for $file_name (private repo? run '"'"'gh auth login'"'"' or set JACU_RELEASE_BASE_URL)" >&2
+  if [ -z "${JACU_RELEASE_BASE_URL:-}" ] && command -v gh >/dev/null 2>&1; then
+    if gh release download "$version" -R "$release_repo" -p "$file_name" -D "$download_dir"; then
+      return 0
+    fi
+  fi
+  echo "install.sh: download failed for $file_name (unreachable host: $(release_host "$base_url"))" >&2
   exit 1
 }
 fetch checksums.txt
@@ -176,7 +234,7 @@ if [ ! -f "$binary" ] || [ -L "$binary" ]; then
 fi
 
 mkdir -p "$prefix"
-if [ -f "$target" ]; then
+if [ -f "$target" ] && [ ! -L "$target" ]; then
   install -m 0755 "$target" "$previous"
 fi
 install -m 0755 "$binary" "$target"

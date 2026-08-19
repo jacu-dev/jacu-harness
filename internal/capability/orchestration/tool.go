@@ -60,7 +60,7 @@ func RegisterTool(server *mcp.Server, root string, manager *verify.TaskManager) 
 			ReadOnly: false, Idempotent: false, OpenWorld: false,
 			Timeout: 15 * time.Minute, MaxInputBytes: 256 * 1024, MaxOutputBytes: 16 * 1024,
 		},
-		Handler: func(ctx context.Context, rawInput json.RawMessage) (capabilityruntime.Result, error) {
+		Handler: capabilityruntime.RequireWorkTree(root, func(ctx context.Context, rawInput json.RawMessage) (capabilityruntime.Result, error) {
 			var input Input
 			if err := json.Unmarshal(rawInput, &input); err != nil {
 				return capabilityruntime.Result{}, err
@@ -90,7 +90,7 @@ func RegisterTool(server *mcp.Server, root string, manager *verify.TaskManager) 
 				status = "ok"
 			}
 			return capabilityruntime.Result{Status: status, Summary: flow.Summary, Data: ToolData{Flow: &flow}, Artifacts: []string{}, Warnings: []string{}, NextActions: []string{}}, nil
-		},
+		}),
 	}
 
 	mcp.AddTool(server, &mcp.Tool{

@@ -59,7 +59,7 @@ func RegisterTool(server *mcp.Server, root string) {
 			MaxInputBytes:  16 * 1024,
 			MaxOutputBytes: 32 * 1024,
 		},
-		Handler: func(_ context.Context, _ json.RawMessage) (capabilityruntime.Result, error) {
+		Handler: capabilityruntime.RequireWorkTree(root, func(_ context.Context, _ json.RawMessage) (capabilityruntime.Result, error) {
 			report, err := headlessreport.BuildAudit(root)
 			if err != nil {
 				return capabilityruntime.Result{}, err
@@ -96,7 +96,7 @@ func RegisterTool(server *mcp.Server, root string) {
 				},
 				Artifacts: []string{}, Warnings: []string{}, NextActions: []string{},
 			}, nil
-		},
+		}),
 	}
 
 	mcp.AddTool(server, &mcp.Tool{

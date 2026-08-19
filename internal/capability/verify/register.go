@@ -67,7 +67,7 @@ func registerVerify(server *mcp.Server, root string, manager *TaskManager) {
 			MaxInputBytes:  16 * 1024,
 			MaxOutputBytes: maxOutputBytes,
 		},
-		Handler: func(ctx context.Context, rawInput json.RawMessage) (capabilityruntime.Result, error) {
+		Handler: capabilityruntime.RequireWorkTree(root, func(ctx context.Context, rawInput json.RawMessage) (capabilityruntime.Result, error) {
 			var input Input
 			if err := json.Unmarshal(rawInput, &input); err != nil {
 				return capabilityruntime.Result{}, err
@@ -124,7 +124,7 @@ func registerVerify(server *mcp.Server, root string, manager *TaskManager) {
 			}
 			result := Verify(ctx, root, input)
 			return capabilityResult(result), nil
-		},
+		}),
 	}
 
 	tool := &mcp.Tool{

@@ -24,7 +24,16 @@ pack (e.g. `claude-code`) that registers `jacu serve` for that host.
 
 ## init
 
-Install skills and emit/apply a host pack into named paths (SDD-017).
+Install skills and emit/apply a host pack into named paths.
+
+```
+jacu init --host <claude-code|claude-desktop|codex|cursor|generic|opencode>
+         [--skills-dir DIR] [--config FILE] [--from DIR] [--repo PATH]
+         [--dry-run] [--json]
+```
+
+Without `--config`, the pack is printed with the exact target path and that
+file is not edited. `--json` prints only a JSON object.
 
 ## status
 

@@ -5,4 +5,5 @@ coverage.out
 *.prof
 .DS_Store
 /.jacu/bin/
-/.cursor/
+/.cursor/*
+!/.cursor/install.sh

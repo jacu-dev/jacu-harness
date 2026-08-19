@@ -128,6 +128,7 @@ func applyInit(opts initOptions, stdout io.Writer) error {
 	if packErr != nil {
 		return packErr
 	}
+	configPath := hostConfigHint(opts.Host, home)
 	configAction := "printed"
 	if opts.Config != "" {
 		if !opts.DryRun {
@@ -136,24 +137,30 @@ func applyInit(opts initOptions, stdout io.Writer) error {
 			}
 		}
 		configAction = "written"
-	} else if _, printErr := fmt.Fprint(stdout, pack); printErr != nil {
-		return printErr
-	} else if _, hintErr := fmt.Fprintf(stdout, "write the snippet above to %s (pass --config to apply it)\n", hostConfigHint(opts.Host, home)); hintErr != nil {
-		return hintErr
+		configPath = opts.Config
+	} else if !opts.JSON {
+		if _, printErr := fmt.Fprint(stdout, pack); printErr != nil {
+			return printErr
+		}
+		if _, hintErr := fmt.Fprintf(stdout, "write the snippet above to %s (pass --config to apply it)\n", configPath); hintErr != nil {
+			return hintErr
+		}
 	}
 
 	doctorText := doctorReport()
-	if !opts.JSON {
-		_, printErr := fmt.Fprint(stdout, doctorText)
-		return printErr
+	if opts.JSON {
+		result := map[string]any{
+			"host":        opts.Host,
+			"skills_dir":  skillsDir,
+			"config":      configAction,
+			"config_path": configPath,
+			"pack":        pack,
+			"doctor":      strings.TrimSpace(doctorText),
+		}
+		return json.NewEncoder(stdout).Encode(result)
 	}
-	result := map[string]any{
-		"host":       opts.Host,
-		"skills_dir": skillsDir,
-		"config":     configAction,
-		"doctor":     strings.TrimSpace(doctorText),
-	}
-	return json.NewEncoder(stdout).Encode(result)
+	_, printErr := fmt.Fprint(stdout, doctorText)
+	return printErr
 }
 
 type skillFile struct {

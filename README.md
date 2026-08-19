@@ -9,13 +9,15 @@ SDD-009 — a Go **library**. MCP is a surface, not the identity.
 **It has no network, no credential and no deploy.** If JACU fails in every way it can,
 production does not fall. That boundary is the design, not an omission.
 
-Install from a verified GitHub Release or with:
+Install with one command:
 
 ```sh
-go install github.com/jacu-dev/jacu-harness/cmd/jacu@latest
+go install github.com/jacu-dev/jacu-harness/cmd/jacu@v0.2.0
 ```
 
-See [docs/install.md](docs/install.md) and [docs/distribution.md](docs/distribution.md).
+That is the recommended path (module checksums, no remote shell). There is no
+`curl | sh` installer. Signed binaries and host registration:
+[docs/install.md](docs/install.md).
 
 ## Quick start
 
@@ -24,8 +26,8 @@ jacu doctor
 jacu serve
 ```
 
-For a host configuration, use `jacu doctor --emit claude-code` (or another
-supported host pack).
+For a host configuration, use `jacu init --host cursor` (or another supported
+host) or `jacu doctor --emit claude-code`.
 
 ## Core MCP workflow
 
