@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+# Snapshot of the formula GoReleaser writes into the GitHub Release.
+# The installable tap is jacu-dev/homebrew-jacu (brew install jacu-dev/jacu/jacu).
 
 class Jacu < Formula
   desc "Governance harness for coding agents"

@@ -21,8 +21,20 @@ if grep -Ehn '^\s*(curl|wget).+\|[[:space:]]*(ba)?sh' README.md docs/install.md 
   echo "release test: living install docs must not teach curl|sh" >&2
   exit 1
 fi
-if ! grep -q 'brew install' README.md || ! grep -q 'brew install' docs/install.md; then
-  echo "release test: living install docs must teach brew install" >&2
+if ! grep -q 'brew install jacu-dev/jacu/jacu' README.md || ! grep -q 'brew install jacu-dev/jacu/jacu' docs/install.md; then
+  echo "release test: living install docs must teach brew install jacu-dev/jacu/jacu" >&2
+  exit 1
+fi
+if ! grep -q '^brews:' .goreleaser.yaml || ! grep -q 'homebrew-jacu' .goreleaser.yaml; then
+  echo "release test: GoReleaser must generate the Homebrew tap formula" >&2
+  exit 1
+fi
+if ! grep -q 'scripts/install.sh' .goreleaser.yaml; then
+  echo "release test: GoReleaser must attach scripts/install.sh to the release" >&2
+  exit 1
+fi
+if ! grep -q 'release-assets/jacu.rb' .github/workflows/release.yml; then
+  echo "release test: release workflow must publish the generated brew formula" >&2
   exit 1
 fi
 if ! grep -q 'exclude-drafts' scripts/install.sh; then

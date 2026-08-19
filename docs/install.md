@@ -5,19 +5,20 @@ Pick one. There is no `curl | sh` installer.
 ## Homebrew
 
 ```bash
-brew install --formula https://raw.githubusercontent.com/jacu-dev/jacu-harness/main/Formula/jacu.rb
+brew install jacu-dev/jacu/jacu
 ```
 
-That is the one-command path on macOS and Linuxbrew. To follow updates from
-this repository instead of a raw URL:
+That is the one-command path on macOS and Linuxbrew. Homebrew auto-taps
+[`jacu-dev/homebrew-jacu`](https://github.com/jacu-dev/homebrew-jacu).
+GoReleaser writes `jacu.rb` into the GitHub Release; the tap syncs that
+file. `brew` then fetches the signed tarball for your OS/arch and
+installs `jacu` plus the compatibility symlink `jacu-mcp`.
+
+Same-repo fallback (this tree's `Formula/jacu.rb`):
 
 ```bash
-brew tap jacu-dev/harness https://github.com/jacu-dev/jacu-harness
-brew install jacu
+brew install --formula https://raw.githubusercontent.com/jacu-dev/jacu-harness/main/Formula/jacu.rb
 ```
-
-`brew` fetches the signed GitHub Release tarball for your OS/arch and
-installs `jacu` plus the compatibility symlink `jacu-mcp`.
 
 ## curl
 

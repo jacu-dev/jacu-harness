@@ -6,8 +6,8 @@ All notable changes to JACU are recorded here. The format follows Keep a Changel
 
 ### Added
 
-- Homebrew formula (`Formula/jacu.rb`) for one-command
-  `brew install --formula` from this repository.
+- Homebrew tap `jacu-dev/homebrew-jacu`: `brew install jacu-dev/jacu/jacu`.
+  GoReleaser writes `jacu.rb`; the tap syncs it from the GitHub Release.
 - Public tree of JACU, a governance harness for coding agents.
 
 ### Fixed

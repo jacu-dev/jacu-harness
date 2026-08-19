@@ -29,3 +29,30 @@ archives:
 checksum:
   name_template: checksums.txt
   algorithm: sha256
+
+release:
+  extra_files:
+    - glob: ./scripts/install.sh
+      name_template: install.sh
+
+# OSS Homebrew formula (not a Cask). skip_upload: the signed GitHub Release
+# carries jacu.rb; jacu-dev/homebrew-jacu syncs it. GITHUB_TOKEN cannot push
+# to another repository.
+brews:
+  - name: jacu
+    ids:
+      - jacu-archives
+    homepage: https://github.com/jacu-dev/jacu-harness
+    description: Governance harness for coding agents
+    license: MIT
+    directory: Formula
+    skip_upload: true
+    url_template: "https://github.com/jacu-dev/jacu-harness/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    repository:
+      owner: jacu-dev
+      name: homebrew-jacu
+    install: |
+      bin.install "jacu"
+      bin.install_symlink "jacu" => "jacu-mcp"
+    test: |
+      assert_match version.to_s, shell_output("#{bin}/jacu version")
