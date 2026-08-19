@@ -6,6 +6,8 @@ Start with the repository [README](../README.md), then:
 
 - [install.md](install.md) — build, install, register with a host.
 - [distribution.md](distribution.md) — releases, verification, channels.
+- [release.md](release.md) — owner keystroke to cut `v0.2.0`.
+- [cursor-cloud.md](cursor-cloud.md) — Cursor and cloud VM bootstrap.
 - [reference/cli.md](reference/cli.md) — every `jacu` subcommand.
 - [reference/mcp-tools.md](reference/mcp-tools.md) — the frozen MCP tool surface.
 

@@ -11,3 +11,22 @@ All notable changes to JACU are recorded here. The format follows Keep a Changel
 ## [0.2.0] - unreleased
 
 First public release. Private lineage: the former `jacu-mcp` tree, imported as a curated history without copying authorship traces.
+
+### Added
+
+- Public signed GitHub Release install (`scripts/install.sh --version`), with
+  offline `JACU_RELEASE_DIR`, checksum + Sigstore verification, rollback, and
+  a `jacu-mcp` compatibility symlink.
+- `jacu init --host` for Claude Code, Claude Desktop, Codex, Cursor, OpenCode
+  and generic stdio hosts. `--json` is exclusive machine-readable output.
+- Cursor / cloud VM bootstrap: `scripts/cloud-install.sh` and
+  `.cursor/install.sh`. Failed fetches name the unreachable host.
+- Repo-scoped MCP tools return `blocked` when `jacu serve` is not inside a
+  git work tree.
+- Hosteval catalogue assert: a truncated or empty tool description fails
+  naming the tool and the observed length.
+
+### Changed
+
+- Installer fetches the public `jacu-dev/jacu-harness` release first via curl.
+  `gh` is a fallback for the same repository.
