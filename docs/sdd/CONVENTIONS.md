@@ -13,7 +13,7 @@ Requirement deltas use exactly `ADDED`, `MODIFIED`, or `REMOVED`. A delta may na
 Close a change with manual `git mv` into `docs/sdd/archive/<YYYY-MM-DD>-<slug>/`, regenerate its lock, update living capability specs, and record the execution report in `docs/relatorios/`. SDD-001 does not provide an `sdd archive` command.
 
 ## Executor
-The ten executor rules are defined once in `docs/sdd/EXECUTOR.md`; executors must follow that document and it remains the source of truth. Per-change trap lists live in that change's own folder and never restate the rules.
+The executor rules are maintained outside the public tree. Per-change trap lists live in that change's own folder and never restate them.
 
 ## Spec authoring
 Requirements transcribe exact limits, enums, orderings and message strings from the Go code; the code and its tests are the source of truth, not the plan documents. Every tool requirement states its behaviour inside the shared envelope instead of respecifying the envelope. Mutating behaviour requires at least one security scenario: deny-by-default, identity validation, or scope enforcement. A new dependency requires an ADR.

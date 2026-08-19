@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report (private)
+    url: https://github.com/jacu-dev/jacu-harness/security/advisories/new
+    about: Never open a public issue for a credential or an exploitable defect. See SECURITY.md.

@@ -1,0 +1,55 @@
+name: Bug report
+description: Something JACU does is wrong, crashes, or violates a documented guarantee.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Security defects do NOT go here. Use
+        [private vulnerability reporting](https://github.com/jacu-dev/jacu-harness/security/advisories/new).
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `jacu version`. For a source build, the commit SHA.
+      placeholder: v0.2.0
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Surface and host
+      description: CLI, or MCP with which host (Claude Code, Codex, Cursor, other stdio client).
+      placeholder: MCP via Claude Code
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS and architecture
+      placeholder: macOS arm64
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Exact commands or tool calls, in order, from a clean state.
+      placeholder: |
+        1. jacu_mission_compile with ...
+        2. jacu_workspace_open ...
+        3. jacu_verify returns ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+      description: What the docs or the tool contract say should happen, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: state
+    attributes:
+      label: Diagnostics
+      description: Relevant output of `jacu doctor`, `jacu status --json` or `jacu storage inspect --json`. Redact anything private.

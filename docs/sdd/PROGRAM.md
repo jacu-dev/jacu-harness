@@ -69,7 +69,7 @@ One SDD open at a time. Order is dependency, not preference.
 | 003 | `clean-exit` | `sdd close`, receipt, closing gate | merged · **eval and ADR-021 open** |
 | 004 | `preflight` | checklist over 8 interruption classes | merged · **eval and ADR-022 open** |
 | 008 | `audit-hardening` | audit remediation, bounded storage | merged · **signed tag, P6-P8 open** |
-| **016** | **`open-source-export`** | sanitize, rename, public repo `jacu-harness` | **next** · ADR-028 accepted · plan: `docs/plans/one-shot-open-source.md` |
+| **016** | **`open-source-export`** | sanitize, rename, public repo `jacu-harness` | **next** · ADR-028 accepted |
 | 017 | `installable-cloud` | release proof P6-P8, `jacu init`, cloud bootstrap, cwd guard | queued · after 016 |
 | 009 | `core-surface` | `Run()` in 6 capabilities, CLI parity, `--json`, `--events` | queued · after 017 · design ready; rename and open decisions resolved by ADR-028 and SDD-016 |
 | 010 | `repo-governance` | `.jacu/protected.json`, per-run `JACU_HOME`, `status` off the write gate, flow fan-out cap | queued |
@@ -116,4 +116,3 @@ statistical test. Becomes a task of 015.
 `docs/evals/` — the sheets the owner-only gates fill in
 `docs/relatorios/` — closed-phase evidence, never rewritten
 `docs/design/` — design inputs for queued SDDs, promoted into `docs/sdd/NNN-slug/` when each opens
-`docs/plans/one-shot-open-source.md` — execution contract of the open-source program (ADR-028)
