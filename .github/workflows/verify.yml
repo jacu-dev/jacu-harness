@@ -67,7 +67,7 @@ jobs:
         run: |
           set -euo pipefail
           go install golang.org/x/vuln/cmd/govulncheck@v1.7.0
-          "$(go env GOPATH)/bin/govulncheck" ./
+          "$(go env GOPATH)/bin/govulncheck" ./...
 
       - name: scripts/hygiene.sh
         if: hashFiles('scripts/hygiene.sh') != ''
