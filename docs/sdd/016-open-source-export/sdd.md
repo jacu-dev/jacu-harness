@@ -140,12 +140,22 @@ Delta: ADDED
 ### Requirement: go.mod floor supports restricted VMs
 
 The system SHALL set the `go` directive to the lowest version that compiles and
-passes `go test ./... -race`, with no toolchain pin.
+passes `go test ./... -race`, with no toolchain pin. The floor is a floor: CI
+SHALL build it with the newest patch of the floor's own minor line, pinned in
+`.go-version`, and SHALL NOT resolve the toolchain from `go.mod`.
 
 #### Scenario: build on an older preinstalled toolchain
 
 - **WHEN** the tree is built with the floor Go version and `GOTOOLCHAIN=local`
 - **THEN** the build and tests succeed without downloading a toolchain
+
+#### Scenario: the floor's own patch releases are not the build toolchain
+
+- **WHEN** the floor names a patch release that a later patch has superseded
+- **THEN** CI builds with the later patch and the claim still holds, because
+  patch releases add no API and the `go` directive keeps the language version
+  at the floor; resolving the toolchain from `go.mod` instead would pin CI to
+  a release whose own advisories `govulncheck` reports as findings
 
 Delta: ADDED
 
@@ -168,9 +178,9 @@ Delta: ADDED
 | T2 | Trace inventory and product/trace classification, fix all traces | tree-wide | `bash scripts/export/trace-scan.sh` | done | `internal/provenance` + `provenance-lint` in verify.yml; traces must be 0 in the exported tree |
 | T3 | Export script: tree export minus ADR-028 §6 exclusions | `scripts/export/**` | `bash scripts/export/export.sh --dry-run` | done | `internal/export` + `cmd/jacu-export`; wrappers under `scripts/export/` (do not ship) |
 | T4 | Mechanical rename (module, cmd dir, binary, user dir shim) | tree-wide | `bash scripts/verify.sh` | done | rename is the export transform; private tree unchanged; `TestExportRealHead` |
-| T5 | go.mod floor lowering | `go.mod` | `GOTOOLCHAIN=local go test ./... -race` | done | `go 1.25.0`, no `toolchain` line; SDK binding recorded in ADR-028 §7 |
+| T5 | go.mod floor lowering | `go.mod` | `GOTOOLCHAIN=local go test ./... -race` | done | `go 1.25.0`, no `toolchain` line; SDK binding recorded in ADR-028 §7; the CI toolchain lives in `.go-version` (go1.25.13) because `setup-go` reads a floor as an exact version |
 | T6 | Translate living PT-BR docs; write README/CONTRIBUTING/SECURITY/CHANGELOG | `docs/**`, root | `bash scripts/hygiene.sh` | done | English overlays for shipping ADRs 001–020, threat-model and design docs; `scripts/host-smoke/` excluded as owner-present eval evidence; `PortugueseInventory` empty is a `TestExportRealHead` gate; README/SECURITY overlays and in-tree English CONTRIBUTING/CHANGELOG already existed |
-| T7 | Vendor verify workflow + provenance-lint + commit check | `.github/**` | first public PR green | in-progress | `.github/workflows/verify.yml` vendored; `ci.yml` calls it; public PR remains owner |
+| T7 | Vendor verify workflow + provenance-lint + commit check | `.github/**` | first public PR green | in-progress | `.github/workflows/verify.yml` vendored; `ci.yml` calls it; `.go-version` pins the gate's toolchain in verify, release and weekly; public PR remains owner |
 | T8 | Curated import series; archive private repo with ARCHIVED.md | new repo | `git log` scan = zero traces | todo | `docs/export/import-playbook.md` + `internal/export/commitplan.go` |
 
 ## Done
