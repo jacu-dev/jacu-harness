@@ -33,7 +33,10 @@ would have been leak-prone and would have invalidated signed tags.
    The `go` directive is `1.25.0` with no toolchain pin, bound by
    `modelcontextprotocol/go-sdk v1.7.0`.
 8. **CI self-containment.** Verify is vendored. The required check name
-   `verify / verify` is preserved.
+   `verify / verify` is preserved. The CI toolchain is pinned in `.go-version`
+   at the newest patch of the floor's own minor line, not read from `go.mod`:
+   the `go` directive in §7 is a floor, and `setup-go` reads a floor as an
+   exact version. `go.mod` keeps the floor and stays free of a toolchain line.
 
 ## Consequences
 

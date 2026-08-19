@@ -54,9 +54,10 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+      # The toolchain comes from .go-version, not go.mod; see verify.yml.
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
-          go-version-file: go.mod
+          go-version-file: .go-version
           cache: true
       - name: Fuzz ${{ matrix.shard }}
         run: |
@@ -86,9 +87,11 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+      # The toolchain comes from .go-version, not go.mod; see verify.yml. This
+      # job is what catches the next stdlib advisory against that pin.
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
-          go-version-file: go.mod
+          go-version-file: .go-version
           cache: true
       # Pinned, not @latest: an unpinned tool is both a rebuild every run and a
       # third party choosing what executes in this job.
@@ -122,7 +125,7 @@ jobs:
           (cd /tmp && sha256sum --ignore-missing --check gitleaks_checksums.txt | grep 'gitleaks_8.30.1_linux_x64.tar.gz: OK')
           tar -xzf "/tmp/${archive}" -C /tmp gitleaks
           sudo install -m 0755 /tmp/gitleaks /usr/local/bin/gitleaks
-      - name: Scan de segredos (histórico completo)
+      - name: Full-history secret scan
         run: gitleaks git . --redact -v
 
   report:
