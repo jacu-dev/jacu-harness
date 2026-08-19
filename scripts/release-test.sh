@@ -89,6 +89,14 @@ fi
 PATH="$fakebin:$PATH" JACU_RELEASE_BASE_URL="file://$release" bash scripts/install.sh --version "$version" --prefix "$prefix"
 assert_installed "$prefix" $'#!/bin/sh\nold'
 
+latest_prefix="$test_root/latest-prefix"
+PATH="$fakebin:$PATH" JACU_RELEASE_DIR="$release" JACU_LATEST_TAG="$version" bash scripts/install.sh --prefix "$latest_prefix"
+assert_installed "$latest_prefix" $'#!/bin/sh\nold'
+if PATH="$fakebin:$PATH" JACU_RELEASE_DIR="$release" bash scripts/install.sh --prefix "$test_root/need-version"; then
+  echo "release test: omitted --version was accepted with JACU_RELEASE_DIR" >&2
+  exit 1
+fi
+
 printf '#!/bin/sh\nnew\n' >"$test_root/stage/jacu"
 tar -czf "$release/$asset" -C "$test_root/stage" jacu
 (cd "$release" && shasum -a 256 "$asset" > checksums.txt)

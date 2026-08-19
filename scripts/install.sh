@@ -9,10 +9,11 @@ release_repo="jacu-dev/jacu-harness"
 
 usage() {
   cat >&2 <<'EOF'
-usage: install.sh --version vX.Y.Z [--prefix DIR] [--dry-run]
+usage: install.sh [--version vX.Y.Z|latest] [--prefix DIR] [--dry-run]
        install.sh --rollback [--prefix DIR] [--dry-run]
 
 Download a signed GitHub Release, verify it, then install jacu.
+Omit --version (or pass latest) to install the newest public release.
 There is no curl|sh installer. Review this script, then run it.
 
 Offline assets: set JACU_RELEASE_DIR to a directory that already contains
@@ -104,6 +105,37 @@ if [ "$rollback" = true ]; then
   exit 0
 fi
 
+resolve_latest_version() {
+  if [ -n "${JACU_LATEST_TAG:-}" ]; then
+    printf '%s\n' "$JACU_LATEST_TAG"
+    return 0
+  fi
+  if command -v gh >/dev/null 2>&1; then
+    if tag="$(gh release view -R "$release_repo" --json tagName -q .tagName 2>/dev/null)" && [ -n "$tag" ]; then
+      printf '%s\n' "$tag"
+      return 0
+    fi
+  fi
+  api_url="https://api.github.com/repos/${release_repo}/releases/latest"
+  body="$(curl --fail --location --silent --show-error "$api_url")" || {
+    echo "install.sh: could not resolve the latest release from github.com" >&2
+    exit 1
+  }
+  tag="$(printf '%s\n' "$body" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)"
+  if [ -z "$tag" ]; then
+    echo "install.sh: latest release response did not include tag_name" >&2
+    exit 1
+  fi
+  printf '%s\n' "$tag"
+}
+
+if [ -z "$version" ] || [ "$version" = latest ]; then
+  if [ -n "${JACU_RELEASE_DIR:-}" ] && [ -z "${JACU_LATEST_TAG:-}" ]; then
+    echo "install.sh: --version vX.Y.Z is required when JACU_RELEASE_DIR is set" >&2
+    exit 2
+  fi
+  version="$(resolve_latest_version)"
+fi
 if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
   echo "install.sh: --version must be a semver tag vX.Y.Z" >&2
   exit 2
