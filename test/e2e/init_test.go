@@ -42,7 +42,7 @@ func TestInitConfiguresEachNamedHostThroughTheShippedBinary(t *testing.T) {
 			if _, err := os.Stat(filepath.Join(skills, "using-jacu", "SKILL.md")); err != nil {
 				t.Fatalf("init %s did not install skills: %v", host, err)
 			}
-			raw, err := os.ReadFile(config)
+			raw, err := os.ReadFile(config) // #nosec G304 -- config is under this test's TempDir.
 			if err != nil {
 				t.Fatalf("init %s did not write named config: %v", host, err)
 			}
