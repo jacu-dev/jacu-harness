@@ -53,8 +53,7 @@ cd "$root"
 
 install_legacy_alias() {
   dest_dir="$1"
-  alias_path="$dest_dir/jacu"
-  previous_path="$dest_dir/jacu.previous"
+  alias_path="$dest_dir/jacu-mcp"
   run() {
     if [ -w "$dest_dir" ]; then
       "$@"
@@ -69,18 +68,13 @@ install_legacy_alias() {
       echo "cloud-install.sh: refusing to replace directory $alias_path" >&2
       return 1
     fi
-    if [ ! -e "$previous_path" ] || [ -L "$previous_path" ]; then
-      run install -m 0755 "$alias_path" "$previous_path" || {
-        echo "WARN: could not preserve $alias_path as $previous_path" >&2
-      }
-    fi
     if ! run rm -f "$alias_path"; then
       echo "WARN: could not replace $alias_path with a symlink to jacu" >&2
       return 0
     fi
   fi
   if ! run ln -sfn jacu "$alias_path"; then
-    echo "WARN: could not create $alias_path; configs that still invoke jacu need PATH/jacu" >&2
+    echo "WARN: could not create $alias_path; configs that still invoke jacu-mcp need PATH/jacu" >&2
   fi
 }
 
