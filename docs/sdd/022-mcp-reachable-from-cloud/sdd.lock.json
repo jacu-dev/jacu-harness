@@ -1,0 +1,45 @@
+{
+  "sdd_id": "sdd_5623ba898a3bdb11",
+  "content_sha256": "5623ba898a3bdb1114e10a1d258caffbd94bab67e446834eb36c3cd3490f949c",
+  "requirements": [
+    {
+      "name": "Cloud sessions approve the project server",
+      "delta": "ADDED"
+    },
+    {
+      "name": "The repository declares the MCP server",
+      "delta": "ADDED"
+    },
+    {
+      "name": "The session reports reachability",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`bash scripts/cloud-install-eval.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T2",
+      "verify": "`git check-ignore -v .cursor/mcp.json`",
+      "status": "done"
+    },
+    {
+      "number": "T3",
+      "verify": "`bash scripts/cloud-install-eval.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T4",
+      "verify": "manual read of session output",
+      "status": "done"
+    },
+    {
+      "number": "T5",
+      "verify": "`bash scripts/verify.sh`",
+      "status": "done"
+    }
+  ]
+}
