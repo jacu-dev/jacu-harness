@@ -1,0 +1,40 @@
+{
+  "sdd_id": "sdd_0cc1aa0f347e8774",
+  "content_sha256": "0cc1aa0f347e877455b4a8211283cc0fcd8f91ad9eec61f36f915d4d26ad092f",
+  "requirements": [
+    {
+      "name": "Docs do not pin a stale release",
+      "delta": "MODIFIED"
+    },
+    {
+      "name": "Formula assertions derive the version",
+      "delta": "MODIFIED"
+    },
+    {
+      "name": "sha256 pins are distinct",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`bash scripts/release-test.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T2",
+      "verify": "`bash scripts/release-test.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T3",
+      "verify": "`grep -rn '0\\.2\\.0'` over instructional docs",
+      "status": "done"
+    },
+    {
+      "number": "T4",
+      "verify": "manual read",
+      "status": "done"
+    }
+  ]
+}
