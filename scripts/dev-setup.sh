@@ -129,6 +129,75 @@ print("dev-setup: approved the jacu MCP server in", path)
 PY
 }
 
+# Cursor Cloud launches stdio servers from ~/.cursor/mcp.json. A leftover
+# `jacu-mcp` command (retired in 0.3.0) becomes spawn ENOENT, so the image
+# phase rewrites that host pack to `jacu serve` without dropping siblings.
+repair_cursor_mcp() {
+  if ! is_remote; then
+    return 0
+  fi
+  config="$HOME/.cursor/mcp.json"
+  mkdir -p "$(dirname "$config")" 2>/dev/null || {
+    note_failure "could not create $(dirname "$config"); Cursor will keep launching whatever host pack it already has"
+    return 0
+  }
+  if ! command -v python3 >/dev/null 2>&1; then
+    note_failure "python3 missing; cannot repair ~/.cursor/mcp.json"
+    return 0
+  fi
+  CONFIG_PATH="$config" python3 - <<'PY' || note_failure "could not repair ~/.cursor/mcp.json"
+import json, os, pathlib
+
+path = pathlib.Path(os.environ["CONFIG_PATH"])
+canonical = {"command": "jacu", "args": ["serve"]}
+data = {}
+if path.exists():
+    try:
+        data = json.loads(path.read_text() or "{}")
+    except json.JSONDecodeError:
+        raise SystemExit("dev-setup: ~/.cursor/mcp.json is not valid JSON; leaving it alone")
+if not isinstance(data, dict):
+    raise SystemExit("dev-setup: ~/.cursor/mcp.json is not a JSON object; leaving it alone")
+
+servers = data.get("mcpServers")
+if not isinstance(servers, dict):
+    servers = {}
+    data["mcpServers"] = servers
+
+def launches_serve(entry):
+    return isinstance(entry, dict) and entry.get("command") == "jacu" and entry.get("args") == ["serve"]
+
+def is_retired(entry):
+    if not isinstance(entry, dict):
+        return False
+    command = entry.get("command")
+    if command == "jacu-mcp":
+        return True
+    if isinstance(command, list) and command and command[0] == "jacu-mcp":
+        return True
+    return False
+
+changed = False
+if "jacu-mcp" in servers:
+    current = servers.get("jacu")
+    if current is not None and not launches_serve(current) and not is_retired(current):
+        raise SystemExit("dev-setup: ~/.cursor/mcp.json already registers a different jacu server; leaving it alone")
+    del servers["jacu-mcp"]
+    changed = True
+
+current = servers.get("jacu")
+if current is None or is_retired(current):
+    servers["jacu"] = canonical
+    changed = True
+elif not launches_serve(current):
+    raise SystemExit("dev-setup: ~/.cursor/mcp.json already registers a different jacu server; leaving it alone")
+
+if changed or not path.exists():
+    path.write_text(json.dumps(data, indent=2) + "\n")
+    print("dev-setup: wrote jacu serve into", path)
+PY
+}
+
 phase_image() {
   : >"$failures"
   echo "dev-setup: image phase"
@@ -148,6 +217,7 @@ phase_image() {
   fi
 
   approve_project_mcp
+  repair_cursor_mcp
 
   echo "$self_hash" >"$stamp" 2>/dev/null || true
   echo "dev-setup: image phase done"
@@ -199,6 +269,13 @@ phase_session() {
     if [ "$approved" = no ]; then
       echo "dev-setup: .mcp.json will sit at 'Pending approval' — a cloned repo cannot approve itself." >&2
     fi
+    cursor_pack=no
+    if [ -f "$HOME/.cursor/mcp.json" ] \
+      && python3 -c 'import json,sys; s=json.load(open(sys.argv[1]))["mcpServers"]["jacu"]; assert s["command"]=="jacu" and s["args"]==["serve"]' \
+        "$HOME/.cursor/mcp.json" 2>/dev/null; then
+      cursor_pack=yes
+    fi
+    echo "dev-setup: Cursor host pack in ~/.cursor/mcp.json: $cursor_pack"
   fi
 
   echo "dev-setup: ready — build with 'go build ./cmd/jacu', verify with 'scripts/verify.sh'"

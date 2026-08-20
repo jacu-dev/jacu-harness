@@ -94,6 +94,154 @@ func TestInitReportsConflictingHostEntryAndChangesNothing(t *testing.T) {
 	}
 }
 
+func TestInitRepointsRetiredAliasCommandToJacuServe(t *testing.T) {
+	t.Parallel()
+	config := filepath.Join(t.TempDir(), "mcp.json")
+	original := []byte(`{"mcpServers":{"stripe":{"url":"https://mcp.stripe.com"},"jacu":{"command":"jacu-mcp"}}}` + "\n")
+	if err := os.WriteFile(config, original, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	stderr := &bytes.Buffer{}
+	code := runInit([]string{"--host", "cursor", "--config", config, "--from", testdataSkills(t), "--skills-dir", t.TempDir()}, &bytes.Buffer{}, stderr)
+	if code != 0 {
+		t.Fatalf("init exit %d: %s", code, stderr.String())
+	}
+	raw, err := os.ReadFile(config) // #nosec G304 -- config is under this test's TempDir.
+	if err != nil {
+		t.Fatal(err)
+	}
+	var parsed map[string]map[string]map[string]any
+	if err := json.Unmarshal(raw, &parsed); err != nil {
+		t.Fatalf("parse written config: %v\n%s", err, raw)
+	}
+	if parsed["mcpServers"]["stripe"]["url"] != "https://mcp.stripe.com" {
+		t.Fatalf("clobbered sibling: %s", raw)
+	}
+	if parsed["mcpServers"]["jacu"]["command"] != "jacu" {
+		t.Fatalf("command = %v; want jacu\n%s", parsed["mcpServers"]["jacu"]["command"], raw)
+	}
+	args, _ := parsed["mcpServers"]["jacu"]["args"].([]any)
+	if len(args) != 1 || args[0] != "serve" {
+		t.Fatalf("args = %#v; want [serve]\n%s", parsed["mcpServers"]["jacu"]["args"], raw)
+	}
+	if _, stillThere := parsed["mcpServers"]["jacu-mcp"]; stillThere {
+		t.Fatalf("retired server key survived: %s", raw)
+	}
+	if _, err := os.Stat(config + ".jacu-init.bak"); err != nil {
+		t.Fatalf("expected backup of the retired config: %v", err)
+	}
+}
+
+func TestInitRepointsRetiredAliasServerKeyToJacuServe(t *testing.T) {
+	t.Parallel()
+	config := filepath.Join(t.TempDir(), "mcp.json")
+	original := []byte(`{"mcpServers":{"jacu-mcp":{"command":"jacu-mcp"}}}` + "\n")
+	if err := os.WriteFile(config, original, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code := runInit([]string{"--host", "cursor", "--config", config, "--from", testdataSkills(t), "--skills-dir", t.TempDir()}, &bytes.Buffer{}, &bytes.Buffer{})
+	if code != 0 {
+		t.Fatal("init refused a retired server key")
+	}
+	raw, err := os.ReadFile(config) // #nosec G304 -- config is under this test's TempDir.
+	if err != nil {
+		t.Fatal(err)
+	}
+	var parsed map[string]map[string]map[string]any
+	if err := json.Unmarshal(raw, &parsed); err != nil {
+		t.Fatalf("parse written config: %v\n%s", err, raw)
+	}
+	if _, stillThere := parsed["mcpServers"]["jacu-mcp"]; stillThere {
+		t.Fatalf("retired server key survived: %s", raw)
+	}
+	if parsed["mcpServers"]["jacu"]["command"] != "jacu" {
+		t.Fatalf("missing jacu entry: %s", raw)
+	}
+}
+
+func TestInitLeavesEquivalentJacuServeEntryAlone(t *testing.T) {
+	t.Parallel()
+	config := filepath.Join(t.TempDir(), "mcp.json")
+	original := []byte(`{"mcpServers":{"jacu":{"type":"stdio","command":"jacu","args":["serve"]}}}` + "\n")
+	if err := os.WriteFile(config, original, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code := runInit([]string{"--host", "cursor", "--config", config, "--from", testdataSkills(t), "--skills-dir", t.TempDir()}, &bytes.Buffer{}, &bytes.Buffer{})
+	if code != 0 {
+		t.Fatal("init treated an equivalent jacu serve entry as a conflict")
+	}
+	got, err := os.ReadFile(config) // #nosec G304 -- config is under this test's TempDir.
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != string(original) {
+		t.Fatalf("rewrote an already-correct entry:\n%s", got)
+	}
+	if _, err := os.Stat(config + ".jacu-init.bak"); err == nil {
+		t.Fatal("wrote a backup even though the file was not modified")
+	}
+}
+
+func TestInitRepointsRetiredCodexAlias(t *testing.T) {
+	t.Parallel()
+	config := filepath.Join(t.TempDir(), "config.toml")
+	original := []byte("[mcp_servers.other]\ncommand = \"keep\"\n\n[mcp_servers.jacu]\ncommand = \"jacu-mcp\"\n")
+	if err := os.WriteFile(config, original, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	stderr := &bytes.Buffer{}
+	code := runInit([]string{"--host", "codex", "--config", config, "--from", testdataSkills(t), "--skills-dir", t.TempDir()}, &bytes.Buffer{}, stderr)
+	if code != 0 {
+		t.Fatalf("init exit %d: %s", code, stderr.String())
+	}
+	got, err := os.ReadFile(config) // #nosec G304 -- config is under this test's TempDir.
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(got)
+	if !strings.Contains(text, `command = "keep"`) {
+		t.Fatalf("clobbered sibling:\n%s", text)
+	}
+	if strings.Contains(text, "jacu-mcp") {
+		t.Fatalf("retired command survived:\n%s", text)
+	}
+	if !strings.Contains(text, `command = "jacu"`) || !strings.Contains(text, `args = ["serve"]`) {
+		t.Fatalf("missing jacu serve:\n%s", text)
+	}
+}
+
+func TestInitRepointsRetiredOpenCodeAlias(t *testing.T) {
+	t.Parallel()
+	config := filepath.Join(t.TempDir(), "opencode.json")
+	original := []byte(`{"mcp":{"jacu-mcp":{"type":"local","command":["jacu-mcp"],"enabled":true}}}` + "\n")
+	if err := os.WriteFile(config, original, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code := runInit([]string{"--host", "opencode", "--config", config, "--from", testdataSkills(t), "--skills-dir", t.TempDir()}, &bytes.Buffer{}, &bytes.Buffer{})
+	if code != 0 {
+		t.Fatal("init refused a retired OpenCode entry")
+	}
+	raw, err := os.ReadFile(config) // #nosec G304 -- config is under this test's TempDir.
+	if err != nil {
+		t.Fatal(err)
+	}
+	var parsed map[string]map[string]map[string]any
+	if err := json.Unmarshal(raw, &parsed); err != nil {
+		t.Fatalf("parse written config: %v\n%s", err, raw)
+	}
+	if _, stillThere := parsed["mcp"]["jacu-mcp"]; stillThere {
+		t.Fatalf("retired server key survived: %s", raw)
+	}
+	entry := parsed["mcp"]["jacu"]
+	if entry["type"] != "local" {
+		t.Fatalf("type = %v; want local\n%s", entry["type"], raw)
+	}
+	cmd, _ := entry["command"].([]any)
+	if len(cmd) != 2 || cmd[0] != "jacu" || cmd[1] != "serve" {
+		t.Fatalf("command = %#v; want [jacu serve]\n%s", entry["command"], raw)
+	}
+}
+
 func TestInitPrintsSnippetWhenConfigIsUnnamed(t *testing.T) {
 	t.Parallel()
 	stdout, stderr := &bytes.Buffer{}, &bytes.Buffer{}

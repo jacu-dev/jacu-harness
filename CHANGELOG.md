@@ -17,6 +17,13 @@ All notable changes to JACU are recorded here. The format follows Keep a Changel
 
 ### Fixed
 
+- `jacu init --config` now rewrites a host pack that still launches the
+  retired `jacu-mcp` command or server key to `jacu serve`, instead of
+  refusing with a conflict. Equivalent `jacu serve` entries (including an
+  extra `"type": "stdio"` field) are left alone. The image phase of
+  `scripts/dev-setup.sh` does the same repair for `~/.cursor/mcp.json` on
+  agent VMs, so a Cursor Cloud session does not `spawn jacu-mcp` after the
+  alias was removed.
 - Release asset collection moved from inline workflow shell into
   `scripts/collect-release-assets.sh`, and is covered by `release-test.sh`
   across every GoReleaser formula layout. The inline version looked for the

@@ -30,6 +30,11 @@ jacu init --host cursor
 jacu init --host cursor --config "$HOME/.cursor/mcp.json"
 ```
 
+`jacu init --config` rewrites a leftover host pack that still names the
+retired binary so the host launches `jacu serve`. On an agent VM the image
+phase of `scripts/dev-setup.sh` does that repair for `~/.cursor/mcp.json`
+without dropping sibling servers.
+
 ## Restricted egress
 
 Release mode talks only to `github.com` (tarball, checksums, Sigstore
