@@ -12,7 +12,9 @@ Go
 GoReleaser builds the four `darwin|linux` × `amd64|arm64` archives and
 the Homebrew formula. Cosign keyless signs `checksums.txt`. The publish
 job attaches `install.sh` and `jacu.rb` and leaves the GitHub Release
-**published** (drafts make `/releases/latest` 404).
+**published** (drafts make `/releases/latest` 404). The Homebrew tap
+never receives a bot push on `main`: sync opens a PR, `verify` checks
+the formula against the signed checksums, and the owner merges.
 
 Install:
 

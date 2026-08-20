@@ -17,6 +17,8 @@ All notable changes to JACU are recorded here. The format follows Keep a Changel
 
 ### Fixed
 
+- Homebrew tap sync opens a pull request instead of pushing `main`, and
+  verifies `jacu.rb` against the signed release checksums.
 - Installer ignores draft GitHub Releases and names a missing published
   release instead of a generic github.com fetch error.
 - Release workflow attaches `install.sh` and publishes the GitHub Release
