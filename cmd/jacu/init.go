@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/jacu-dev/jacu-harness"
@@ -260,58 +261,190 @@ func mergeHostConfig(host, path, pack string) error {
 	return os.WriteFile(path, merged, 0o600)
 }
 
+const retiredMCPCommand = "jacu-mcp"
+
 func mergeExistingConfig(host string, existing []byte, pack string) ([]byte, error) {
 	switch host {
 	case "codex":
-		if strings.Contains(string(existing), "[mcp_servers.jacu]") {
-			if strings.Contains(string(existing), `command = "jacu"`) && strings.Contains(string(existing), `args = ["serve"]`) {
-				return existing, nil
-			}
-			return nil, fmt.Errorf("conflict: %s already registers [mcp_servers.jacu]", host)
-		}
-		out := strings.TrimRight(string(existing), "\n") + "\n\n" + pack
-		return []byte(out), nil
+		return mergeCodexConfig(existing, pack)
 	case "opencode":
-		var current map[string]any
-		if err := json.Unmarshal(existing, &current); err != nil {
-			return nil, fmt.Errorf("parse existing config: %w", err)
-		}
-		mcp, _ := current["mcp"].(map[string]any)
-		if mcp == nil {
-			mcp = map[string]any{}
-			current["mcp"] = mcp
-		}
-		if _, exists := mcp["jacu"]; exists {
-			return nil, fmt.Errorf("conflict: %s already registers mcp.jacu", host)
-		}
-		mcp["jacu"] = map[string]any{"type": "local", "command": []string{"jacu", "serve"}, "enabled": true}
-		return json.MarshalIndent(current, "", "  ")
+		return mergeOpenCodeConfig(host, existing)
 	default:
-		var current map[string]any
-		if err := json.Unmarshal(existing, &current); err != nil {
-			return nil, fmt.Errorf("parse existing config: %w", err)
-		}
-		servers, _ := current["mcpServers"].(map[string]any)
-		if servers == nil {
-			servers = map[string]any{}
-			current["mcpServers"] = servers
-		}
-		if existingJacu, exists := servers["jacu"]; exists {
-			want := map[string]any{"command": "jacu", "args": []any{"serve"}}
-			encodedHave, _ := json.Marshal(existingJacu)
-			encodedWant, _ := json.Marshal(want)
-			if string(encodedHave) == string(encodedWant) {
-				return existing, nil
-			}
-			return nil, fmt.Errorf("conflict: %s already registers mcpServers.jacu", host)
-		}
-		servers["jacu"] = map[string]any{"command": "jacu", "args": []string{"serve"}}
-		out, err := json.MarshalIndent(current, "", "  ")
-		if err != nil {
-			return nil, err
-		}
-		return append(out, '\n'), nil
+		return mergeJSONMCPServers(host, existing)
 	}
+}
+
+func mergeCodexConfig(existing []byte, pack string) ([]byte, error) {
+	text := string(existing)
+	retired := strings.Contains(text, "[mcp_servers."+retiredMCPCommand+"]") || strings.Contains(text, `command = "`+retiredMCPCommand+`"`)
+	if retired {
+		migrated := strings.ReplaceAll(text, "[mcp_servers."+retiredMCPCommand+"]", "[mcp_servers.jacu]")
+		if strings.Contains(migrated, `args = ["serve"]`) {
+			migrated = strings.ReplaceAll(migrated, `command = "`+retiredMCPCommand+`"`, `command = "jacu"`)
+		} else {
+			migrated = strings.ReplaceAll(migrated, `command = "`+retiredMCPCommand+`"`, "command = \"jacu\"\nargs = [\"serve\"]")
+		}
+		return []byte(migrated), nil
+	}
+	if strings.Contains(text, "[mcp_servers.jacu]") {
+		if strings.Contains(text, `command = "jacu"`) && strings.Contains(text, `args = ["serve"]`) {
+			return existing, nil
+		}
+		return nil, fmt.Errorf("conflict: codex already registers [mcp_servers.jacu]")
+	}
+	out := strings.TrimRight(text, "\n") + "\n\n" + pack
+	return []byte(out), nil
+}
+
+func mergeOpenCodeConfig(host string, existing []byte) ([]byte, error) {
+	var current map[string]any
+	if err := json.Unmarshal(existing, &current); err != nil {
+		return nil, fmt.Errorf("parse existing config: %w", err)
+	}
+	mcp, _ := current["mcp"].(map[string]any)
+	if mcp == nil {
+		mcp = map[string]any{}
+		current["mcp"] = mcp
+	}
+	changed, err := applyRetiredServer(mcp, "jacu", canonicalOpenCodeServer(), openCodeLaunchesJacuServe, jsonCommandIsRetired)
+	if err != nil {
+		return nil, fmt.Errorf("conflict: %s already registers mcp.jacu", host)
+	}
+	if !changed {
+		return existing, nil
+	}
+	return json.MarshalIndent(current, "", "  ")
+}
+
+func mergeJSONMCPServers(host string, existing []byte) ([]byte, error) {
+	var current map[string]any
+	if err := json.Unmarshal(existing, &current); err != nil {
+		return nil, fmt.Errorf("parse existing config: %w", err)
+	}
+	servers, _ := current["mcpServers"].(map[string]any)
+	if servers == nil {
+		servers = map[string]any{}
+		current["mcpServers"] = servers
+	}
+	changed, err := applyRetiredServer(servers, "jacu", canonicalJSONServer(), jsonLaunchesJacuServe, jsonCommandIsRetired)
+	if err != nil {
+		return nil, fmt.Errorf("conflict: %s already registers mcpServers.jacu", host)
+	}
+	if !changed {
+		return existing, nil
+	}
+	out, err := json.MarshalIndent(current, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return append(out, '\n'), nil
+}
+
+func canonicalJSONServer() map[string]any {
+	return map[string]any{"command": "jacu", "args": []string{"serve"}}
+}
+
+func canonicalOpenCodeServer() map[string]any {
+	return map[string]any{"type": "local", "command": []string{"jacu", "serve"}, "enabled": true}
+}
+
+func applyRetiredServer(servers map[string]any, key string, canonical map[string]any, launchesServe, isRetired func(any) bool) (bool, error) {
+	changed := false
+	if _, ok := servers[retiredMCPCommand]; ok {
+		if current, exists := servers[key]; exists && !launchesServe(current) && !isRetired(current) {
+			return false, fmt.Errorf("conflict")
+		}
+		delete(servers, retiredMCPCommand)
+		changed = true
+	}
+	if current, exists := servers[key]; exists {
+		if launchesServe(current) {
+			return changed, nil
+		}
+		if isRetired(current) {
+			servers[key] = canonical
+			return true, nil
+		}
+		return false, fmt.Errorf("conflict")
+	}
+	servers[key] = canonical
+	return true, nil
+}
+
+func jsonLaunchesJacuServe(entry any) bool {
+	object, ok := entry.(map[string]any)
+	if !ok {
+		return false
+	}
+	command, _ := object["command"].(string)
+	if command != "jacu" {
+		return false
+	}
+	return jsonStringListEquals(object["args"], "serve")
+}
+
+func openCodeLaunchesJacuServe(entry any) bool {
+	object, ok := entry.(map[string]any)
+	if !ok {
+		return false
+	}
+	return jsonStringListEquals(object["command"], "jacu", "serve")
+}
+
+func jsonCommandIsRetired(entry any) bool {
+	object, ok := entry.(map[string]any)
+	if !ok {
+		return false
+	}
+	switch command := object["command"].(type) {
+	case string:
+		return filepath.Base(command) == retiredMCPCommand
+	default:
+		return jsonStringListHasRetiredBinary(command)
+	}
+}
+
+// jsonStringList flattens the two shapes an argv list arrives in — []any once
+// encoding/json has decoded a host config, []string when this process built the
+// entry itself — into a single []string. Collapsing the shapes here is what lets
+// the callers below index one slice they have just measured instead of carrying
+// a "these two slices are the same length" invariant across a loop, which is
+// both easier to read and something a bounds checker can actually see.
+// A non-string element decodes to the empty string, so it can never match a
+// wanted argument that is itself non-empty.
+func jsonStringList(value any) ([]string, bool) {
+	switch items := value.(type) {
+	case []any:
+		list := make([]string, 0, len(items))
+		for _, item := range items {
+			text, _ := item.(string)
+			list = append(list, text)
+		}
+		return list, true
+	case []string:
+		return items, true
+	default:
+		return nil, false
+	}
+}
+
+func jsonStringListHasRetiredBinary(value any) bool {
+	items, ok := jsonStringList(value)
+	if !ok {
+		return false
+	}
+	if len(items) == 0 {
+		return false
+	}
+	return filepath.Base(items[0]) == retiredMCPCommand
+}
+
+func jsonStringListEquals(value any, want ...string) bool {
+	items, ok := jsonStringList(value)
+	if !ok {
+		return false
+	}
+	return slices.Equal(items, want)
 }
 
 func doctorReport() string {

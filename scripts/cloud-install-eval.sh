@@ -100,6 +100,10 @@ if ! grep -q '"jacu"' "$approve_home/.claude/settings.json" 2>/dev/null; then
   echo "cloud-install-eval: image phase must approve the jacu MCP server in ~/.claude/settings.json" >&2
   exit 1
 fi
+if ! python3 -c 'import json,sys; s=json.load(open(sys.argv[1]))["mcpServers"]["jacu"]; assert s["command"]=="jacu"; assert s["args"]==["serve"]' "$approve_home/.cursor/mcp.json" 2>/dev/null; then
+  echo "cloud-install-eval: image phase must write ~/.cursor/mcp.json as \`jacu serve\`" >&2
+  exit 1
+fi
 
 # Approving must never clobber an existing settings file.
 keep_home="$test_root/approve-keep"
@@ -109,6 +113,18 @@ HOME="$keep_home" CLAUDE_CODE_REMOTE=true bash "$root/scripts/dev-setup.sh" --ph
 if ! python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); assert d["model"]=="opus"; assert set(d["enabledMcpjsonServers"])>={"other","jacu"}' "$keep_home/.claude/settings.json" 2>/dev/null; then
   echo "cloud-install-eval: approving the MCP server must preserve existing user settings" >&2
   cat "$keep_home/.claude/settings.json" >&2
+  exit 1
+fi
+
+# Host configs left on the retired command must be rewritten. Cursor Cloud
+# launches whatever ~/.cursor/mcp.json says; a leftover `jacu-mcp` is ENOENT.
+repoint_home="$test_root/repoint-home"
+mkdir -p "$repoint_home/.cursor"
+printf '{"mcpServers":{"stripe":{"url":"https://mcp.stripe.com"},"jacu-mcp":{"command":"jacu-mcp"},"jacu":{"command":"jacu-mcp"}}}' >"$repoint_home/.cursor/mcp.json"
+HOME="$repoint_home" CURSOR_AGENT=1 bash "$root/scripts/dev-setup.sh" --phase image >/dev/null 2>&1 || true
+if ! python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); s=d["mcpServers"]; assert s["stripe"]["url"]=="https://mcp.stripe.com"; assert "jacu-mcp" not in s; assert s["jacu"]["command"]=="jacu"; assert s["jacu"]["args"]==["serve"]' "$repoint_home/.cursor/mcp.json" 2>/dev/null; then
+  echo "cloud-install-eval: image phase must repoint a retired jacu-mcp Cursor config to \`jacu serve\`" >&2
+  cat "$repoint_home/.cursor/mcp.json" >&2
   exit 1
 fi
 
