@@ -8,11 +8,23 @@ Pick one. There is no `curl | sh` installer.
 brew install jacu-dev/jacu/jacu
 ```
 
-That is the one-command path on macOS and Linuxbrew. Homebrew auto-taps
-[`jacu-dev/homebrew-jacu`](https://github.com/jacu-dev/homebrew-jacu).
+That first command auto-taps
+[`jacu-dev/homebrew-jacu`](https://github.com/jacu-dev/homebrew-jacu)
+and installs the formula. After the tap is present, the short name
+works:
+
+```bash
+brew upgrade jacu
+brew install jacu
+```
+
 GoReleaser writes `jacu.rb` into the GitHub Release; the tap syncs that
 file. `brew` then fetches the signed tarball for your OS/arch and
 installs `jacu` plus the compatibility symlink `jacu-mcp`.
+
+`brew install jacu` without the tap only works for homebrew-core
+formulae. JACU is not there yet, so the first install must name the
+tap.
 
 Same-repo fallback (this tree's `Formula/jacu.rb`):
 

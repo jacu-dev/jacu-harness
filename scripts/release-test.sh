@@ -25,6 +25,14 @@ if ! grep -q 'brew install jacu-dev/jacu/jacu' README.md || ! grep -q 'brew inst
   echo "release test: living install docs must teach brew install jacu-dev/jacu/jacu" >&2
   exit 1
 fi
+if ! grep -q 'brew upgrade jacu' README.md || ! grep -q 'brew upgrade jacu' docs/install.md; then
+  echo "release test: living install docs must teach brew upgrade jacu after the tap" >&2
+  exit 1
+fi
+if ! grep -qx 'brew install jacu' README.md || ! grep -qx 'brew install jacu' docs/install.md; then
+  echo "release test: living install docs must teach the short brew install jacu" >&2
+  exit 1
+fi
 if ! grep -q '^brews:' .goreleaser.yaml || ! grep -q 'homebrew-jacu' .goreleaser.yaml; then
   echo "release test: GoReleaser must generate the Homebrew tap formula" >&2
   exit 1
