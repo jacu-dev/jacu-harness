@@ -11,10 +11,13 @@ production does not fall. That boundary is the design, not an omission.
 
 Install with one command.
 
-Homebrew (macOS or Linux) — the tap is generated from the GitHub Release:
+Homebrew (macOS or Linux) — first install adds the tap; after that the
+name is short:
 
 ```sh
 brew install jacu-dev/jacu/jacu
+brew upgrade jacu
+brew install jacu
 ```
 
 Signed binary via curl: download the script from the same Release, review

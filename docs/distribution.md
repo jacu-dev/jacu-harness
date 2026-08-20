@@ -18,6 +18,7 @@ Install:
 
 ```bash
 brew install jacu-dev/jacu/jacu
+brew upgrade jacu
 ```
 
 ```bash
