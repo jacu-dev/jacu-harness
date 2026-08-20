@@ -4,6 +4,21 @@ All notable changes to JACU are recorded here. The format follows Keep a Changel
 
 ## [Unreleased]
 
+### Removed
+
+- **Breaking:** the `jacu-mcp` compatibility alias. Installers no longer create
+  the symlink, packaging no longer declares it, and the binary no longer
+  branches on its own filename. A host config that still launches `jacu-mcp`
+  must be repointed with `jacu init --host <host>`. An existing `jacu-mcp` file
+  in the install prefix is left untouched — it is the user's, not ours.
+- **Breaking:** automatic migration of the `~/.jacu-mcp` user-state directory.
+  `userstate.Legacy` and `EnsureMigrated` are gone; `Migrate` remains as a
+  generic utility for a future rename. The migration failed closed when both
+  directories existed, which surfaced as `home directory unavailable` and sent
+  the binary to its cwd fallback, writing `.jacu-harness/` into checkouts.
+  Anyone still holding `~/.jacu-mcp` should move it to `~/.jacu-harness` by
+  hand.
+
 ### Added
 
 - Weekly free hardening on public runners: 3m fuzz per target, `go test
@@ -31,8 +46,7 @@ First public release. Private lineage: the former `jacu-mcp` tree, imported as a
 ### Added
 
 - Public signed GitHub Release install (`scripts/install.sh --version`), with
-  offline `JACU_RELEASE_DIR`, checksum + Sigstore verification, rollback, and
-  a `jacu-mcp` compatibility symlink.
+  offline `JACU_RELEASE_DIR`, checksum + Sigstore verification, and rollback.
 - `jacu init --host` for Claude Code, Claude Desktop, Codex, Cursor, OpenCode
   and generic stdio hosts. `--json` is exclusive machine-readable output.
 - Cursor / cloud VM bootstrap: `scripts/cloud-install.sh` and

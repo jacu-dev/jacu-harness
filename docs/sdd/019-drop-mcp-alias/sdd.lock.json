@@ -1,0 +1,68 @@
+{
+  "sdd_id": "sdd_2692c00c4dd8561f",
+  "content_sha256": "2692c00c4dd8561fdd0323abfdec3cadddb96f87a86455024d2d1adbd9594994",
+  "requirements": [
+    {
+      "name": "A pre-existing alias is left alone",
+      "delta": "ADDED"
+    },
+    {
+      "name": "No argv-name dispatch",
+      "delta": "REMOVED"
+    },
+    {
+      "name": "No automatic user-state migration",
+      "delta": "REMOVED"
+    },
+    {
+      "name": "Packaging emits no alias",
+      "delta": "MODIFIED"
+    },
+    {
+      "name": "Single installed binary name",
+      "delta": "MODIFIED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`go test ./cmd/jacu/...`",
+      "status": "done"
+    },
+    {
+      "number": "T2",
+      "verify": "`bash scripts/install-smoke.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T3",
+      "verify": "`bash scripts/cloud-install-eval.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T4",
+      "verify": "`bash scripts/release-test.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T5",
+      "verify": "`go test ./internal/userstate/...`",
+      "status": "done"
+    },
+    {
+      "number": "T6",
+      "verify": "`go test ./cmd/jacu/...`",
+      "status": "done"
+    },
+    {
+      "number": "T7",
+      "verify": "`go run ./cmd/jacu sdd lint --all`",
+      "status": "done"
+    },
+    {
+      "number": "T8",
+      "verify": "`go build ./cmd/jacu \u0026\u0026 git status --short`",
+      "status": "done"
+    }
+  ]
+}

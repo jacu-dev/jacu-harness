@@ -51,11 +51,6 @@ func usage(args []string) {
 }
 
 func main() {
-	switch filepath.Base(os.Args[0]) {
-	case "jacu-mcp", "jacu-mcp.exe":
-		fmt.Fprintln(os.Stderr, "jacu-mcp is deprecated; use jacu")
-	}
-
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
 		case "help":

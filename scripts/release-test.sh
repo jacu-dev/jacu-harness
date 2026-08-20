@@ -103,7 +103,6 @@ for needle in \
   'jacu_0.2.0_linux_amd64.tar.gz' \
   'jacu_0.2.0_linux_arm64.tar.gz' \
   'bin.install "jacu"' \
-  'bin.install_symlink "jacu" => "jacu-mcp"' \
   'https://github.com/jacu-dev/jacu-harness/releases/download/v0.2.0/'
 do
   if ! grep -Fq "$needle" "$formula"; then
@@ -128,8 +127,8 @@ if [ -e "$prefix" ]; then
   echo "release test: dry-run wrote into the destination" >&2
   exit 1
 fi
-if ! grep -q 'jacu-mcp -> jacu' "$test_root/dry-run.log"; then
-  echo "release test: dry-run must describe the jacu-mcp compatibility symlink" >&2
+if grep -q 'jacu-mcp' "$test_root/dry-run.log"; then
+  echo "release test: dry-run still mentions the retired jacu-mcp alias" >&2
   exit 1
 fi
 
@@ -164,20 +163,23 @@ assert_installed() {
     echo "release test: $dest/jacu content mismatch" >&2
     exit 1
   fi
-  if [ ! -L "$dest/jacu-mcp" ] || [ "$(readlink "$dest/jacu-mcp")" != jacu ]; then
-    echo "release test: missing jacu-mcp -> jacu compatibility symlink" >&2
-    exit 1
-  fi
 }
 
+# A jacu-mcp left over from an older install is not ours to delete. Installing
+# over it must neither recreate it nor remove it: the user's file stays exactly
+# as it was, and jacu is installed beside it.
 legacy_prefix="$test_root/legacy-prefix"
 mkdir -p "$legacy_prefix"
 printf '#!/bin/sh\nlegacy-alias\n' >"$legacy_prefix/jacu-mcp"
 chmod 0755 "$legacy_prefix/jacu-mcp"
 PATH="$fakebin:$PATH" JACU_RELEASE_DIR="$release" bash scripts/install.sh --version "$version" --prefix "$legacy_prefix"
 assert_installed "$legacy_prefix" $'#!/bin/sh\nold'
-if [ -e "$legacy_prefix/jacu-mcp" ] && [ ! -L "$legacy_prefix/jacu-mcp" ]; then
-  echo "release test: regular-file jacu-mcp was not replaced by a symlink" >&2
+if [ ! -f "$legacy_prefix/jacu-mcp" ] || [ -L "$legacy_prefix/jacu-mcp" ]; then
+  echo "release test: install must leave a pre-existing jacu-mcp untouched" >&2
+  exit 1
+fi
+if [ "$(cat "$legacy_prefix/jacu-mcp")" != "$(printf '#!/bin/sh\nlegacy-alias')" ]; then
+  echo "release test: install modified a pre-existing jacu-mcp" >&2
   exit 1
 fi
 

@@ -20,7 +20,7 @@ brew install jacu
 
 GoReleaser writes `jacu.rb` into the GitHub Release; the tap syncs that
 file. `brew` then fetches the signed tarball for your OS/arch and
-installs `jacu` plus the compatibility symlink `jacu-mcp`.
+installs `jacu`.
 
 `brew install jacu` without the tap only works for homebrew-core
 formulae. JACU is not there yet, so the first install must name the
@@ -54,7 +54,7 @@ bash /tmp/jacu-install.sh
 
 Omit `--version` to install the latest **published** release. Drafts are
 ignored. Pin with `--version v0.2.0`. The script verifies Sigstore + sha256
-before writing `~/.local/bin/jacu`, and creates a symlink `jacu-mcp`.
+before writing `~/.local/bin/jacu`.
 `--dry-run` and `--rollback` are supported. Offline assets:
 `JACU_RELEASE_DIR`.
 

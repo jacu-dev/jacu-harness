@@ -4,6 +4,12 @@
 coverage.out
 *.prof
 .DS_Store
+
+# `go build ./cmd/jacu` from the module root drops an 11 MB binary here. It was
+# not ignored, which in a public repository is one `git add -A` away from a
+# committed binary.
+/jacu
+
 /.jacu/bin/
 # ~/.gitignore_global ignora `.cursor/` — o diretorio inteiro. Git nao desce em
 # diretorio excluido, entao negar arquivo por arquivo la dentro nao adianta sem

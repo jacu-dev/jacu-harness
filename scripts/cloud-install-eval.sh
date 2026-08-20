@@ -71,8 +71,8 @@ if [ ! -f "$prefix/jacu" ] || [ -L "$prefix/jacu" ]; then
   echo "cloud-install-eval: from-source did not install a regular-file jacu" >&2
   exit 1
 fi
-if [ ! -L "$prefix/jacu-mcp" ] || [ "$(readlink "$prefix/jacu-mcp")" != jacu ]; then
-  echo "cloud-install-eval: missing jacu-mcp compatibility symlink" >&2
+if [ -e "$prefix/jacu-mcp" ] || [ -L "$prefix/jacu-mcp" ]; then
+  echo "cloud-install-eval: install created a retired jacu-mcp entry" >&2
   exit 1
 fi
 if ! "$prefix/jacu" version >/dev/null; then

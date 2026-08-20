@@ -11,13 +11,16 @@ import (
 
 // Living teaching surfaces must not tell anyone to type jacu-mcp. The current
 // module, user-dir, and GitHub repo are jacu-harness. The retired string may
-// remain only as the archived module/repo path, the previous user-dir
-// (~/.jacu-mcp), the JACU_MCP_* env prefix, the documented compat alias, or
+// remain only as the archived module/repo path, the JACU_MCP_* env prefix, or
 // named historical/export contracts.
+//
+// SDD-019 narrowed this allowlist: the compat alias and the ~/.jacu-mcp user
+// directory are gone from the product, so a living document that still teaches
+// either one is now a defect rather than an accepted exception.
 func TestLivingDocsDoNotTeachRetiredCommand(t *testing.T) {
 	root := filepath.Join("..", "..")
 	allowed := regexp.MustCompile(
-		`github\.com/jacu-dev/jacu-mcp|jacu-dev/jacu-mcp|~?/?\.jacu-mcp|JACU_MCP_[A-Z0-9_]+|"o jacu-mcp não chama modelo"|symlink ` + "`jacu-mcp`" + `|strings ` + "`jacu-mcp`" + `|private ` + "`jacu-mcp`",
+		`github\.com/jacu-dev/jacu-mcp|jacu-dev/jacu-mcp|JACU_MCP_[A-Z0-9_]+|"o jacu-mcp não chama modelo"`,
 	)
 	retired := regexp.MustCompile(`jacu-mcp`)
 	// Frozen ADRs record the old product name. SDD-016 is the export contract

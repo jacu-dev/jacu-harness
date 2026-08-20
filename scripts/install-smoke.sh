@@ -27,8 +27,8 @@ if [ ! -x "$work/bin/jacu" ] || [ -L "$work/bin/jacu" ]; then
   echo "install-smoke: prefix does not contain a regular jacu binary" >&2
   exit 1
 fi
-if [ ! -L "$work/bin/jacu-mcp" ] || [ "$(readlink "$work/bin/jacu-mcp")" != jacu ]; then
-  echo "install-smoke: missing jacu-mcp compatibility symlink" >&2
+if [ -e "$work/bin/jacu-mcp" ] || [ -L "$work/bin/jacu-mcp" ]; then
+  echo "install-smoke: install created a retired jacu-mcp entry" >&2
   exit 1
 fi
 
