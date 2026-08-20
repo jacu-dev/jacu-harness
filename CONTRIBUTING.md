@@ -45,7 +45,7 @@ go test ./... -race
 
 `scripts/verify.sh` also runs `scripts/release-test.sh` and
 `scripts/cloud-install-eval.sh` (signed-install and Cursor VM bootstrap).
-Owner-only: cutting `v0.2.0` is documented in [docs/release.md](docs/release.md).
+Owner-only: cutting a release is documented in [docs/release.md](docs/release.md).
 
 PRs must keep the `verify / verify` check green. That check also runs
 golangci-lint, govulncheck, gitleaks, hygiene, e2e and MCP smoke — running

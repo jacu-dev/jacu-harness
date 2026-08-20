@@ -10,12 +10,17 @@ the repository. Cursor, Claude Code, Codex and OpenCode only register
 bash .cursor/install.sh --from-source
 ```
 
-That wrapper runs `scripts/cloud-install.sh`. After `v0.2.0` exists, prefer
-the signed binary (github.com egress only):
+That wrapper runs `scripts/cloud-install.sh`. Prefer a signed release over
+building from source when the VM can reach github.com:
 
 ```bash
-bash .cursor/install.sh --version v0.2.0
+bash .cursor/install.sh --version vX.Y.Z
 ```
+
+Cursor cloud agents read `.cursor/environment.json`, not `install.sh`. It runs
+`scripts/dev-setup.sh --phase image` at build time and `--phase session` per
+session; the install above happens inside the image phase. See
+[SDD-018](sdd/018-cloud-dev-environment/sdd.md).
 
 Then register the host pack without editing an unnamed config:
 
@@ -34,6 +39,5 @@ bundle). If a download fails, the installer names the unreachable host.
 ## What this is not
 
 There is no `curl | sh` bootstrap, no host API call, and no binary network
-capability. A Cursor Cloud Agent can build from a checkout today; the
-verified one-command path is `install.sh --version` after the owner tags
-`v0.2.0`.
+capability. A Cursor Cloud Agent can build from a checkout, or install a
+signed release with `install.sh --version` once a tag is published.

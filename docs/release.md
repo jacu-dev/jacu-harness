@@ -1,27 +1,27 @@
 # Cutting a public release
 
 Only Erick (`ecouto`) can promote a `v*` tag. CI will refuse any other
-actor. This is the owner keystroke that publishes `v0.2.0`.
+actor. This is the owner keystroke that publishes `vX.Y.Z`.
 
 ## Checklist
 
 1. `main` is green: `verify / verify` and `all-checks-passed`.
 2. The tag MUST point at that `main` tip — not an older import commit.
    A tag on the wrong SHA ships an installer that cannot install itself.
-3. `CHANGELOG.md` `[0.2.0]` lists what ships. Move it off "unreleased"
+3. `CHANGELOG.md` has a `[X.Y.Z]` section listing what ships. Move it off "unreleased"
    when the tag is cut.
 4. From a clean `main`:
 
    ```bash
-   git tag -a v0.2.0 -m "v0.2.0"
-   git push origin v0.2.0
+   git tag -a vX.Y.Z -m "vX.Y.Z"
+   git push origin vX.Y.Z
    ```
 
 5. Confirm `.github/workflows/release.yml` published a **non-draft**
    release (otherwise `/releases/latest` is 404 and curl/brew cannot
    resolve it):
 
-   - `jacu_0.2.0_{darwin,linux}_{amd64,arm64}.tar.gz`
+   - `jacu_X.Y.Z_{darwin,linux}_{amd64,arm64}.tar.gz`
    - `checksums.txt`
    - `checksums.txt.sigstore.json`
    - `jacu.spdx.json`
@@ -42,9 +42,9 @@ actor. This is the owner keystroke that publishes `v0.2.0`.
 
    ```bash
    curl -fsSL -o install.sh \
-     https://raw.githubusercontent.com/jacu-dev/jacu-harness/v0.2.0/scripts/install.sh
+     https://raw.githubusercontent.com/jacu-dev/jacu-harness/vX.Y.Z/scripts/install.sh
    less install.sh
-   bash install.sh --version v0.2.0
+   bash install.sh --version vX.Y.Z
    jacu doctor
    jacu version
    ```
@@ -52,16 +52,16 @@ actor. This is the owner keystroke that publishes `v0.2.0`.
 7. Keep that transcript as the installable-release report (SDD-017 T7).
    After it is green, G-10a (owner-only social pilot) is unblocked.
 
-If `v0.2.0` was pushed on the wrong commit and no one has consumed the
+If `vX.Y.Z` was pushed on the wrong commit and no one has consumed the
 assets yet, delete the tag and recut it on `main`:
 
 ```bash
-git tag -d v0.2.0
-git push origin :refs/tags/v0.2.0
+git tag -d vX.Y.Z
+git push origin :refs/tags/vX.Y.Z
 git switch main
 git pull --ff-only
-git tag -a v0.2.0 -m "v0.2.0"
-git push origin v0.2.0
+git tag -a vX.Y.Z -m "vX.Y.Z"
+git push origin vX.Y.Z
 ```
 
 The weekly workflow (standard public runners only) re-fuzzes for 3m per

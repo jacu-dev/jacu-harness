@@ -51,39 +51,12 @@ done
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
 
-install_legacy_alias() {
-  dest_dir="$1"
-  alias_path="$dest_dir/jacu-mcp"
-  run() {
-    if [ -w "$dest_dir" ]; then
-      "$@"
-    elif sudo -n true 2>/dev/null; then
-      sudo "$@"
-    else
-      return 1
-    fi
-  }
-  if [ -e "$alias_path" ] && [ ! -L "$alias_path" ]; then
-    if [ -d "$alias_path" ]; then
-      echo "cloud-install.sh: refusing to replace directory $alias_path" >&2
-      return 1
-    fi
-    if ! run rm -f "$alias_path"; then
-      echo "WARN: could not replace $alias_path with a symlink to jacu" >&2
-      return 0
-    fi
-  fi
-  if ! run ln -sfn jacu "$alias_path"; then
-    echo "WARN: could not create $alias_path; configs that still invoke jacu-mcp need PATH/jacu" >&2
-  fi
-}
 
 install_binary() {
   src="$1"
   if [ -n "$prefix" ]; then
     mkdir -p "$prefix"
     install -m 0755 "$src" "$prefix/jacu"
-    install_legacy_alias "$prefix"
     echo "$prefix/jacu"
     return
   fi
@@ -98,7 +71,6 @@ install_binary() {
     install -m 0755 "$src" "$install_dir/jacu"
     echo "WARN: installed jacu to $install_dir; ensure it is on PATH" >&2
   fi
-  install_legacy_alias "$install_dir"
   echo "$install_dir/jacu"
 }
 

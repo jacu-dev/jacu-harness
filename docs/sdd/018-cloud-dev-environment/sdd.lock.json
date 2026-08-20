@@ -1,0 +1,44 @@
+{
+  "sdd_id": "sdd_45e2b4b70002335d",
+  "content_sha256": "45e2b4b70002335da946fdcce2be56e295ec2ca179b2603f695211aea4475c62",
+  "requirements": [
+    {
+      "name": "Both cloud entry points stay wired",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Local sessions are unaffected",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Stale snapshot self-healing",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Two-phase bootstrap entry point",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`bash scripts/dev-setup.sh --phase session --if-remote`",
+      "status": "done"
+    },
+    {
+      "number": "T2",
+      "verify": "`bash scripts/cloud-install-eval.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T3",
+      "verify": "`git check-ignore -v .cursor/environment.json`",
+      "status": "done"
+    },
+    {
+      "number": "T4",
+      "verify": "`bash scripts/verify.sh`",
+      "status": "done"
+    }
+  ]
+}

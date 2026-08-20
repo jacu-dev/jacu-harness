@@ -98,22 +98,50 @@ fi
 for needle in \
   'class Jacu < Formula' \
   'license "MIT"' \
-  'jacu_0.2.0_darwin_amd64.tar.gz' \
-  'jacu_0.2.0_darwin_arm64.tar.gz' \
-  'jacu_0.2.0_linux_amd64.tar.gz' \
-  'jacu_0.2.0_linux_arm64.tar.gz' \
-  'bin.install "jacu"' \
-  'bin.install_symlink "jacu" => "jacu-mcp"' \
-  'https://github.com/jacu-dev/jacu-harness/releases/download/v0.2.0/'
+  'bin.install "jacu"'
 do
   if ! grep -Fq "$needle" "$formula"; then
     echo "release test: $formula is missing: $needle" >&2
     exit 1
   fi
 done
-sha_count="$(grep -cE 'sha256 "[a-f0-9]{64}"' "$formula" || true)"
-if [ "$sha_count" -lt 4 ]; then
+
+# The formula's own `version` is the single source of truth here. Asserting a
+# literal number would mean editing this test on every release and would pass
+# happily on a formula whose urls disagree with its version — which is the
+# defect that actually ships a broken `brew install`.
+formula_version="$(sed -n 's/^  version "\([^"]*\)".*/\1/p' "$formula" | head -n 1)"
+if [ -z "$formula_version" ]; then
+  echo "release test: $formula does not declare a version" >&2
+  exit 1
+fi
+if ! printf '%s' "$formula_version" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$'; then
+  echo "release test: $formula version is not semver: $formula_version" >&2
+  exit 1
+fi
+for platform in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64; do
+  asset="jacu_${formula_version}_${platform}.tar.gz"
+  if ! grep -Fq "$asset" "$formula"; then
+    echo "release test: $formula is missing the $formula_version asset: $asset" >&2
+    exit 1
+  fi
+done
+# Every url must carry the declared version. One stale url is a 404 install,
+# and it survives any check that only asks whether the right version appears
+# *somewhere* in the file.
+url_versions="$(grep -oE 'releases/download/v[^/]+/' "$formula" | sed 's|releases/download/v||; s|/$||' | sort -u)"
+distinct="$(printf '%s\n' "$url_versions" | grep -c . || true)"
+if [ "$distinct" -ne 1 ] || [ "$url_versions" != "$formula_version" ]; then
+  echo "release test: $formula declares version $formula_version but its urls use:" >&2
+  printf '%s\n' "$url_versions" | sed 's/^/  /' >&2
+  exit 1
+fi
+if [ "$(grep -cE 'sha256 "[a-f0-9]{64}"' "$formula" || true)" -lt 4 ]; then
   echo "release test: $formula must pin sha256 for every platform tarball" >&2
+  exit 1
+fi
+if [ "$(grep -oE 'sha256 "[a-f0-9]{64}"' "$formula" | sort -u | wc -l | tr -d ' ')" -lt 4 ]; then
+  echo "release test: $formula reuses a sha256 across platforms" >&2
   exit 1
 fi
 
@@ -128,8 +156,8 @@ if [ -e "$prefix" ]; then
   echo "release test: dry-run wrote into the destination" >&2
   exit 1
 fi
-if ! grep -q 'jacu-mcp -> jacu' "$test_root/dry-run.log"; then
-  echo "release test: dry-run must describe the jacu-mcp compatibility symlink" >&2
+if grep -q 'jacu-mcp' "$test_root/dry-run.log"; then
+  echo "release test: dry-run still mentions the retired jacu-mcp alias" >&2
   exit 1
 fi
 
@@ -164,20 +192,23 @@ assert_installed() {
     echo "release test: $dest/jacu content mismatch" >&2
     exit 1
   fi
-  if [ ! -L "$dest/jacu-mcp" ] || [ "$(readlink "$dest/jacu-mcp")" != jacu ]; then
-    echo "release test: missing jacu-mcp -> jacu compatibility symlink" >&2
-    exit 1
-  fi
 }
 
+# A jacu-mcp left over from an older install is not ours to delete. Installing
+# over it must neither recreate it nor remove it: the user's file stays exactly
+# as it was, and jacu is installed beside it.
 legacy_prefix="$test_root/legacy-prefix"
 mkdir -p "$legacy_prefix"
 printf '#!/bin/sh\nlegacy-alias\n' >"$legacy_prefix/jacu-mcp"
 chmod 0755 "$legacy_prefix/jacu-mcp"
 PATH="$fakebin:$PATH" JACU_RELEASE_DIR="$release" bash scripts/install.sh --version "$version" --prefix "$legacy_prefix"
 assert_installed "$legacy_prefix" $'#!/bin/sh\nold'
-if [ -e "$legacy_prefix/jacu-mcp" ] && [ ! -L "$legacy_prefix/jacu-mcp" ]; then
-  echo "release test: regular-file jacu-mcp was not replaced by a symlink" >&2
+if [ ! -f "$legacy_prefix/jacu-mcp" ] || [ -L "$legacy_prefix/jacu-mcp" ]; then
+  echo "release test: install must leave a pre-existing jacu-mcp untouched" >&2
+  exit 1
+fi
+if [ "$(cat "$legacy_prefix/jacu-mcp")" != "$(printf '#!/bin/sh\nlegacy-alias')" ]; then
+  echo "release test: install modified a pre-existing jacu-mcp" >&2
   exit 1
 fi
 

@@ -20,7 +20,7 @@ brew install jacu
 
 GoReleaser writes `jacu.rb` into the GitHub Release; the tap syncs that
 file. `brew` then fetches the signed tarball for your OS/arch and
-installs `jacu` plus the compatibility symlink `jacu-mcp`.
+installs `jacu`.
 
 `brew install jacu` without the tap only works for homebrew-core
 formulae. JACU is not there yet, so the first install must name the
@@ -53,8 +53,8 @@ bash /tmp/jacu-install.sh
 ```
 
 Omit `--version` to install the latest **published** release. Drafts are
-ignored. Pin with `--version v0.2.0`. The script verifies Sigstore + sha256
-before writing `~/.local/bin/jacu`, and creates a symlink `jacu-mcp`.
+ignored. Pin a specific release with `--version vX.Y.Z`. The script verifies Sigstore + sha256
+before writing `~/.local/bin/jacu`.
 `--dry-run` and `--rollback` are supported. Offline assets:
 `JACU_RELEASE_DIR`.
 
@@ -63,7 +63,7 @@ Requires `curl`, `cosign`, `tar` and `shasum`.
 ## go install
 
 ```bash
-go install github.com/jacu-dev/jacu-harness/cmd/jacu@v0.2.0
+go install github.com/jacu-dev/jacu-harness/cmd/jacu@latest
 ```
 
 Go's module checksum database, no remote shell. Compiles on the machine.
@@ -87,7 +87,7 @@ jacu version
 
 Cloud and Cursor VMs: `bash .cursor/install.sh` in this repository, or
 `bash scripts/cloud-install.sh --from-source`. After a tagged release,
-prefer `bash .cursor/install.sh --version v0.2.0` (github.com egress only).
+prefer `bash .cursor/install.sh --version vX.Y.Z` (github.com egress only).
 See [cursor-cloud.md](cursor-cloud.md).
 
 See [distribution.md](distribution.md) and [release.md](release.md).

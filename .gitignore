@@ -4,6 +4,31 @@
 coverage.out
 *.prof
 .DS_Store
+
+# `go build ./cmd/jacu` from the module root drops an 11 MB binary here. It was
+# not ignored, which in a public repository is one `git add -A` away from a
+# committed binary.
+/jacu
+
 /.jacu/bin/
+# ~/.gitignore_global ignora `.cursor/` — o diretorio inteiro. Git nao desce em
+# diretorio excluido, entao negar arquivo por arquivo la dentro nao adianta sem
+# antes re-incluir o proprio diretorio. Sem a linha `!/.cursor/` abaixo, o
+# environment.json some do repo e a VM da Cursor sobe sem bootstrap.
+!/.cursor/
 /.cursor/*
 !/.cursor/install.sh
+!/.cursor/environment.json
+
+# Artefatos de execucao do proprio jacu. Os testes criam .jacu-harness/telemetry/
+# ao lado do pacote sob teste; sem esta regra um `git add -A` publica telemetria
+# de execucao local num repositorio publico.
+.jacu-harness/
+
+# Rede de seguranca para repositorio publico: nada de credencial em texto plano.
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+!*.pub

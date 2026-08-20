@@ -9,7 +9,6 @@ import (
 
 const (
 	Name    = ".jacu-harness"
-	Legacy  = ".jacu-mcp"
 	HomeEnv = "JACU_HOME"
 )
 
@@ -24,9 +23,6 @@ func Dir() (string, error) {
 	}
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return "", err
-	}
-	if _, err := EnsureMigrated(home); err != nil {
 		return "", err
 	}
 	return DirIn(home), nil
@@ -52,10 +48,11 @@ func WorktreesDir(home string) string {
 	return filepath.Join(DirIn(home), "worktrees")
 }
 
-func EnsureMigrated(home string) (Outcome, error) {
-	return Migrate(home, Name, Legacy)
-}
-
+// Migrate stays as a generic utility for a future rename. It is no longer
+// wired into Dir: the .jacu-mcp lineage was retired in SDD-019, and an
+// automatic migration that fails closed when both directories exist cost more
+// than it returned — it surfaced as "home directory unavailable", sending the
+// binary to its cwd fallback and littering checkouts with state directories.
 func Migrate(home, currentName, legacyName string) (Outcome, error) {
 	if legacyName == "" {
 		return Outcome{Skipped: "no-legacy"}, nil

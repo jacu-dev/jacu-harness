@@ -32,7 +32,6 @@ class Jacu < Formula
 
   def install
     bin.install "jacu"
-    bin.install_symlink "jacu" => "jacu-mcp"
   end
 
   test do

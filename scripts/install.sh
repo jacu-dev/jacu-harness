@@ -57,20 +57,6 @@ done
 target="$prefix/jacu"
 previous="$prefix/jacu.previous"
 
-# Hosts that still launch the retired binary name keep working after the rename.
-install_legacy_alias() {
-  dest_dir="$1"
-  alias_path="$dest_dir/jacu-mcp"
-  if [ -e "$alias_path" ] && [ ! -L "$alias_path" ]; then
-    if [ -d "$alias_path" ]; then
-      echo "install.sh: refusing to replace directory $alias_path" >&2
-      return 1
-    fi
-    rm -f "$alias_path"
-  fi
-  ln -sfn jacu "$alias_path"
-}
-
 release_host() {
   case "$1" in
     https://*|http://*)
@@ -101,7 +87,6 @@ if [ "$rollback" = true ]; then
   fi
   mkdir -p "$prefix"
   install -m 0755 "$previous" "$target"
-  install_legacy_alias "$prefix"
   echo "restored $target from $previous"
   exit 0
 fi
@@ -165,7 +150,6 @@ if [ "$dry_run" = true ]; then
   echo "dry-run: download $base_url/$asset"
   echo "dry-run: verify $bundle and sha256 for $asset"
   echo "dry-run: backup $target to $previous and install into $prefix"
-  echo "dry-run: link $prefix/jacu-mcp -> jacu"
   exit 0
 fi
 
@@ -242,5 +226,4 @@ if [ -f "$target" ] && [ ! -L "$target" ]; then
   install -m 0755 "$target" "$previous"
 fi
 install -m 0755 "$binary" "$target"
-install_legacy_alias "$prefix"
 echo "installed $target from $version"

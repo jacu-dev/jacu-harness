@@ -30,7 +30,7 @@ bash /tmp/jacu-install.sh
 ```
 
 That writes a Sigstore-verified `~/.local/bin/jacu`. From source:
-`go install github.com/jacu-dev/jacu-harness/cmd/jacu@v0.2.0`. Host
+`go install github.com/jacu-dev/jacu-harness/cmd/jacu@latest`. Host
 registration: [docs/install.md](docs/install.md).
 
 ## Quick start
