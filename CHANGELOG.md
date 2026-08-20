@@ -4,6 +4,17 @@ All notable changes to JACU are recorded here. The format follows Keep a Changel
 
 ## [Unreleased]
 
+### Added
+
+- `.mcp.json` and `.cursor/mcp.json`, so a cloud session gets the `jacu` MCP
+  server without hand configuration. The image phase of `scripts/dev-setup.sh`
+  also writes the approval into `~/.claude/settings.json`: since Claude Code
+  v2.1.196 a cloned repository cannot approve its own MCP servers, so a
+  committed config alone would sit at `Pending approval` forever in a VM where
+  nobody can accept the workspace trust dialog. Approval names the `jacu`
+  server rather than enabling all project servers, and preserves any existing
+  settings.
+
 ### Fixed
 
 - Release asset collection moved from inline workflow shell into

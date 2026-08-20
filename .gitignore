@@ -19,6 +19,7 @@ coverage.out
 /.cursor/*
 !/.cursor/install.sh
 !/.cursor/environment.json
+!/.cursor/mcp.json
 
 # Artefatos de execucao do proprio jacu. Os testes criam .jacu-harness/telemetry/
 # ao lado do pacote sob teste; sem esta regra um `git add -A` publica telemetria

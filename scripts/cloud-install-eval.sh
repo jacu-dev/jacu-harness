@@ -6,7 +6,14 @@ cd "$(dirname "$0")/.."
 
 root="$(pwd)"
 test_root="$(mktemp -d)"
-trap 'rm -rf "$test_root"' EXIT
+# The Go module cache is written read-only, so a plain rm -rf on a fixture HOME
+# that Go populated fails with "Directory not empty".
+trap 'chmod -R u+w "$test_root" 2>/dev/null || true; rm -rf "$test_root"' EXIT
+
+# Fixtures that run with a temporary HOME must not re-download the module cache
+# into it: that is minutes of network for a test about a settings file.
+export GOMODCACHE="${GOMODCACHE:-$(go env GOMODCACHE)}"
+export GOCACHE="${GOCACHE:-$(go env GOCACHE)}"
 
 if [ ! -x "$root/.cursor/install.sh" ]; then
   echo "cloud-install-eval: .cursor/install.sh is missing or not executable" >&2
@@ -63,6 +70,46 @@ if [ "$(uname -s)" = Darwin ]; then
     echo "cloud-install-eval: --if-remote must be a no-op on Darwin, got: $out" >&2
     exit 1
   fi
+fi
+
+# The MCP configs are the whole point of the product being reachable from a
+# host. They are also the files most likely to be lost silently: a global
+# gitignore rule already hid .cursor/ once.
+for mcp_config in "$root/.mcp.json" "$root/.cursor/mcp.json"; do
+  if [ ! -f "$mcp_config" ]; then
+    echo "cloud-install-eval: $mcp_config is missing" >&2
+    exit 1
+  fi
+  if ! python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); s=d["mcpServers"]["jacu"]; assert s["command"]=="jacu", s["command"]; assert s["args"]==["serve"], s["args"]' "$mcp_config" 2>/dev/null; then
+    echo "cloud-install-eval: $mcp_config must declare mcpServers.jacu as \`jacu serve\`" >&2
+    exit 1
+  fi
+  if git -C "$root" check-ignore -q "$mcp_config" 2>/dev/null; then
+    echo "cloud-install-eval: $mcp_config is gitignored and would never reach a cloud VM" >&2
+    exit 1
+  fi
+done
+
+# A cloned repository cannot approve its own MCP servers, so the image phase has
+# to write the approval into the session user's settings. Without this a cloud
+# session boots with .mcp.json stuck at "Pending approval" and no jacu tools.
+approve_home="$test_root/approve-home"
+mkdir -p "$approve_home"
+HOME="$approve_home" CLAUDE_CODE_REMOTE=true bash "$root/scripts/dev-setup.sh" --phase image >/dev/null 2>&1 || true
+if ! grep -q '"jacu"' "$approve_home/.claude/settings.json" 2>/dev/null; then
+  echo "cloud-install-eval: image phase must approve the jacu MCP server in ~/.claude/settings.json" >&2
+  exit 1
+fi
+
+# Approving must never clobber an existing settings file.
+keep_home="$test_root/approve-keep"
+mkdir -p "$keep_home/.claude"
+printf '{"model":"opus","enabledMcpjsonServers":["other"]}' >"$keep_home/.claude/settings.json"
+HOME="$keep_home" CLAUDE_CODE_REMOTE=true bash "$root/scripts/dev-setup.sh" --phase image >/dev/null 2>&1 || true
+if ! python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); assert d["model"]=="opus"; assert set(d["enabledMcpjsonServers"])>={"other","jacu"}' "$keep_home/.claude/settings.json" 2>/dev/null; then
+  echo "cloud-install-eval: approving the MCP server must preserve existing user settings" >&2
+  cat "$keep_home/.claude/settings.json" >&2
+  exit 1
 fi
 
 prefix="$test_root/prefix"
