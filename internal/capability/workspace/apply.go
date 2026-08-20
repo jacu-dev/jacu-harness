@@ -222,21 +222,6 @@ func applyUnlocked(ctx context.Context, root string, in ApplyInput, hostName str
 		},
 	}
 	emitWorkspaceApplyTelemetry(root, run, execution.Data.Verdict, int64(len(fullDiff)), len(snapshot.Files))
-	if policyPresent {
-		integration := integrateAutonomyWithIdentity(ctx, root, run.Branch, run.Mission.Objective, run.ReviewedDigest, execution.Data.EvidenceDigest, receiptRef, run.RunID, run.MissionID, run.Audit)
-		appendIntegrationAudit(&run, integration)
-		if auditErr := runstate.SaveLocked(root, run); auditErr != nil {
-			return ApplyResult{}, auditErr
-		}
-		if integration.Escalated {
-			result.Status = "escalated"
-			result.Summary = "Workspace applied; GitHub integration escalated."
-			result.Warnings = append(result.Warnings, integration.Warning)
-			result.NextActions = []string{"resolve the integration escalation; the locked worktree is preserved"}
-			return result, nil
-		}
-		result.NextActions = []string{"PR opened with auto-merge for " + run.Branch}
-	}
 	if err := git.WorktreeUnlock(ctx, root, run.Worktree); err != nil {
 		result.Warnings = append(result.Warnings, "worktree cleanup failed: "+err.Error())
 		return result, nil

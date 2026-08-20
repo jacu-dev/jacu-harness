@@ -264,12 +264,12 @@ Every automatic or escalated mission SHALL persist an audit package containing o
 - **WHEN** a mission exceeds its iteration budget or encounters a merge conflict
 - **THEN** the mission is escalated without deleting its worktree or audit evidence
 
-### Requirement: ADR-007 integration and tag safety
-After an automatic apply, the run branch SHALL be integrated only through a pull request to `main` with auto-merge armed and zero reviewers, using the CI checks as the gate. Merge conflicts SHALL escalate and preserve the worktree. The autonomy runtime SHALL never create, move, or delete a `v*` tag.
+### Requirement: Apply stays local and never mutates remotes
+After a successful apply, whether manual or policy-gated, the result SHALL be a local commit on the run branch. Apply SHALL NOT invoke `git push`, `gh`, a provider API, pull-request creation, merge, or auto-merge. `NextActions` SHALL instruct merging the run branch into `main`. Remote integration is an outer-loop operation. Apply SHALL never create, move, or delete a `v*` tag.
 
-#### Scenario: Automatic apply opens a guarded integration
+#### Scenario: Policy-gated apply stays local
 - **WHEN** policy requirements pass and the run commit succeeds
-- **THEN** a PR targets `main`, auto-merge is armed, and no reviewer is requested
+- **THEN** Apply returns `ok`, `NextActions` request a local merge, and no `git push` or `gh` process is started
 
 #### Scenario: Production tag remains unreachable
 - **WHEN** an automatic apply completes

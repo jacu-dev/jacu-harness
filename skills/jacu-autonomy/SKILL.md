@@ -22,9 +22,9 @@ has opted into `.jacu/autonomy-policy.json`.
    The receipt proves what this local runtime emitted; it does not prove that
    reviewer and executor were different sessions. Never invent that claim.
 5. Call `jacu_apply` only after the policy requirements and receipt pass. The
-   runtime commits the run branch, opens a PR to `main`, and arms auto-merge
-   with required checks. The machine never creates, moves, or deletes a `v*`
-   production tag.
+   runtime commits the run branch locally and stops. It does not push, open a
+   PR, or arm auto-merge. Remote integration stays in the outer loop. The
+   machine never creates, moves, or deletes a `v*` production tag.
 6. If a mission escalates, stop that mission and preserve its worktree, receipt,
    diff, and audit package. Continue independent missions; do not stop the
    whole program. A dependent mission waits for its prerequisites.
