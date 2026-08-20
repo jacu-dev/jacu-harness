@@ -1,0 +1,44 @@
+{
+  "sdd_id": "sdd_20bb826a85fb278a",
+  "content_sha256": "20bb826a85fb278ab7ebd2f8b184a43e64152788eefc8ac4b3ba247c23a9e32f",
+  "requirements": [
+    {
+      "name": "Asset collection is executable outside a tag",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Only top-level artifacts are published",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Required assets are enforced",
+      "delta": "ADDED"
+    },
+    {
+      "name": "The formula is found in any GoReleaser layout",
+      "delta": "MODIFIED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`bash scripts/release-test.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T2",
+      "verify": "`bash scripts/release-test.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T3",
+      "verify": "`bash scripts/release-test.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T4",
+      "verify": "`go run ./cmd/jacu sdd lint --all`",
+      "status": "done"
+    }
+  ]
+}

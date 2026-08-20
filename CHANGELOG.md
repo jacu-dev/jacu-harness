@@ -4,6 +4,17 @@ All notable changes to JACU are recorded here. The format follows Keep a Changel
 
 ## [Unreleased]
 
+### Fixed
+
+- Release asset collection moved from inline workflow shell into
+  `scripts/collect-release-assets.sh`, and is covered by `release-test.sh`
+  across every GoReleaser formula layout. The inline version looked for the
+  Homebrew formula at `dist/jacu.rb` and `dist/Formula/jacu.rb` while
+  GoReleaser v2 writes `dist/homebrew/Formula/jacu.rb`; because the `brews`
+  block landed after 0.2.0 was cut, the first release to run that code was
+  0.3.0 and it failed there. Collection now locates the formula by search and
+  fails closed when a required asset is missing.
+
 ## [0.3.0] - 2026-08-20
 
 ### Removed
