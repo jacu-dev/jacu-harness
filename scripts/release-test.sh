@@ -41,16 +41,21 @@ if ! grep -q 'scripts/install.sh' .goreleaser.yaml; then
   echo "release test: GoReleaser must attach scripts/install.sh to the release" >&2
   exit 1
 fi
-if ! grep -q 'release-assets/jacu.rb' .github/workflows/release.yml; then
-  echo "release test: release workflow must publish the generated brew formula" >&2
+# The workflow delegates asset collection to a script so it can be tested; the
+# behavioural proof is the layout matrix at the end of this file. Here we only
+# assert the wiring, because a workflow that stops calling the script would make
+# that matrix meaningless.
+if ! grep -q 'scripts/collect-release-assets.sh' .github/workflows/release.yml; then
+  echo "release test: release workflow must collect assets via scripts/collect-release-assets.sh" >&2
   exit 1
 fi
 if ! grep -q 'exclude-drafts' scripts/install.sh; then
   echo "release test: install.sh must ignore draft GitHub Releases" >&2
   exit 1
 fi
-if ! grep -q 'scripts/install.sh' .github/workflows/release.yml || ! grep -q 'release-assets/install.sh' .github/workflows/release.yml; then
-  echo "release test: release workflow must publish install.sh as a release asset" >&2
+if ! grep -q 'scripts/install\.sh' scripts/collect-release-assets.sh \
+  || ! grep -q 'install\.sh' scripts/collect-release-assets.sh; then
+  echo "release test: asset collection must publish install.sh as a release asset" >&2
   exit 1
 fi
 if ! grep -q -- '--draft=false' .github/workflows/release.yml; then
@@ -273,6 +278,50 @@ fi
 if ! grep -q 'no published GitHub Release' "$no_latest_log"; then
   echo "release test: missing-release failure must say no published GitHub Release" >&2
   cat "$no_latest_log" >&2
+  exit 1
+fi
+
+# Asset collection, across every GoReleaser formula layout. Until v0.3.0 this
+# logic was inline in release.yml, so no test ran it and a path mismatch failed
+# the owner's tag instead of a pull request.
+collect_fixture() {
+  fixture_dist="$1"
+  formula_rel="$2"
+  mkdir -p "$fixture_dist"
+  printf 'tarball\n' >"$fixture_dist/jacu_0.0.0_darwin_arm64.tar.gz"
+  printf 'sums\n' >"$fixture_dist/checksums.txt"
+  printf 'bundle\n' >"$fixture_dist/checksums.txt.sigstore.json"
+  mkdir -p "$fixture_dist/$(dirname "$formula_rel")"
+  printf 'class Jacu < Formula\n' >"$fixture_dist/$formula_rel"
+  # A per-platform build directory must not be uploaded.
+  mkdir -p "$fixture_dist/jacu_darwin_arm64"
+  printf 'binary\n' >"$fixture_dist/jacu_darwin_arm64/jacu"
+}
+
+for layout in jacu.rb Formula/jacu.rb homebrew/Formula/jacu.rb; do
+  collect_root="$test_root/collect-$(echo "$layout" | tr / -)"
+  collect_fixture "$collect_root/dist" "$layout"
+  if ! bash scripts/collect-release-assets.sh "$collect_root/dist" "$collect_root/out" >/dev/null 2>&1; then
+    echo "release test: asset collection failed for formula layout $layout" >&2
+    exit 1
+  fi
+  for required in jacu.rb install.sh checksums.txt checksums.txt.sigstore.json; do
+    if [ ! -f "$collect_root/out/$required" ]; then
+      echo "release test: layout $layout did not produce $required" >&2
+      exit 1
+    fi
+  done
+  if [ -e "$collect_root/out/jacu" ]; then
+    echo "release test: layout $layout uploaded a per-platform build directory" >&2
+    exit 1
+  fi
+done
+
+missing_root="$test_root/collect-missing"
+mkdir -p "$missing_root/dist"
+printf 'sums\n' >"$missing_root/dist/checksums.txt"
+if bash scripts/collect-release-assets.sh "$missing_root/dist" "$missing_root/out" >/dev/null 2>&1; then
+  echo "release test: asset collection passed without a Homebrew formula" >&2
   exit 1
 fi
 
