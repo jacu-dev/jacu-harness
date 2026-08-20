@@ -59,5 +59,10 @@ git tag -a v0.2.0 -m "v0.2.0"
 git push origin v0.2.0
 ```
 
+The weekly workflow (standard public runners only) re-fuzzes for 3m per
+target, runs `go test -race` on macOS, and smokes the published
+`install.sh` with real cosign (`scripts/install-smoke.sh`). That job is
+not a pull-request gate.
+
 `workflow_dispatch` on the release workflow is dry-run only. It never
 publishes.

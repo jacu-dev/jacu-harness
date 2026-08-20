@@ -57,6 +57,38 @@ if ! grep -q -- '--draft=false' .github/workflows/release.yml; then
   echo "release test: release workflow must publish a non-draft GitHub Release" >&2
   exit 1
 fi
+if [ ! -x scripts/install-smoke.sh ]; then
+  echo "release test: scripts/install-smoke.sh must exist and be executable" >&2
+  exit 1
+fi
+if grep -Ehn '^\s*(curl|wget).+\|[[:space:]]*(ba)?sh' scripts/install-smoke.sh; then
+  echo "release test: install-smoke must not use curl|sh" >&2
+  exit 1
+fi
+if ! grep -q 'releases/latest/download/install.sh' scripts/install-smoke.sh; then
+  echo "release test: install-smoke must fetch the published installer" >&2
+  exit 1
+fi
+if grep -q 'scripts/install-smoke.sh' .github/workflows/ci.yml .github/workflows/verify.yml; then
+  echo "release test: install-smoke must stay off the pull-request gate" >&2
+  exit 1
+fi
+if ! grep -q 'scripts/install-smoke.sh' .github/workflows/weekly.yml; then
+  echo "release test: weekly workflow must run the published-release install smoke" >&2
+  exit 1
+fi
+if ! grep -q -- '-fuzztime=3m' .github/workflows/weekly.yml; then
+  echo "release test: weekly fuzz must run 3m per target" >&2
+  exit 1
+fi
+if ! grep -q 'macos-latest' .github/workflows/weekly.yml; then
+  echo "release test: weekly workflow must run go test on macOS" >&2
+  exit 1
+fi
+if grep -Ehn 'runs-on:.*(larger|xl|4-core|8-core|windows-)' .github/workflows/weekly.yml; then
+  echo "release test: weekly workflow must stay on free standard runners" >&2
+  exit 1
+fi
 
 formula="Formula/jacu.rb"
 if [ ! -f "$formula" ]; then

@@ -19,17 +19,11 @@ jobs:
   # exceeded the timeout and was killed most weeks, so the fuzz corpus stopped
   # growing without anyone being told.
   #
-  # Three shards of three targets: ~3m of fuzzing per leg, ~4m wall clock, and
-  # fewer total job-minutes than nine separate legs would cost in setup.
-  #
-  # `-fuzztime=1m`, not 3m. Nine targets at three minutes was ~170 billed
-  # minutes a month — 4% of the whole org budget — spent re-fuzzing a corpus
-  # that already covers the seeds. One minute a week per target still grows the
-  # corpus; when a target starts finding things again, raise its own number
-  # rather than everyone's.
+  # Three shards of three targets. Public standard runners are free, so
+  # each target runs 3m without putting this on the pull-request gate.
   fuzz:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -66,7 +60,7 @@ jobs:
             pkg="${target%%:*}"
             fn="${target##*:}"
             echo "::group::$fn ($pkg)"
-            go test "$pkg" -run='^$' -fuzz="^${fn}$" -fuzztime=1m
+            go test "$pkg" -run='^$' -fuzz="^${fn}$" -fuzztime=3m
             echo "::endgroup::"
           done
       # A crasher is written into testdata/fuzz/ inside the workspace and dies
@@ -128,8 +122,38 @@ jobs:
       - name: Full-history secret scan
         run: gitleaks git . --redact -v
 
+  # Standard macos-latest is free on a public repo. The PR gate stays
+  # ubuntu-only; this is the cheap catch for GOOS=darwin.
+  darwin-test:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache: true
+      - name: go test on darwin
+        run: go test ./... -race
+
+  # Hits the published Release (cosign + tarball), not the PR tree.
+  install-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: v3.1.3
+      - name: Install the latest published release
+        run: bash scripts/install-smoke.sh
+
   report:
-    needs: [fuzz, vuln, secrets-history]
+    needs: [fuzz, vuln, secrets-history, darwin-test, install-smoke]
     if: ${{ always() && contains(needs.*.result, 'failure') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
