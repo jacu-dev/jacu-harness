@@ -46,7 +46,11 @@ jobs:
         run: |
           set -euo pipefail
           echo "verify: ${RESULT}"
+          # Only `success`. `verify` carries no `if:`, so it is never skipped
+          # for a legitimate reason, and treating `skipped` as a pass turned
+          # the one required check into a gate a pull request could switch off
+          # by putting `if: false` on the very job it has to pass.
           case "${RESULT}" in
-            success|skipped) exit 0 ;;
+            success) exit 0 ;;
             *) echo "::error::verify result=${RESULT}"; exit 1 ;;
           esac
