@@ -6,6 +6,9 @@ All notable changes to JACU are recorded here. The format follows Keep a Changel
 
 ### Added
 
+- Weekly free hardening on public runners: 3m fuzz per target, `go test
+  -race` on macOS, and a published-release install smoke
+  (`scripts/install-smoke.sh`). Not on the pull-request gate.
 - Homebrew tap `jacu-dev/homebrew-jacu`: first install is
   `brew install jacu-dev/jacu/jacu`; afterwards `brew install jacu` and
   `brew upgrade jacu`. GoReleaser writes `jacu.rb`; the tap syncs it
