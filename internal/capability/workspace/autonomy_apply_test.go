@@ -15,6 +15,60 @@ import (
 	"github.com/jacu-dev/jacu-harness/internal/runstate"
 )
 
+func TestPolicySatisfiedApplyStaysLocalAndNeverInvokesRemote(t *testing.T) {
+	repo, opened := reviewedApplyFixture(t, "write", [][]string{{"git", "status", "--short"}})
+	policyPath := filepath.Join(repo, ".jacu", "autonomy-policy.json")
+	if err := os.MkdirAll(filepath.Dir(policyPath), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	policy := []byte(`{"policy":{"auto_apply":{"require":["verify_pass","cross_review"],"risk_max":"write","max_iterations":3,"on_violation":"escalate"}}}`)
+	if err := os.WriteFile(policyPath, policy, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	key := []byte("local-test-key-012345678901234567890")
+	if err := os.WriteFile(filepath.Join(repo, ".git", "jacu", "receipt.key"), key, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	run, err := loadRunForTest(repo, opened.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	receipt, err := SignReviewReceipt(ReviewReceipt{RunID: run.RunID, DiffDigest: run.ReviewedDigest, Verdict: "approve", CreatedAt: time.Now().UTC()}, key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, writeReceiptErr := WriteReviewReceipt(repo, receipt); writeReceiptErr != nil {
+		t.Fatal(writeReceiptErr)
+	}
+	oldRunner := autonomyRunCommand
+	defer func() { autonomyRunCommand = oldRunner }()
+	var remoteCalls [][]string
+	autonomyRunCommand = func(_ context.Context, name string, args ...string) error {
+		remoteCalls = append(remoteCalls, append([]string{name}, args...))
+		return errors.New("remote command must not run")
+	}
+	oldWatcher := autonomyWatchCheckEvidence
+	defer func() { autonomyWatchCheckEvidence = oldWatcher }()
+	autonomyWatchCheckEvidence = func(context.Context, runner.CheckEvidenceRequest) (runner.CheckEvidence, error) {
+		t.Fatal("Apply must not watch hosted checks")
+		return runner.CheckEvidence{}, errors.New("hosted checks must not run")
+	}
+	result, err := Apply(context.Background(), repo, ApplyInput{RunID: opened.RunID}, "Claude Code")
+	if err != nil || result.Status != "ok" {
+		t.Fatalf("Apply = %#v err %v", result, err)
+	}
+	if len(remoteCalls) != 0 {
+		t.Fatalf("Apply invoked remote commands %#v", remoteCalls)
+	}
+	wantNext := []string{"merge " + result.Data.Branch + " into main when ready"}
+	if !reflect.DeepEqual(result.NextActions, wantNext) {
+		t.Fatalf("NextActions = %#v, want local merge only", result.NextActions)
+	}
+	if _, err := os.Stat(opened.WorktreePath); !os.IsNotExist(err) {
+		t.Fatalf("worktree remains after local apply: %v", err)
+	}
+}
+
 func TestPolicySatisfiedApplyPersistsAuditAndIntegrates(t *testing.T) {
 	repo, opened := reviewedApplyFixture(t, "write", [][]string{{"git", "status", "--short"}})
 	policyPath := filepath.Join(repo, ".jacu", "autonomy-policy.json")
