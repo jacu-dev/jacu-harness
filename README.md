@@ -9,15 +9,26 @@ SDD-009 — a Go **library**. MCP is a surface, not the identity.
 **It has no network, no credential and no deploy.** If JACU fails in every way it can,
 production does not fall. That boundary is the design, not an omission.
 
-Install with one command:
+Install with one command.
+
+Homebrew (macOS or Linux) — the tap is generated from the GitHub Release:
 
 ```sh
-go install github.com/jacu-dev/jacu-harness/cmd/jacu@v0.2.0
+brew install jacu-dev/jacu/jacu
 ```
 
-That is the recommended path (module checksums, no remote shell). There is no
-`curl | sh` installer. Signed binaries and host registration:
-[docs/install.md](docs/install.md).
+Signed binary via curl: download the script from the same Release, review
+it, then run it. There is no `curl | sh` installer.
+
+```sh
+curl -fsSL -o /tmp/jacu-install.sh \
+  https://github.com/jacu-dev/jacu-harness/releases/latest/download/install.sh
+bash /tmp/jacu-install.sh
+```
+
+That writes a Sigstore-verified `~/.local/bin/jacu`. From source:
+`go install github.com/jacu-dev/jacu-harness/cmd/jacu@v0.2.0`. Host
+registration: [docs/install.md](docs/install.md).
 
 ## Quick start
 

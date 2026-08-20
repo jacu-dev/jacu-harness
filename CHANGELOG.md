@@ -6,7 +6,16 @@ All notable changes to JACU are recorded here. The format follows Keep a Changel
 
 ### Added
 
+- Homebrew tap `jacu-dev/homebrew-jacu`: `brew install jacu-dev/jacu/jacu`.
+  GoReleaser writes `jacu.rb`; the tap syncs it from the GitHub Release.
 - Public tree of JACU, a governance harness for coding agents.
+
+### Fixed
+
+- Installer ignores draft GitHub Releases and names a missing published
+  release instead of a generic github.com fetch error.
+- Release workflow attaches `install.sh` and publishes the GitHub Release
+  as non-draft so `/releases/latest` resolves.
 
 ## [0.2.0] - unreleased
 
