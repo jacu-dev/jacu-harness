@@ -61,12 +61,12 @@ func TestWorkspaceStatusJSONAndReportJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("report --json: %v\n%s", err, reportOut)
 	}
-	var envelope map[string]any
-	if err := json.Unmarshal(reportOut, &envelope); err != nil {
+	var quality map[string]any
+	if err := json.Unmarshal(reportOut, &quality); err != nil {
 		t.Fatalf("report stdout is not JSON: %v; %q", err, reportOut)
 	}
-	if envelope["status"] != "ok" {
-		t.Fatalf("report status = %#v", envelope["status"])
+	if quality["kind"] != "audit" || quality["schema_version"] != "1" {
+		t.Fatalf("report --json is not quality.json: %#v", quality)
 	}
 }
 

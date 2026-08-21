@@ -1,6 +1,7 @@
 package report
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
@@ -52,6 +53,20 @@ func TestReportValidationDigestAndMarkdownAreDeterministic(t *testing.T) {
 	markdownAgain, _ := Markdown(report)
 	if digestAgain != digest || markdownAgain != markdown {
 		t.Fatal("same report produced different digest or Markdown")
+	}
+	encoded, err := EncodeJSON(report)
+	if err != nil {
+		t.Fatalf("EncodeJSON: %v", err)
+	}
+	var payload map[string]any
+	if err := json.Unmarshal(encoded, &payload); err != nil {
+		t.Fatalf("EncodeJSON: %v", err)
+	}
+	if payload["kind"] != KindAudit || payload["schema_version"] != SchemaVersion {
+		t.Fatalf("%s identity = %#v", QualityJSONName, payload)
+	}
+	if _, ok := payload["trace_id"]; ok {
+		t.Fatalf("%s must not be the capability envelope: %s", QualityJSONName, encoded)
 	}
 }
 

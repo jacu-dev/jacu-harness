@@ -109,8 +109,28 @@ jacu report [--json] [--events]
 ```
 
 Project structured workspace state as deterministic Markdown. Headless
-projection of the audit state — same data the `jacu_report` MCP tool serves.
-`--json` prints the capability envelope instead of Markdown.
+projection of the audit state. `--json` prints the ADR-010 audit object on
+stdout; that object is the `quality.json` artifact. Markdown is a projection
+only. `--events` with `--json` keeps events on stderr. The MCP `jacu_report`
+tool still returns the compact envelope (summary, Markdown, digest).
+
+Exit codes: `0` success, `1` build/encode failure, `2` usage.
+
+## context
+
+```
+jacu context --sdd [--json]
+```
+
+Admit the active living native SDD (`docs/sdd/<NNN>-<slug>/sdd.md`) into the
+host. Default stdout is the path, a blank line, then the document. `--json`
+prints `{path, document}`. Diagnostics stay on stderr.
+
+Active means a living SDD whose lock has a `doing` task, otherwise the
+PROGRAM queue row marked `doing` or `next`. Exit `1` with typed
+`no_active_sdd` or `multiple_active_sdd` when that contract fails. Exit `2`
+for usage. SDD-006 later adds pack/explain on this same command; this flag
+does not admit a mission pack.
 
 ## statusline
 

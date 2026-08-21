@@ -40,7 +40,7 @@ func TestUsageNamesTheSubcommandsThatExist(t *testing.T) {
 		if strings.Contains(text, "jacu-mcp") {
 			t.Errorf("%s: usage still names the retired command jacu-mcp: %q", label, text)
 		}
-		for _, subcommand := range []string{"serve", "doctor", "init", "version", "report", "statusline", "stats", "provenance", "inspect", "compile", "workspace", "memory", "verify", "flow"} {
+		for _, subcommand := range []string{"serve", "doctor", "init", "version", "report", "context", "statusline", "stats", "provenance", "inspect", "compile", "workspace", "memory", "verify", "flow"} {
 			if !strings.Contains(text, subcommand) {
 				t.Errorf("%s: usage does not name %q: %q", label, subcommand, text)
 			}

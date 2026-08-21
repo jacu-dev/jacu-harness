@@ -18,10 +18,11 @@ import (
 )
 
 const (
-	SchemaVersion = "1"
-	KindAdhoc     = "adhoc"
-	KindPlan      = "plan"
-	KindAudit     = "audit"
+	SchemaVersion   = "1"
+	KindAdhoc       = "adhoc"
+	KindPlan        = "plan"
+	KindAudit       = "audit"
+	QualityJSONName = "quality.json"
 )
 
 type Report struct {
@@ -149,14 +150,22 @@ func Validate(report Report) error {
 	return nil
 }
 
-func Digest(report Report) (string, error) {
+func EncodeJSON(report Report) ([]byte, error) {
 	normalized := normalize(report)
 	if err := Validate(normalized); err != nil {
-		return "", err
+		return nil, err
 	}
 	encoded, err := json.Marshal(normalized)
 	if err != nil {
-		return "", fmt.Errorf("encode report: %w", err)
+		return nil, fmt.Errorf("encode report: %w", err)
+	}
+	return encoded, nil
+}
+
+func Digest(report Report) (string, error) {
+	encoded, err := EncodeJSON(report)
+	if err != nil {
+		return "", err
 	}
 	hash := sha256.Sum256(encoded)
 	return "sha256:" + hex.EncodeToString(hash[:]), nil

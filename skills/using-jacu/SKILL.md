@@ -18,7 +18,7 @@ description: "Use when deciding which JACU skill applies to a request about the 
 | Execute a persisted run through Claude or Codex headless | `jacu-runner` |
 | Inspect structured runs, missions, programs, or the deterministic statusline | `jacu-report` |
 | Diagnose measured local JACU outcomes, including the telemetry window and v1 metrics | `jacu stats [--since 30d]` (CLI diagnostic; no MCP tool) |
-| Scaffold, lint, lock, or inspect a native SDD | `jacu-sdd` |
+| Scaffold, lint, lock, inspect a native SDD, or admit the active one | `jacu-sdd` |
 | Run a bounded declarative graph with verdict/policy edges and deterministic waves | `jacu-orchestration` |
 | Choose among attested host-native CLI profiles, control retries, or record safe cost evidence | `jacu-model` |
 | Remember, recall, or apply a project convention | `jacu-memory`; if a file must also change, use `jacu-mission`, then `jacu-workspace` |
