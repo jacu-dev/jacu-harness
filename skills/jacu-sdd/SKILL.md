@@ -21,7 +21,9 @@ binary only parses, lints, identifies, and gates it.
    and Verify commands, not prose.
 6. `jacu sdd status` is a summary, not proof. Task Verify output belongs in
    the task Evidence cell, and human gates remain human gates.
-7. `jacu sdd close <directory>` is the final verification step. It refuses
+7. `jacu context --sdd` (or `--json`) admits the active living SDD path and
+   document. It is CLI-only. A typed `no_active_sdd` on stderr means stop.
+8. `jacu sdd close <directory>` is the final verification step. It refuses
    unfinished tasks, missing evidence, lint BLOCKs, or a missing manual archive;
    it never performs the archive move or deletes user-created paths.
 

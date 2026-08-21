@@ -149,20 +149,32 @@ func runReport(root string, args []string, stdout, stderr io.Writer) int {
 			return usageSurface(stderr, "report: unknown option "+arg, "report: usage is report [--json] [--events]")
 		}
 	}
-	if !jsonOnly && !events {
-		report, err := headlessreport.BuildAudit(root)
-		if err != nil {
-			_, _ = fmt.Fprintln(stderr, "build report failed:", err)
+	opts := surfaceOptions{jsonOut: jsonOnly, events: events}
+	if events && !jsonOnly {
+		return writeSurface(stdout, reportcapability.Run(surfaceContext(opts, stdout, stderr), root, reportcapability.Input{}), opts)
+	}
+	if events {
+		_ = reportcapability.Run(surfaceContext(opts, stdout, stderr), root, reportcapability.Input{})
+	}
+	report, err := headlessreport.BuildAudit(root)
+	if err != nil {
+		_, _ = fmt.Fprintln(stderr, "build report failed:", err)
+		return 1
+	}
+	if jsonOnly {
+		encoded, encodeErr := headlessreport.EncodeJSON(report)
+		if encodeErr != nil {
+			_, _ = fmt.Fprintln(stderr, "encode", headlessreport.QualityJSONName, "failed:", encodeErr)
 			return 1
 		}
-		markdown, err := headlessreport.Markdown(report)
-		if err != nil {
-			_, _ = fmt.Fprintln(stderr, "render report failed:", err)
-			return 1
-		}
-		_, _ = fmt.Fprint(stdout, markdown)
+		_, _ = stdout.Write(append(encoded, '\n'))
 		return 0
 	}
-	opts := surfaceOptions{jsonOut: jsonOnly, events: events}
-	return writeSurface(stdout, reportcapability.Run(surfaceContext(opts, stdout, stderr), root, reportcapability.Input{}), opts)
+	markdown, err := headlessreport.Markdown(report)
+	if err != nil {
+		_, _ = fmt.Fprintln(stderr, "render report failed:", err)
+		return 1
+	}
+	_, _ = fmt.Fprint(stdout, markdown)
+	return 0
 }

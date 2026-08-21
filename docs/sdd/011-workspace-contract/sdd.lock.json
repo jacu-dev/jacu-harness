@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_310f68e2b58e40b9",
-  "content_sha256": "310f68e2b58e40b9ba301737e94165941c4f5b2f77f8f229e912e241e8aa6627",
+  "sdd_id": "sdd_24034a5c1fa45e06",
+  "content_sha256": "24034a5c1fa45e06d0833d6970ba7b9d07538f21e1430c458a3ee1749187e282",
   "requirements": [
     {
       "name": "Both subcommands accept --json",
@@ -19,27 +19,27 @@
     {
       "number": "T1",
       "verify": "`go test ./cmd/jacu ./internal/report -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T2",
       "verify": "`go test ./cmd/jacu ./internal/report -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T3",
       "verify": "`go test ./cmd/jacu -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T4",
       "verify": "`go test ./internal/mcpadapter -run Skills -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T5",
       "verify": "`jacu sdd lint --all`",
-      "status": "todo"
+      "status": "done"
     }
   ]
 }

@@ -68,6 +68,24 @@ write a report file.
 - **WHEN** no persisted runs are present
 - **THEN** statusline reports `idle` and does not invent a mission or cost
 
+### Requirement: report --json is quality.json
+
+`jacu report --json` SHALL emit the versioned audit JSON object on stdout.
+That object is the `quality.json` artifact. Markdown remains the default
+projection and SHALL never be parsed as state. The MCP `jacu_report` envelope
+stays a compact summary plus Markdown and digest; it is not `quality.json`.
+
+#### Scenario: CLI JSON is the audit object
+
+- **WHEN** `jacu report --json` runs
+- **THEN** stdout is `schema_version` 1, `kind` `audit`, with the eight blocks,
+  and is not a capability envelope
+
+#### Scenario: default output stays Markdown
+
+- **WHEN** `jacu report` runs without `--json`
+- **THEN** stdout is the deterministic Markdown projection of the same audit
+
 ### Requirement: Telemetry metrics projection
 
 The audit report SHALL populate its existing `metrics` block from the local telemetry statistics reader when telemetry data is available. It SHALL include the v1 metric names, the selected time window, and an explicit no-data value when a metric cannot be measured; it SHALL preserve deterministic ordering and report the apply-revert value as heuristic.

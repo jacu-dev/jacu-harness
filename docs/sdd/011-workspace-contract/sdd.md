@@ -45,24 +45,29 @@ does not.
 **Allowed**
 
 ```
-docs/sdd/009-core-surface/**
-docs/sdd/010-repo-governance/**
+cmd/jacu/**
+internal/report/**
 docs/sdd/011-workspace-contract/**
-docs/sdd/012-structural-debt/**
-docs/sdd/013-model-panel/**
-docs/sdd/014-report-visual/**
-docs/sdd/015-program-closeout/**
+docs/sdd/specs/report/spec.md
+docs/sdd/specs/context/spec.md
 docs/sdd/PROGRAM.md
-.cursor/agent-board.md
+skills/**
+docs/reference/cli.md
 ```
 
 **Forbidden**
 
 ```
-cmd/**
-internal/**
 .github/**
 docs/adr/**
+docs/sdd/009-core-surface/**
+docs/sdd/010-repo-governance/**
+docs/sdd/012-structural-debt/**
+docs/sdd/013-model-panel/**
+docs/sdd/014-report-visual/**
+docs/sdd/015-program-closeout/**
+internal/capability/**
+internal/mcpadapter/**
 ```
 
 ## Requirements
@@ -127,11 +132,11 @@ Delta: ADDED
 
 | # | Task | Files | Verify | Status | Evidence |
 |---|---|---|---|---|---|
-| T1 | RED: `jacu report --json` is schema-valid audit JSON | `cmd/jacu/`, `internal/report/` | `go test ./cmd/jacu ./internal/report -race` | todo | |
-| T2 | GREEN: `--json` vs default Markdown projection | `cmd/jacu/`, `internal/report/` | `go test ./cmd/jacu ./internal/report -race` | todo | |
-| T3 | RED then GREEN: `jacu context --sdd` | `cmd/jacu/` | `go test ./cmd/jacu -race` | todo | |
-| T4 | Skills and CLI docs; MCP census unchanged | `skills/`, `docs/` | `go test ./internal/mcpadapter -run Skills -race` | todo | |
-| T5 | Update the report spec after implementation | `docs/sdd/specs/report/spec.md` | `jacu sdd lint --all` | todo | |
+| T1 | RED: `jacu report --json` is schema-valid audit JSON | `cmd/jacu/`, `internal/report/` | `go test ./cmd/jacu ./internal/report -race` | done | `TestReportJSONIsQualityAuditObject` |
+| T2 | GREEN: `--json` vs default Markdown projection | `cmd/jacu/`, `internal/report/` | `go test ./cmd/jacu ./internal/report -race` | done | `TestReportDefaultIsMarkdownProjection` |
+| T3 | RED then GREEN: `jacu context --sdd` | `cmd/jacu/` | `go test ./cmd/jacu -race` | done | `TestContextSDDAdmitsActiveLivingDocument` |
+| T4 | Skills and CLI docs; MCP census unchanged | `skills/`, `docs/` | `go test ./internal/mcpadapter -run Skills -race` | done | report skill + cli.md; no new MCP tool |
+| T5 | Update the report spec after implementation | `docs/sdd/specs/report/spec.md` | `jacu sdd lint --all` | done | quality.json + context --sdd specs |
 
 ## Done
 
