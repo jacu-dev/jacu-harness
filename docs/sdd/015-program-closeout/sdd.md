@@ -62,13 +62,20 @@ archive` stays deferred (`docs/decisions/triggers.md`).
 docs/sdd/015-program-closeout/**
 docs/sdd/PROGRAM.md
 docs/relatorios/sdd-015-execucao.md
+cmd/jacu/**
+internal/gitx/gitx_test.go
+internal/capability/workspace/open.go
+internal/capability/ledger/telemetry.go
+internal/capability/context/pack.go
+internal/capability/orchestration/**
+internal/mcpadapter/surface_test.go
+internal/reportgen/**
+internal/runner/**
 ```
 
 **Forbidden**
 
 ```
-cmd/**
-internal/**
 .github/**
 docs/adr/**
 docs/sdd/001-native-sdd/**
