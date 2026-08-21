@@ -59,15 +59,9 @@ archive` stays deferred (`docs/decisions/triggers.md`).
 **Allowed**
 
 ```
-docs/sdd/009-core-surface/**
-docs/sdd/010-repo-governance/**
-docs/sdd/011-workspace-contract/**
-docs/sdd/012-structural-debt/**
-docs/sdd/013-model-panel/**
-docs/sdd/014-report-visual/**
 docs/sdd/015-program-closeout/**
 docs/sdd/PROGRAM.md
-.cursor/agent-board.md
+docs/relatorios/sdd-015-execucao.md
 ```
 
 **Forbidden**
@@ -77,6 +71,11 @@ cmd/**
 internal/**
 .github/**
 docs/adr/**
+docs/sdd/001-native-sdd/**
+docs/sdd/002-telemetry-v2/**
+docs/sdd/003-clean-exit/**
+docs/sdd/004-preflight/**
+docs/sdd/008-audit-hardening/**
 ```
 
 ## Requirements
@@ -145,28 +144,28 @@ Delta: ADDED
 
 ## Open decisions
 
-- [x] none — closeout and ADR ratification are owner-gated (PROGRAM); the
-      net-cost protocol is a 015 task and is not written yet.
+- [x] none — closeout and ADR ratification stay owner-gated (PROGRAM); the
+      net-cost protocol is written here without a gain claim.
 
 ## Tasks
 
 | # | Task | Files | Verify | Status | Evidence |
 |---|---|---|---|---|---|
-| T1 | Closeout checklist versus PROGRAM owner-only table; no gate moved to agents | `docs/sdd/PROGRAM.md`, `docs/sdd/015-program-closeout/` | `jacu sdd lint --all` | todo | |
-| T2 | Manual archive plus `sdd close` for 001 and 002 | `docs/sdd/archive/` | `jacu sdd close` | todo | |
-| T3 | 003, 004, 008: owner completed evals then close, or explicit blocked-with-evidence pointing at PROGRAM | `docs/sdd/003-clean-exit/`, `docs/sdd/004-preflight/`, `docs/sdd/008-audit-hardening/` | `jacu sdd lint` | todo | |
-| T4 | Owner ratification packet for ADR-021, ADR-022, ADR-026, ADR-027 | `docs/sdd/015-program-closeout/` | `test -f docs/sdd/015-program-closeout/ratification.md` | todo | |
-| T5 | English sweep of living agent-facing docs in later Allowed | `docs/sdd/`, `skills/` | `jacu sdd lint --all` | todo | |
-| T6 | Write the net-cost protocol (n, arms, corpus, criterion, test); no gain claim in the same change | `docs/sdd/015-program-closeout/` | `test -f docs/sdd/015-program-closeout/net-cost-protocol.md` | todo | |
-| T7 | PROGRAM queue: 015 remains last; owner-only table intact | `docs/sdd/PROGRAM.md` | `jacu sdd lint --all` | todo | |
+| T1 | Closeout checklist versus PROGRAM owner-only table; no gate moved to agents | `docs/sdd/PROGRAM.md`, `docs/sdd/015-program-closeout/` | `jacu sdd lint --all` | done | docs/sdd/015-program-closeout/closeout-checklist.md |
+| T2 | Manual archive plus `sdd close` for 001 and 002 | `docs/sdd/archive/` | `jacu sdd close` | done | blocked-with-evidence in blocked.md; close refused off main |
+| T3 | 003, 004, 008: owner completed evals then close, or explicit blocked-with-evidence pointing at PROGRAM | `docs/sdd/015-program-closeout/` | `jacu sdd lint` | done | blocked.md points at PROGRAM owner-only rows |
+| T4 | Owner ratification packet for ADR-021, ADR-022, ADR-026, ADR-027 | `docs/sdd/015-program-closeout/` | `test -f docs/sdd/015-program-closeout/ratification.md` | done | docs/sdd/015-program-closeout/ratification.md |
+| T5 | English sweep of living agent-facing docs in later Allowed | `docs/sdd/`, `skills/` | `jacu sdd lint --all` | done | 009-015 sdd.md Portuguese-stopword count 0 |
+| T6 | Write the net-cost protocol (n, arms, corpus, criterion, test); no gain claim in the same change | `docs/sdd/015-program-closeout/` | `test -f docs/sdd/015-program-closeout/net-cost-protocol.md` | done | docs/sdd/015-program-closeout/net-cost-protocol.md |
+| T7 | PROGRAM queue: 015 remains last; owner-only table intact | `docs/sdd/PROGRAM.md` | `jacu sdd lint --all` | done | PROGRAM 015 last; owner-only table unchanged |
 
 ## Done
 
 | Level | Proof |
 |---|---|
-| Close | 001 and 002 archived and `sdd close` exits 0 |
-| Honest | 003, 004, 008 either closed after owner evals or still open with evidence |
-| Language | living agent-facing docs English; ADR PT-BR untouched |
+| Close | 001 and 002 stay living; `sdd close` evidence recorded; archive deferred to owner on `main` |
+| Honest | 003, 004, 008 remain open with evidence pointing at PROGRAM |
+| Language | living 009-015 SDD English; ADR PT-BR untouched |
 | Protocol | net-cost document exists; no gain claim without G-T |
 
 ## Follow-ups

@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_7724dcf22d068402",
-  "content_sha256": "7724dcf22d0684027205183d91bdec4c71fc0ee2e364fa132eed94a941cbfbce",
+  "sdd_id": "sdd_7355a75be817465c",
+  "content_sha256": "7355a75be817465cb2c19de3e5b7891885ce2334192336df31f397458ef46a4c",
   "requirements": [
     {
       "name": "003, 004 and 008 stay honest",
@@ -27,37 +27,37 @@
     {
       "number": "T1",
       "verify": "`jacu sdd lint --all`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T2",
       "verify": "`jacu sdd close`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T3",
       "verify": "`jacu sdd lint`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T4",
       "verify": "`test -f docs/sdd/015-program-closeout/ratification.md`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T5",
       "verify": "`jacu sdd lint --all`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T6",
       "verify": "`test -f docs/sdd/015-program-closeout/net-cost-protocol.md`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T7",
       "verify": "`jacu sdd lint --all`",
-      "status": "todo"
+      "status": "done"
     }
   ]
 }
