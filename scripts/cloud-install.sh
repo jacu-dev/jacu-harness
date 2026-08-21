@@ -6,7 +6,7 @@
 #
 #   cloud-install.sh                  build from this checkout (default)
 #   cloud-install.sh --from-source    same
-#   cloud-install.sh --version vX.Y.Z verified release install (github.com)
+#   cloud-install.sh --version vX.Y.Z verified release install (github.com only)
 set -euo pipefail
 
 from_source=true

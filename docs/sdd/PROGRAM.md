@@ -69,8 +69,8 @@ One SDD open at a time. Order is dependency, not preference.
 | 003 | `clean-exit` | `sdd close`, receipt, closing gate | merged · **eval and ADR-021 open** |
 | 004 | `preflight` | checklist over 8 interruption classes | merged · **eval and ADR-022 open** |
 | 008 | `audit-hardening` | audit remediation, bounded storage | merged · **signed tag, P6-P8 open** |
-| **016** | **`open-source-export`** | sanitize, rename, public repo `jacu-harness` | **doing** · T1–T8 in-tree; owner still archives the former private repo |
-| 017 | `installable-cloud` | release proof P6-P8, `jacu init`, cloud bootstrap, cwd guard | queued · after 016 |
+| **016** | **`open-source-export`** | sanitize, rename, public repo `jacu-harness` | in-tree done · owner still archives the former private repo |
+| 017 | `installable-cloud` | release proof P6-P8, `jacu init`, cloud bootstrap, cwd guard | **doing** · T1–T6 in-tree; T7 owner tag |
 | 009 | `core-surface` | `Run()` in 6 capabilities, CLI parity, `--json`, `--events` | merged · `3d22487` |
 | **010** | **`repo-governance`** | `.jacu/protected.json`, per-run `JACU_HOME`, `status` off the write gate, flow fan-out cap | merged · `c9fb999` |
 | **011** | **`workspace-contract`** | `report --json` as `quality.json`, `context --sdd` | merged · `a252a18` |

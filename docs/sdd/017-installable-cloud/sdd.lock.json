@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_541134b17ed9c7c0",
-  "content_sha256": "541134b17ed9c7c06b295d86c7af55d41f0190af3bd5715ddd816f493c290d92",
+  "sdd_id": "sdd_61d2c4c680a8e187",
+  "content_sha256": "61d2c4c680a8e187419abe26ed81f3b7ef438abc5dc57f42695dce06c0af1415",
   "requirements": [
     {
       "name": "Catalogue survives the host round-trip",
@@ -35,32 +35,32 @@
     {
       "number": "T1",
       "verify": "`bash scripts/release-test.sh`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T2",
       "verify": "`bash scripts/e2e.sh`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T3",
       "verify": "`go test ./cmd/...`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T4",
       "verify": "`go test ./... -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T5",
       "verify": "scripted VM matrix",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T6",
       "verify": "`bash scripts/hosteval.sh`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T7",

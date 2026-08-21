@@ -53,7 +53,7 @@ func verifyCapability(root string, manager *TaskManager) capabilityruntime.Capab
 			MaxInputBytes:  16 * 1024,
 			MaxOutputBytes: maxOutputBytes,
 		},
-		Handler: capabilityruntime.RequireWorkTree(root, verifyHandler(root, manager)),
+		Handler: workTreeGuardedVerify(root, verifyHandler(root, manager)),
 	}
 }
 
@@ -127,6 +127,21 @@ func eligibleRun(root, runID string) error {
 		return fmt.Errorf("run %s is not open for verification (status %q)", runID, run.Status)
 	}
 	return nil
+}
+
+func workTreeGuardedVerify(root string, next capabilityruntime.Handler) capabilityruntime.Handler {
+	return func(ctx context.Context, input json.RawMessage) (capabilityruntime.Result, error) {
+		if blocked, ok := capabilityruntime.WorkTreeBlock(ctx, root); ok {
+			blocked.Data = Data{Verdict: VerdictBlocked, Commands: []Result{}}
+			blocked.Artifacts = []string{}
+			blocked.Warnings = []string{}
+			return blocked, nil
+		}
+		if next == nil {
+			return capabilityruntime.Result{Status: "failed", Summary: "capability handler is missing"}, nil
+		}
+		return next(ctx, input)
+	}
 }
 
 func capabilityResult(result Envelope) capabilityruntime.Result {

@@ -35,6 +35,18 @@ func TestDoctorReportsVersions(t *testing.T) {
 	}
 }
 
+func TestDoctorEmitClaudeDesktopWithoutRepoFails(t *testing.T) {
+	cmd := exec.Command("go", "run", "-buildvcs=false", ".", "doctor", "--emit", "claude-desktop")
+	cmd.Env = isolatedUserStateEnv(t)
+	output, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatalf("doctor --emit claude-desktop without --repo exited 0:\n%s", output)
+	}
+	if !strings.Contains(string(output), "--repo") {
+		t.Fatalf("refusal must name --repo:\n%s", output)
+	}
+}
+
 func TestSupportedProtocolVersions(t *testing.T) {
 	if len(mcpadapter.SupportedProtocolVersions) == 0 {
 		t.Fatal("SupportedProtocolVersions must not be empty")

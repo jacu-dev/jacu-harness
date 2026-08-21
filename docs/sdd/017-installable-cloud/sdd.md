@@ -46,6 +46,7 @@ Execution contract: `docs/plans/one-shot-open-source.md` (Phase C).
 cmd/**
 internal/capability/projectinspect/**
 internal/capability/preflight/**
+internal/capability/verify/**
 internal/mcpadapter/**
 scripts/**
 test/e2e/**
@@ -174,13 +175,13 @@ Delta: ADDED
 
 | # | Task | Files | Verify | Status | Evidence |
 |---|---|---|---|---|---|
-| T1 | Self-fetching install.sh + tests | `scripts/install.sh`, `scripts/release-test.sh` | `bash scripts/release-test.sh` | todo | |
-| T2 | `jacu init` + per-host e2e | `cmd/jacu/init.go`, `test/e2e/**` | `bash scripts/e2e.sh` | todo | |
-| T3 | claude-desktop pack anchoring | `cmd/jacu/hostpack.go` | `go test ./cmd/...` | todo | |
-| T4 | cwd guard on repo-scoped tools | `internal/capability/projectinspect/**`, `internal/mcpadapter/**` | `go test ./... -race` | todo | |
-| T5 | cloud-install.sh + restricted-VM eval | `scripts/cloud-install.sh` | scripted VM matrix | todo | |
-| T6 | Catalogue round-trip assert | `test/hosteval/**` | `bash scripts/hosteval.sh` | todo | |
-| T7 | Release v0.2.0 + installable-release report (owner tag) | `.github/workflows/release.yml`, docs | fresh-machine install log | todo | |
+| T1 | Self-fetching install.sh + tests | `scripts/install.sh`, `scripts/release-test.sh` | `bash scripts/release-test.sh` | done | `scripts/install.sh` fetches tarball+checksums+sigstore bundle, keeps `--dry-run`/`--rollback`/`JACU_RELEASE_BASE_URL`; tamper refuse in `scripts/release-test.sh` |
+| T2 | `jacu init` + per-host e2e | `cmd/jacu/init.go`, `test/e2e/**` | `bash scripts/e2e.sh` | done | `cmd/jacu/init.go` plus `test/e2e/init_test.go`: named `--config` only; unnamed host prints snippet and target path |
+| T3 | claude-desktop pack anchoring | `cmd/jacu/hostpack.go` | `go test ./cmd/...` | done | `renderHostPack` emits `cd <repo> && exec jacu serve`; `doctor --emit claude-desktop` without `--repo` exits nonzero |
+| T4 | cwd guard on repo-scoped tools | `internal/capability/projectinspect/**`, `internal/capability/verify/**`, `internal/mcpadapter/**` | `go test ./... -race` | done | `runtime.RequireWorkTree` on inspect, compile, workspace write tools, report, verify, flow; verify blocked envelopes carry `verdict=blocked`; `TestRepoScopedToolsBlockOutsideAGitWorkTree` covers `jacu_verify` and `jacu_flow_run`; `jacu_status` stays user-scoped |
+| T5 | cloud-install.sh + restricted-VM eval | `scripts/cloud-install.sh` | scripted VM matrix | done | `scripts/cloud-install.sh --version` is github.com release mode; `--from-source` is the checkout fallback; `scripts/cloud-install-eval.sh` plus `.cursor/install.sh` wrapper |
+| T6 | Catalogue round-trip assert | `test/hosteval/**` | `bash scripts/hosteval.sh` | done | `test/hosteval/catalogue.go` fails truncated or empty descriptions; `scripts/hosteval.sh` runs those tests without a live host; mcpadapter lists the advertised catalogue |
+| T7 | Release v0.2.0 + installable-release report (owner tag) | `.github/workflows/release.yml`, docs | fresh-machine install log | todo | owner: release guard requires actor `ecouto` |
 
 ## Done
 
@@ -190,4 +191,4 @@ Delta: ADDED
 
 ## Follow-ups
 
-- G-10a social pilot (owner-only) is unblocked and should run immediately after.
+- G-10a social pilot (owner-only) is unblocked after the signed `v0.2.0` tag (T7).
