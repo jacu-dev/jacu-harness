@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/jacu-dev/jacu-harness/internal/scope"
 )
 
 const (
@@ -355,7 +357,7 @@ func ScheduleWaves(flow Flow) ([][]string, error) {
 			}
 			conflict := false
 			for _, other := range waves[wave] {
-				if scopesConflict(nodes[id].AllowedPaths, nodes[other].AllowedPaths) {
+				if scope.ListsConflict(nodes[id].AllowedPaths, nodes[other].AllowedPaths) {
 					conflict = true
 					break
 				}
@@ -372,41 +374,4 @@ func ScheduleWaves(flow Flow) ([][]string, error) {
 		sort.Strings(waves[index])
 	}
 	return waves, nil
-}
-
-func normalizeScope(path string) string {
-	path = strings.TrimSpace(path)
-	if index := strings.IndexAny(path, "*?"); index >= 0 {
-		path = path[:index]
-	}
-	return strings.TrimSuffix(path, "/")
-}
-
-func scopesConflict(left, right []string) bool {
-	if len(left) == 0 || len(right) == 0 {
-		return true
-	}
-	for _, raw := range left {
-		if normalizeScope(raw) == "" {
-			return true
-		}
-	}
-	for _, raw := range right {
-		if normalizeScope(raw) == "" {
-			return true
-		}
-	}
-	for _, leftPath := range left {
-		for _, rightPath := range right {
-			leftPath, rightPath = normalizeScope(leftPath), normalizeScope(rightPath)
-			if leftPath == rightPath || dirPrefix(leftPath, rightPath) || dirPrefix(rightPath, leftPath) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func dirPrefix(prefix, path string) bool {
-	return prefix != "" && len(path) > len(prefix) && strings.HasPrefix(path, prefix) && path[len(prefix)] == '/'
 }

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/jacu-dev/jacu-harness/internal/scope"
 )
 
 type protectedDocument struct {
@@ -32,5 +34,5 @@ func LoadProtectedPaths(root string) ([]string, error) {
 }
 
 func ProtectedPath(path string, protected []string) bool {
-	return scopeMatchesAny(path, protected)
+	return scope.MatchesAny(path, protected)
 }

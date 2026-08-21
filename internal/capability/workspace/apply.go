@@ -11,6 +11,7 @@ import (
 	"github.com/jacu-dev/jacu-harness/internal/capability/verify"
 	"github.com/jacu-dev/jacu-harness/internal/gitx"
 	"github.com/jacu-dev/jacu-harness/internal/runstate"
+	"github.com/jacu-dev/jacu-harness/internal/scope"
 	"github.com/jacu-dev/jacu-harness/internal/telemetry"
 )
 
@@ -79,7 +80,7 @@ func applyUnlocked(ctx context.Context, root string, in ApplyInput, hostName str
 	}
 	run.Mission = mission
 	for _, path := range snapshot.Files {
-		if ScopesConflict(path, run.Mission.AllowedPaths, run.Mission.ForbiddenPaths) {
+		if scope.ScopesConflict(path, run.Mission.AllowedPaths, run.Mission.ForbiddenPaths) {
 			emitWorkspaceGate(root, "block", "jacu_apply", run)
 			return blockedApply("mission scope mismatch: "+path, ""), nil
 		}

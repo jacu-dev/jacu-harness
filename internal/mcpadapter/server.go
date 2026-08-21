@@ -35,6 +35,7 @@ func NewServer(version, root string) *mcp.Server {
 	verify.RegisterToolWithTaskManager(server, root, taskManager)
 	orchestration.RegisterTool(server, root, taskManager)
 	reportcapability.RegisterTool(server, root)
+	server.AddReceivingMiddleware(compactToolsListMiddleware)
 	return server
 }
 

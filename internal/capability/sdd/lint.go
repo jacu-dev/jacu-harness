@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jacu-dev/jacu-harness/internal/capability/workspace"
 	"github.com/jacu-dev/jacu-harness/internal/gitx"
+	"github.com/jacu-dev/jacu-harness/internal/scope"
 )
 
 var requiredSections = []string{
@@ -149,7 +149,7 @@ func lintOpenDecisions(sections map[string]Section) []Finding {
 func lintScope(document Document, changedPaths []string) []Finding {
 	allowed, forbidden := writeScope(document)
 	for _, path := range changedPaths {
-		if workspace.ScopesConflict(path, allowed, forbidden) {
+		if scope.ScopesConflict(path, allowed, forbidden) {
 			return []Finding{{Code: "sdd_out_of_scope_touched", Severity: SeverityBlock, Target: path, Message: "changed path is outside the declared write scope"}}
 		}
 	}

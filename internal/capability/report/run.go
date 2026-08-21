@@ -6,6 +6,7 @@ import (
 	"time"
 
 	headlessreport "github.com/jacu-dev/jacu-harness/internal/report"
+	"github.com/jacu-dev/jacu-harness/internal/reportgen"
 	capabilityruntime "github.com/jacu-dev/jacu-harness/internal/runtime"
 	"github.com/jacu-dev/jacu-harness/internal/telemetry"
 )
@@ -38,7 +39,7 @@ func reportHandler(root string) capabilityruntime.Handler {
 		if err != nil {
 			return capabilityruntime.Result{}, err
 		}
-		markdown, err := headlessreport.Markdown(report)
+		markdown, err := reportgen.Markdown(report)
 		if err != nil {
 			return capabilityruntime.Result{}, err
 		}

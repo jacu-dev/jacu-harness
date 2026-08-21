@@ -1,16 +1,12 @@
 package telemetry
 
 import (
-	"bytes"
-	"context"
 	"fmt"
 	"math"
 	"os"
 	"sort"
 	"strings"
 	"time"
-
-	"github.com/jacu-dev/jacu-harness/internal/gitx"
 )
 
 const (
@@ -221,15 +217,9 @@ func ComputeStats(events []Event, since, until time.Time, history *GitHistory) (
 		stats.ToolP95Ms[tool] = percentile(durations, 0.95)
 	}
 	if history != nil && history.Repo != "" {
-		reverted, err := history.revertedApplies(since, until)
-		if err != nil {
-			return stats, nil
-		}
-		if totalApplies > 0 {
-			stats.RevertedApplyPct = percentage(reverted, totalApplies)
-			stats.Available[MetricRevertedApplyPct] = true
-			stats.RevertHeuristic = true
-		}
+		// Revert rate is a missing signal without scanning history (I4 / SDD-012).
+		stats.Available[MetricRevertedApplyPct] = false
+		stats.RevertHeuristic = false
 	}
 	if stats.MissionBytesIn > 0 {
 		stats.Available[MetricMissionBytesIn] = true
@@ -270,28 +260,6 @@ func percentile(values []int64, fraction float64) int64 {
 		index = len(sorted) - 1
 	}
 	return sorted[index]
-}
-
-func (history GitHistory) revertedApplies(since, until time.Time) (int, error) {
-	git, err := gitx.New()
-	if err != nil {
-		return 0, fmt.Errorf("read git revert history: %w", err)
-	}
-	output, err := git.OutputRaw(context.Background(), history.Repo, "log",
-		"--since="+since.UTC().Format(time.RFC3339),
-		"--until="+until.UTC().Format(time.RFC3339),
-		"--format=%aI%x00%B%x00")
-	if err != nil {
-		return 0, fmt.Errorf("read git revert history: %w", err)
-	}
-	count := 0
-	for _, record := range bytes.Split([]byte(output), []byte{0}) {
-		message := string(record)
-		if strings.Contains(strings.ToLower(message), "revert") && strings.Contains(message, "Jacu-Run:") {
-			count++
-		}
-	}
-	return count, nil
 }
 
 func FormatStats(stats Stats) string {

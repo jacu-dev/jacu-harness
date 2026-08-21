@@ -10,6 +10,7 @@ import (
 	"github.com/jacu-dev/jacu-harness/internal/gitx"
 	"github.com/jacu-dev/jacu-harness/internal/runstate"
 	capabilityruntime "github.com/jacu-dev/jacu-harness/internal/runtime"
+	"github.com/jacu-dev/jacu-harness/internal/scope"
 )
 
 const (
@@ -87,13 +88,13 @@ func workspaceDiffUnlocked(ctx context.Context, root string, in DiffInput) (Diff
 	}
 	warnings := []string{}
 	for _, path := range snapshot.Files {
-		if scopeMatchesAny(path, run.Mission.AllowedPaths) {
+		if scope.MatchesAny(path, run.Mission.AllowedPaths) {
 			data.InScope = append(data.InScope, path)
 		} else {
 			data.OutOfScope = append(data.OutOfScope, path)
 			warnings = append(warnings, "out-of-scope change: "+path)
 		}
-		if scopeMatchesAny(path, run.Mission.ForbiddenPaths) {
+		if scope.MatchesAny(path, run.Mission.ForbiddenPaths) {
 			warnings = append(warnings, "FORBIDDEN path modified: "+path)
 		}
 	}
