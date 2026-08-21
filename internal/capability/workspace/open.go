@@ -106,9 +106,9 @@ func openUnlocked(ctx context.Context, root string, in OpenInput) (OpenResult, e
 		cleanup(branchCreated)
 		return OpenResult{}, err
 	}
-	if err := git.WorktreeLock(ctx, root, worktree); err != nil {
+	if lockErr := git.WorktreeLock(ctx, root, worktree); lockErr != nil {
 		cleanup(branchCreated)
-		return OpenResult{}, err
+		return OpenResult{}, lockErr
 	}
 	runHome, err := userstate.RunHome(projectID, runID)
 	if err != nil {
