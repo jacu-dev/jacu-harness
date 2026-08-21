@@ -3,11 +3,11 @@ package cleanexit
 import (
 	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/jacu-dev/jacu-harness/internal/gitx"
 	"github.com/jacu-dev/jacu-harness/internal/runstate"
 )
 
@@ -135,13 +135,11 @@ func gitOutput(project string, args ...string) string {
 }
 
 func gitOutputChecked(project string, args ...string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), gitQueryTimeout)
-	defer cancel()
-	// #nosec G204 -- git is fixed and project is the validated repository root; args are fixed detector queries.
-	command := exec.CommandContext(ctx, "git", append([]string{"-C", project}, args...)...)
-	output, err := command.Output()
+	git, err := gitx.New()
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSpace(string(output)), nil
+	ctx, cancel := context.WithTimeout(context.Background(), gitQueryTimeout)
+	defer cancel()
+	return git.Output(ctx, project, args...)
 }

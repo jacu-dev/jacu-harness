@@ -5,11 +5,29 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 	"log/slog"
 	"time"
 
 	"github.com/jacu-dev/jacu-harness/internal/telemetry"
 )
+
+type liveEventsKey struct{}
+
+// WithLiveEvents tees the telemetry v2 envelope as NDJSON to w during Execute.
+// jacu serve must not set this on stdout: stdout is JSON-RPC.
+func WithLiveEvents(ctx context.Context, w io.Writer) context.Context {
+	if w == nil {
+		return ctx
+	}
+	return context.WithValue(ctx, liveEventsKey{}, w)
+}
+
+// LiveEvents returns the writer attached by WithLiveEvents, if any.
+func LiveEvents(ctx context.Context) io.Writer {
+	w, _ := ctx.Value(liveEventsKey{}).(io.Writer)
+	return w
+}
 
 type Handler func(ctx context.Context, input json.RawMessage) (Result, error)
 
@@ -39,14 +57,15 @@ func Execute(ctx context.Context, c Capability, input json.RawMessage) (result R
 		if projectID == "" {
 			projectID = "prj_unknown"
 		}
-		telemetry.EmitBestEffortInput(telemetry.EventInput{
+		event := telemetry.EventInput{
 			Timestamp: time.Now().UTC(), ProjectID: projectID, TraceID: result.TraceID,
 			Event: telemetry.EventToolCall, Tool: c.Spec.Name, Status: result.Status,
 			RunID: fields.runID, MissionID: fields.missionID, Ceremony: fields.ceremony,
 			Risk: fields.risk, Verdict: fields.verdict, Duration: time.Since(started),
 			Measurement: "exact_bytes", InputBytes: inputBytes, OutputBytes: outputBytes,
 			Capped: capped, DegradedPartial: capped && result.Status == "partial",
-		})
+		}
+		telemetry.EmitBestEffortInputLive(LiveEvents(ctx), event)
 		slog.Info("capability execution",
 			"tool", c.Spec.Name,
 			"trace_id", result.TraceID,

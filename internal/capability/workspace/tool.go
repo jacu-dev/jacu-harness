@@ -91,7 +91,6 @@ func registerWorkspaceToolsWithTaskManager(server *mcp.Server, root string, gate
 }
 
 func registerOpenTool(server *mcp.Server, root string, gate workspaceOperationGate) {
-	capability := workspaceOpenCapability(root)
 	mcp.AddTool(server, workspaceTool(
 		WorkspaceOpenToolName,
 		"Open.",
@@ -100,7 +99,9 @@ func registerOpenTool(server *mcp.Server, root string, gate workspaceOperationGa
 		false,
 		false,
 	), func(ctx context.Context, _ *mcp.CallToolRequest, input OpenInput) (*mcp.CallToolResult, envelope[OpenData], error) {
-		return executeTyped[OpenInput, OpenData](ctx, gate, capability, input)
+		return executeRun[OpenData](ctx, gate, workspaceOpenCapability(root).Spec.Timeout, func(ctx context.Context) capabilityruntime.Result {
+			return RunOpen(ctx, root, input)
+		})
 	})
 }
 
@@ -109,7 +110,6 @@ func registerStatusTool(server *mcp.Server, root string, gate workspaceOperation
 }
 
 func registerStatusToolWithTaskManager(server *mcp.Server, root string, gate workspaceOperationGate, name string, manager *verify.TaskManager) {
-	capability := workspaceStatusCapabilityWithTaskManager(root, manager)
 	tool := workspaceTool(
 		name,
 		"Status.",
@@ -121,12 +121,13 @@ func registerStatusToolWithTaskManager(server *mcp.Server, root string, gate wor
 	tool.InputSchema = statusInputSchema()
 	tool.OutputSchema = statusOutputSchema()
 	mcp.AddTool(server, tool, func(ctx context.Context, _ *mcp.CallToolRequest, input StatusInput) (*mcp.CallToolResult, envelope[StatusData], error) {
-		return executeTyped[StatusInput, StatusData](ctx, gate, capability, input)
+		return executeRun[StatusData](ctx, gate, workspaceStatusCapabilityWithTaskManager(root, manager).Spec.Timeout, func(ctx context.Context) capabilityruntime.Result {
+			return RunStatusWithManager(ctx, root, input, manager)
+		})
 	})
 }
 
 func registerDiffTool(server *mcp.Server, root string, gate workspaceOperationGate) {
-	capability := workspaceDiffCapability(root)
 	mcp.AddTool(server, workspaceTool(
 		DiffToolName,
 		"Diff.",
@@ -135,7 +136,9 @@ func registerDiffTool(server *mcp.Server, root string, gate workspaceOperationGa
 		false,
 		false,
 	), func(ctx context.Context, _ *mcp.CallToolRequest, input DiffInput) (*mcp.CallToolResult, envelope[DiffData], error) {
-		return executeTyped[DiffInput, DiffData](ctx, gate, capability, input)
+		return executeRun[DiffData](ctx, gate, workspaceDiffCapability(root).Spec.Timeout, func(ctx context.Context) capabilityruntime.Result {
+			return RunDiff(ctx, root, input)
+		})
 	})
 }
 
@@ -152,12 +155,14 @@ func registerApplyTool(server *mcp.Server, root string, gate workspaceOperationG
 		true,
 		true,
 	), func(ctx context.Context, request *mcp.CallToolRequest, input ApplyInput) (*mcp.CallToolResult, envelope[ApplyData], error) {
-		return executeTyped[ApplyInput, ApplyData](ctx, gate, workspaceApplyCapability(root, requestHostName(request)), input)
+		hostName := requestHostName(request)
+		return executeRun[ApplyData](ctx, gate, workspaceApplyCapability(root, hostName).Spec.Timeout, func(ctx context.Context) capabilityruntime.Result {
+			return RunApply(ctx, root, input, hostName)
+		})
 	})
 }
 
 func registerDiscardTool(server *mcp.Server, root string, gate workspaceOperationGate) {
-	capability := workspaceDiscardCapability(root)
 	mcp.AddTool(server, workspaceTool(
 		DiscardToolName,
 		"Discard.",
@@ -166,7 +171,9 @@ func registerDiscardTool(server *mcp.Server, root string, gate workspaceOperatio
 		true,
 		false,
 	), func(ctx context.Context, _ *mcp.CallToolRequest, input DiscardInput) (*mcp.CallToolResult, envelope[DiscardData], error) {
-		return executeTyped[DiscardInput, DiscardData](ctx, gate, capability, input)
+		return executeRun[DiscardData](ctx, gate, workspaceDiscardCapability(root).Spec.Timeout, func(ctx context.Context) capabilityruntime.Result {
+			return RunDiscard(ctx, root, input)
+		})
 	})
 }
 
@@ -183,19 +190,14 @@ func workspaceTool(name, description string, readOnly, idempotent, destructive, 
 	}
 }
 
-func executeTyped[I, D any](ctx context.Context, gate workspaceOperationGate, capability capabilityruntime.Capability, input I) (*mcp.CallToolResult, envelope[D], error) {
-	executionCtx, cancel := context.WithTimeout(ctx, capability.Spec.Timeout)
+func executeRun[D any](ctx context.Context, gate workspaceOperationGate, timeout time.Duration, run func(context.Context) capabilityruntime.Result) (*mcp.CallToolResult, envelope[D], error) {
+	executionCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	if err := gate.acquire(executionCtx); err != nil {
 		return nil, envelope[D]{}, err
 	}
 	defer gate.release()
-
-	rawInput, err := json.Marshal(input)
-	if err != nil {
-		return nil, envelope[D]{}, err
-	}
-	result := capabilityruntime.Execute(executionCtx, capability, rawInput)
+	result := run(executionCtx)
 	data, _ := result.Data.(D)
 	return nil, envelope[D]{
 		Status:      result.Status,

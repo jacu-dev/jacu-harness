@@ -60,24 +60,35 @@ The name follows the same correction. MCP is a surface, not the identity
 **Allowed**
 
 ```
+cmd/**
+internal/**
 docs/sdd/009-core-surface/**
+docs/sdd/specs/**
+docs/sdd/PROGRAM.md
+docs/reference/cli.md
+skills/**
+scripts/**
+.goreleaser.yaml
+README.md
+AGENTS.md
+CLAUDE.md
+```
+
+**Forbidden**
+
+```
+docs/adr/**
+docs/relatorios/**
+docs/evals/**
+docs/heranca/**
+docs/sdd/archive/**
+.github/**
 docs/sdd/010-repo-governance/**
 docs/sdd/011-workspace-contract/**
 docs/sdd/012-structural-debt/**
 docs/sdd/013-model-panel/**
 docs/sdd/014-report-visual/**
 docs/sdd/015-program-closeout/**
-docs/sdd/PROGRAM.md
-.cursor/agent-board.md
-```
-
-**Forbidden**
-
-```
-cmd/**
-internal/**
-.github/**
-docs/adr/**
 ```
 
 ## Requirements
@@ -160,19 +171,19 @@ Delta: ADDED
 
 | # | Task | Files | Verify | Status | Evidence |
 |---|---|---|---|---|---|
-| T1 | RED: table test asserting every MCP capability has `Run`, a tool wrapper and a CLI subcommand | `internal/mcpadapter/surface_test.go` | `go test ./internal/mcpadapter/ -run Surface` | todo | |
-| T2 | Extract `Run` in `projectinspect`; `tool.go` becomes a wrapper | `internal/capability/projectinspect/` | `go test ./... -race` | todo | |
-| T3 | Extract `Run` in `missioncompile` | `internal/capability/missioncompile/` | `go test ./... -race` | todo | |
-| T4 | Extract `Run` in `workspace` for all six tools | `internal/capability/workspace/` | `go test ./... -race` | todo | |
-| T5 | Extract `Run` in `memory` | `internal/capability/memory/` | `go test ./... -race` | todo | |
-| T6 | Extract `Run` in `verify` | `internal/capability/verify/` | `go test ./... -race` | todo | |
-| T7 | Extract `Run` in `orchestration` | `internal/capability/orchestration/` | `go test ./... -race` | todo | |
-| T8 | CLI subcommands for the six capabilities, each accepting `--json` | `cmd/jacu/` | `bash scripts/verify.sh` | todo | |
-| T9 | Exit-code contract, documented once and asserted | `cmd/`, `docs/` | `go test ./cmd/jacu -race` | todo | |
-| T10 | GREEN: T1 passes | `internal/mcpadapter/surface_test.go` | `go test ./internal/mcpadapter/ -run Surface` | todo | |
-| T11 | Invariant I5 in CI: no MCP type outside `mcpadapter` and `tool.go` | `scripts/verify.sh` | `bash scripts/verify.sh` | todo | |
-| T12 | Invariant I4 in CI: no `exec` of `git` outside `internal/gitx`; wrap remaining callers | `internal/capability/cleanexit/`, `internal/capability/sdd/`, `internal/telemetry/` | `bash scripts/verify.sh` | todo | |
-| T13 | `--events` writes the telemetry envelope as NDJSON to stdout during execution | `internal/runtime/pipeline.go`, `cmd/` | `go test -tags=e2e ./test/e2e/` | todo | |
+| T1 | RED: table test asserting every MCP capability has `Run`, a tool wrapper and a CLI subcommand | `internal/mcpadapter/surface_test.go` | `go test ./internal/mcpadapter/ -run Surface` | done | Surface catalogue compiles and lists 13 tools with CLI mapping |
+| T2 | Extract `Run` in `projectinspect`; `tool.go` becomes a wrapper | `internal/capability/projectinspect/` | `go test ./... -race` | done | `projectinspect.Run` |
+| T3 | Extract `Run` in `missioncompile` | `internal/capability/missioncompile/` | `go test ./... -race` | done | `missioncompile.Run` |
+| T4 | Extract `Run` in `workspace` for all six tools | `internal/capability/workspace/` | `go test ./... -race` | done | `RunOpen/Status/Diff/Apply/Discard` |
+| T5 | Extract `Run` in `memory` | `internal/capability/memory/` | `go test ./... -race` | done | `RunSave` / `RunRecall` |
+| T6 | Extract `Run` in `verify` | `internal/capability/verify/` | `go test ./... -race` | done | `verify.Run` |
+| T7 | Extract `Run` in `orchestration` | `internal/capability/orchestration/` | `go test ./... -race` | done | `orchestration.Run` |
+| T8 | CLI subcommands for the six capabilities, each accepting `--json` | `cmd/jacu/` | `bash scripts/verify.sh` | done | inspect/compile/workspace/memory/verify/flow |
+| T9 | Exit-code contract, documented once and asserted | `cmd/`, `docs/` | `go test ./cmd/jacu -race` | done | 0 ok/accepted/partial, 1 blocked/failed, 2 usage |
+| T10 | GREEN: T1 passes | `internal/mcpadapter/surface_test.go` | `go test ./internal/mcpadapter/ -run Surface` | done | Surface tests |
+| T11 | Invariant I5 in CI: no MCP type outside `mcpadapter` and `tool.go` | `scripts/verify.sh` | `bash scripts/verify.sh` | done | grep + seeded leak |
+| T12 | Invariant I4 in CI: no `exec` of `git` outside `internal/gitx`; wrap remaining callers | `internal/capability/cleanexit/`, `internal/capability/sdd/`, `internal/telemetry/` | `bash scripts/verify.sh` | done | gitx wrap + seeded leak |
+| T13 | `--events` writes the telemetry envelope as NDJSON to stdout during execution | `internal/runtime/pipeline.go`, `cmd/` | `go test -tags=e2e ./test/e2e/` | done | live writer on Execute; verify running pulse |
 | T14 | Rename: binary and command `jacu` | `cmd/jacu/` | `go build ./...` | done | command `jacu` shipped; module and repo remain SDD-016 |
 | T15 | Rename: installers, MCP `Implementation.Name`, host docs, skills | `scripts/`, `skills/`, `docs/` | `bash scripts/e2e.sh` | done | command `jacu` shipped; module and repo remain SDD-016 |
 | T16 | ADR-028 records the surface decision and the rename | `docs/adr/ADR-028-open-source-export.md` | `test -f docs/adr/ADR-028-open-source-export.md` | done | ADR-028 accepted; command `jacu` shipped |
@@ -191,9 +202,4 @@ Delta: ADDED
 - Moving packages out of `internal/` for library consumption; only when a
   second Go program needs it.
 - `jacu sdd archive` as a subcommand; its trigger is unchanged.
-- Execution report `docs/relatorios/sdd-009-execucao.md` after implementation
-  (out of this authoring write scope).
-- When 009 opens for implementation, replace this authoring write-scope with
-  the implementation set: `cmd/`, `internal/`, `docs/sdd/009-core-surface/**`,
-  `docs/sdd/specs/**`, `docs/sdd/PROGRAM.md`, `skills/`, `scripts/`,
-  `.goreleaser.yaml`, `README.md`, `AGENTS.md`, `CLAUDE.md`.
+- Execution report `docs/relatorios/sdd-009-execucao.md` after implementation.

@@ -3,8 +3,8 @@
 A governance harness for coding agents. It compiles missions, isolates the work,
 verifies declared scope, and preserves auditable local run state.
 
-Three surfaces over one core: the **CLI**, the **MCP server** (`serve`), and — after
-SDD-009 — a Go **library**. MCP is a surface, not the identity.
+Three surfaces over one core: the **CLI**, the **MCP server** (`serve`), and a
+later Go **library**. MCP is a surface, not the identity.
 
 **It has no network, no credential and no deploy.** If JACU fails in every way it can,
 production does not fall. That boundary is the design, not an omission.
@@ -37,16 +37,26 @@ registration: [docs/install.md](docs/install.md).
 
 ```sh
 jacu doctor
+jacu inspect --json
 jacu serve
 ```
 
 For a host configuration, use `jacu init --host cursor` (or another supported
 host) or `jacu doctor --emit claude-code`.
 
-## Core MCP workflow
+## Core workflow
 
-The names below are MCP tools called by the configured host, not shell
-commands:
+The same core runs from the CLI or from MCP. CLI:
+
+```sh
+jacu compile --json --input '{"objective":"..."}'
+jacu workspace open --json --input '{"mission_id":"..."}'
+jacu verify --json --run-id run_...
+jacu workspace diff --json --run-id run_...
+jacu workspace apply --json --run-id run_...
+```
+
+MCP tool names used by a configured host:
 
 1. `jacu_mission_compile` turns the objective, scope and verification argv into
    a governed mission.
@@ -59,9 +69,12 @@ commands:
 5. After explicit approval, `jacu_apply` validates and commits the reviewed
    tree. Use `jacu_discard` instead when abandoning the run.
 
-Never apply an unreviewed diff. `jacu_apply` may run the mission's verification
-commands for up to 10 minutes; MCP hosts must allow at least that long
-(`MCP_TOOL_TIMEOUT` in Claude Code).
+Never apply an unreviewed diff. `jacu_apply` / `jacu workspace apply` may run
+the mission's verification commands for up to 10 minutes; MCP hosts must allow
+at least that long (`MCP_TOOL_TIMEOUT` in Claude Code).
+
+`jacu status` is the global parked-run scan. Per-repo MCP `jacu_status` is
+`jacu workspace status`.
 
 ## Diagnostics and local data
 

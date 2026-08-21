@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_30eaaa9e8ba23c06",
-  "content_sha256": "30eaaa9e8ba23c06b2741cd6db3682be0908f6010b3b23f427f182838302335f",
+  "sdd_id": "sdd_68b44558beb7f5d4",
+  "content_sha256": "68b44558beb7f5d43f5cda9de2457b8da310970106e7ed465bbe80bb791dcd6a",
   "requirements": [
     {
       "name": "Every capability has a transport-free core",
@@ -27,67 +27,67 @@
     {
       "number": "T1",
       "verify": "`go test ./internal/mcpadapter/ -run Surface`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T2",
       "verify": "`go test ./... -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T3",
       "verify": "`go test ./... -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T4",
       "verify": "`go test ./... -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T5",
       "verify": "`go test ./... -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T6",
       "verify": "`go test ./... -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T7",
       "verify": "`go test ./... -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T8",
       "verify": "`bash scripts/verify.sh`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T9",
       "verify": "`go test ./cmd/jacu -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T10",
       "verify": "`go test ./internal/mcpadapter/ -run Surface`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T11",
       "verify": "`bash scripts/verify.sh`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T12",
       "verify": "`bash scripts/verify.sh`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T13",
       "verify": "`go test -tags=e2e ./test/e2e/`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T14",

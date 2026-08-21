@@ -2,317 +2,154 @@ package verify
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
-	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
+	"encoding/json"
 	"time"
 
-	"github.com/jacu-dev/jacu-harness/internal/project"
-	"github.com/jacu-dev/jacu-harness/internal/runstate"
-	"github.com/jacu-dev/jacu-harness/internal/telemetry"
-	"github.com/jacu-dev/jacu-harness/internal/userstate"
+	"github.com/google/jsonschema-go/jsonschema"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// Aggregate verdicts. not_run is in the enum on purpose, against the four-value
-// draft of the phase plan: a verify that ran nothing is not an approval, and a
-// cancelled batch reported as failures becomes N phantom remediations
-// downstream. The autonomy policy requires verdict == pass, literally.
 const (
-	VerdictPass    = "pass"
-	VerdictFail    = "fail"
-	VerdictTimeout = "timeout"
-	VerdictBlocked = "blocked"
-	VerdictNotRun  = "not_run"
+	ToolName = "jacu_verify"
 )
 
-// Input is the whole surface: no command, no timeout, no allowlist. The argv
-// comes from the compiled mission, and limits are runtime policy, never a
-// parameter of the object being governed.
-type Input struct {
-	RunID  string   `json:"run_id,omitempty"`
-	ArgV   []string `json:"argv,omitempty"`
-	Async  bool     `json:"async,omitempty"`
-	TaskID string   `json:"task_id,omitempty"`
-	Cancel bool     `json:"cancel,omitempty"`
-}
-
-// Data is the stable result contract that phases 07 and 09 consume.
-type Data struct {
-	Verdict         string    `json:"verdict"`
-	Commands        []Result  `json:"commands"`
-	EvidenceDigest  string    `json:"evidence_digest"`
-	TotalDurationMs int64     `json:"total_duration_ms"`
-	Task            *TaskInfo `json:"task,omitempty"`
-}
-
-// Envelope mirrors the runtime result the capability layer wraps.
-type Envelope struct {
+type envelope[T any] struct {
 	Status      string   `json:"status"`
 	Summary     string   `json:"summary"`
-	Data        Data     `json:"data"`
+	Data        T        `json:"data"`
+	Artifacts   []string `json:"artifacts"`
 	Warnings    []string `json:"warnings"`
 	NextActions []string `json:"next_actions"`
+	TraceID     string   `json:"trace_id"`
 }
 
-// Execution is the verify-owned batch seam shared by jacu_verify and
-// jacu_apply. Refusal is non-empty only when policy or executor setup blocks
-// the batch before ordinary command-result aggregation.
-type Execution struct {
-	Data    Data
-	Refusal string
+// Spec limits are runtime policy, not tool parameters. The object being
+// governed does not get to choose its own timeout or its own output cap.
+const (
+	toolTimeout    = 630 * time.Second
+	maxOutputBytes = 16 * 1024
+)
+
+func RegisterTool(server *mcp.Server, root string) {
+	manager, err := NewTaskManager(root)
+	if err != nil {
+		panic("verify: initialize task manager: " + err.Error())
+	}
+	RegisterToolWithTaskManager(server, root, manager)
 }
 
-// Verify runs the mission's verification commands, in order, inside the run
-// worktree.
-func Verify(ctx context.Context, root string, in Input) (result Envelope) {
-	result = Envelope{
-		Status:      "ok",
-		Data:        Data{Verdict: VerdictNotRun, Commands: []Result{}},
-		Warnings:    []string{},
-		NextActions: []string{},
+func RegisterToolWithTaskManager(server *mcp.Server, root string, manager *TaskManager) {
+	if manager == nil {
+		panic("verify: task manager is nil")
 	}
-
-	run, err := runstate.Load(root, in.RunID)
-	if err != nil {
-		return blocked(result, refusalFor(in.RunID, err))
-	}
-	emitGate := func(verdict string) {
-		telemetry.EmitBestEffortInput(telemetry.EventInput{
-			Timestamp: time.Now().UTC(), ProjectID: telemetry.ProjectID(root), TraceID: telemetry.NewTraceID(),
-			RunID: run.RunID, MissionID: run.MissionID, Module: "verify", Stage: "gate",
-			Event: telemetry.EventGateDecision, Tool: ToolName, Status: "ok", Verdict: verdict,
-		})
-	}
-	started := time.Now()
-	defer func() {
-		telemetry.EmitBestEffortInput(telemetry.EventInput{
-			Timestamp: time.Now().UTC(), ProjectID: telemetry.ProjectID(root), TraceID: telemetry.NewTraceID(),
-			RunID: run.RunID, MissionID: run.MissionID, Event: telemetry.EventVerify,
-			Tool: ToolName, Status: result.Status, Verdict: result.Data.Verdict,
-			Iteration: 1, Duration: time.Since(started),
-		})
-	}()
-	if run.Status != runstate.StatusOpen && run.Status != runstate.StatusReviewed {
-		emitGate("block")
-		return blocked(result, fmt.Sprintf("run %s is not open for verification (status %q)", run.RunID, run.Status))
-	}
-
-	commands := run.Mission.VerificationCommands
-	if len(in.ArgV) > 0 {
-		commands = [][]string{append([]string{}, in.ArgV...)}
-	}
-	if len(commands) == 0 {
-		emitGate("warn")
-		result.Data.Verdict = VerdictNotRun
-		result.Summary = "Mission declares no verification commands."
-		result.Warnings = append(result.Warnings, "mission declares no verification commands; nothing was verified")
-		result.NextActions = append(result.NextActions, "add verification_commands to the mission and recompile")
-		result.Data.EvidenceDigest = digestOf(nil)
-		return result
-	}
-
-	execution := ExecuteCommands(ctx, root, run, commands)
-	if execution.Refusal != "" {
-		emitGate("block")
-	} else if execution.Data.Verdict == VerdictPass {
-		emitGate("pass")
-	} else {
-		emitGate("warn")
-	}
-	result.Data = execution.Data
-	if execution.Refusal != "" {
-		return blocked(result, execution.Refusal)
-	}
-	result.Summary = summaryFor(result.Data.Verdict, len(result.Data.Commands))
-	if result.Data.Verdict == VerdictBlocked {
-		return blocked(result, result.Summary)
-	}
-	if result.Data.Verdict == VerdictFail || result.Data.Verdict == VerdictTimeout {
-		result.NextActions = append(result.NextActions, "fix the mission in the worktree and verify again")
-	}
-	return result
+	registerVerify(server, root, manager)
 }
 
-// ExecuteCommands applies the complete verify policy and bounded executor to
-// an authoritative command batch. The whole batch is checked before the first
-// spawn, so a refused later argv cannot leave effects from an earlier one.
-func ExecuteCommands(ctx context.Context, root string, run runstate.Run, commands [][]string) Execution {
-	data := Data{Verdict: VerdictNotRun, Commands: []Result{}, EvidenceDigest: digestOf(nil)}
-	if len(commands) == 0 {
-		return Execution{Data: data}
+func registerVerify(server *mcp.Server, root string, manager *TaskManager) {
+	destructive := false
+	openWorld := false
+	tool := &mcp.Tool{
+		Name:         ToolName,
+		Description:  "Run checks.",
+		OutputSchema: outputSchema(),
+		Annotations: &mcp.ToolAnnotations{
+			ReadOnlyHint:    false,
+			DestructiveHint: &destructive,
+			IdempotentHint:  false,
+			OpenWorldHint:   &openWorld,
+		},
 	}
-
-	config, err := LoadConfig(root)
-	if err != nil {
-		data.Verdict = VerdictBlocked
-		return Execution{Data: data, Refusal: "verify policy is unreadable: " + err.Error()}
-	}
-	allowlist := New(config)
-	for _, command := range commands {
-		if checkErr := allowlist.Check(command); checkErr != nil {
-			emitDenialTelemetry(root, run, denialReason(checkErr), len(command) > 0 && allowlist.KnowsProgram(command[0]))
-			data.Commands = append(data.Commands, Result{
-				ArgV:   append([]string{}, command...),
-				Status: StatusBlocked,
-				Reason: checkErr.Error(),
-			})
-			data.Verdict = VerdictBlocked
-			return Execution{Data: data, Refusal: fmt.Sprintf("command refused before execution: %s (%s)",
-				strings.Join(command, " "), checkErr.Error())}
-		}
-	}
-
-	projectID, err := project.ID(root)
-	if err != nil {
-		data.Verdict = VerdictBlocked
-		return Execution{Data: data, Refusal: "project identity unavailable: " + err.Error()}
-	}
-	runner, cleanup, err := runnerFor(run, projectID, config.PathDirs)
-	if err != nil {
-		data.Verdict = VerdictBlocked
-		return Execution{Data: data, Refusal: err.Error()}
-	}
-	defer cleanup()
-
-	digests := make([]string, 0, len(commands))
-	for _, command := range commands {
-		outcome := runner.Run(ctx, command)
-		data.Commands = append(data.Commands, outcome)
-		data.TotalDurationMs += outcome.DurationMs
-		digests = append(digests, outcome.Digest)
-		if outcome.Status == StatusTimedOut || outcome.Status == StatusNotRun {
-			break
-		}
-	}
-	data.EvidenceDigest = digestOf(digests)
-	data.Verdict = aggregate(data.Commands)
-	return Execution{Data: data}
-}
-
-func emitDenialTelemetry(root string, run runstate.Run, reason string, programKnown bool) {
-	telemetry.EmitBestEffortInput(telemetry.EventInput{
-		Timestamp: time.Now().UTC(), ProjectID: telemetry.ProjectID(root), TraceID: telemetry.NewTraceID(),
-		RunID: run.RunID, MissionID: run.MissionID, Module: "verify", Stage: "denial",
-		Event: telemetry.EventVerifyDenial, Tool: ToolName, Status: "blocked", Reason: reason, ProgramKnown: programKnown,
+	tool.InputSchema = verifyInputSchema()
+	mcp.AddTool(server, tool, func(ctx context.Context, _ *mcp.CallToolRequest, input Input) (*mcp.CallToolResult, envelope[Data], error) {
+		result := RunWithManager(ctx, root, input, manager)
+		data, _ := result.Data.(Data)
+		return nil, envelope[Data]{
+			Status:      result.Status,
+			Summary:     result.Summary,
+			Data:        data,
+			Artifacts:   result.Artifacts,
+			Warnings:    result.Warnings,
+			NextActions: result.NextActions,
+			TraceID:     result.TraceID,
+		}, nil
 	})
 }
 
-func denialReason(err error) string {
-	message := err.Error()
-	switch {
-	case strings.Contains(message, "shell metachar"):
-		return "shell_meta"
-	case strings.Contains(message, "shell invocation"), strings.Contains(message, "interpreter flag"):
-		return "shell_interpreter"
-	case strings.Contains(message, "not in allowlist"), strings.Contains(message, "no allowlist"):
-		return "not_in_allowlist"
-	default:
-		return "sandbox"
+func verifyInputSchema() *jsonschema.Schema {
+	return &jsonschema.Schema{
+		Type: "object",
+		Properties: map[string]*jsonschema.Schema{
+			"run_id":  {Type: "string"},
+			"argv":    {Type: "array", Items: &jsonschema.Schema{Type: "string"}},
+			"async":   {Type: "boolean"},
+			"task_id": {Type: "string"},
+			"cancel":  {Type: "boolean"},
+		},
 	}
 }
 
-// aggregate applies the decision order of the design. not_run never counts as a
-// failure — that is the whole reason it exists.
-func aggregate(commands []Result) string {
-	if len(commands) == 0 {
-		return VerdictNotRun
-	}
-	seen := map[string]bool{}
-	for _, command := range commands {
-		seen[command.Status] = true
-	}
-	switch {
-	case seen[StatusBlocked]:
-		return VerdictBlocked
-	case seen[StatusTimedOut]:
-		return VerdictTimeout
-	case seen[StatusFailed]:
-		return VerdictFail
-	case seen[StatusNotRun]:
-		return VerdictNotRun
-	default:
-		return VerdictPass
-	}
-}
-
-func summaryFor(verdict string, count int) string {
-	switch verdict {
-	case VerdictPass:
-		return fmt.Sprintf("Verification passed: %d command(s).", count)
-	case VerdictFail:
-		return "Verification failed."
-	case VerdictTimeout:
-		return "Verification timed out."
-	case VerdictNotRun:
-		return "Verification did not run."
-	default:
-		return "Verification blocked."
-	}
-}
-
-func blocked(result Envelope, summary string) Envelope {
-	result.Status = "blocked"
-	result.Summary = summary
-	if result.Data.Verdict != VerdictBlocked {
-		result.Data.Verdict = VerdictBlocked
-	}
-	if result.Data.EvidenceDigest == "" {
-		result.Data.EvidenceDigest = digestOf(nil)
-	}
-	return result
-}
-
-// refusalFor keeps the reason specific. "invalid run_id" and "no such run" are
-// different failures and the host reacts to them differently.
-func refusalFor(runID string, err error) string {
-	if !runstate.ValidRunID(runID) {
-		return fmt.Sprintf("invalid run_id %q", runID)
-	}
-	if os.IsNotExist(err) {
-		return fmt.Sprintf("run %s does not exist", runID)
-	}
-	return fmt.Sprintf("run %s is unreadable: %v", runID, err)
-}
-
-// runnerFor builds the executor for a run: the worktree as working directory, a
-// synthetic HOME per project so toolchains have a cache without reaching the
-// user's, and a scratch TMPDIR outside the worktree.
-func runnerFor(run runstate.Run, projectID string, pathDirs []string) (Runner, func(), error) {
-	stateDir, err := userstate.Dir()
+// outputSchema announces the verdict enum. A host that has to branch on the
+// verdict should learn the five values from the contract, not by observation —
+// and "not run" existing at all is the part nobody guesses.
+func outputSchema() *jsonschema.Schema {
+	schema, err := jsonschema.For[envelope[Data]](nil)
 	if err != nil {
-		return Runner{}, func() {}, fmt.Errorf("home directory unavailable: %w", err)
+		panic("verify: infer output schema: " + err.Error())
 	}
-	toolchainHome := filepath.Join(stateDir, "toolchain-home", projectID)
-	if mkdirErr := os.MkdirAll(toolchainHome, 0o700); mkdirErr != nil {
-		return Runner{}, func() {}, fmt.Errorf("prepare toolchain home: %w", mkdirErr)
+	data, ok := schema.Properties["data"]
+	if !ok {
+		panic("verify: output schema lost data")
 	}
-	scratch, err := os.MkdirTemp("", "jacu-verify-"+run.RunID+"-")
-	if err != nil {
-		return Runner{}, func() {}, fmt.Errorf("prepare scratch directory: %w", err)
+	verdict, ok := data.Properties["verdict"]
+	if !ok {
+		panic("verify: output schema lost verdict")
 	}
-	runner := Runner{
-		Worktree:      run.Worktree,
-		PathDirs:      append([]string{}, pathDirs...),
-		ToolchainHome: toolchainHome,
-		ScratchDir:    scratch,
-		Timeout:       commandTimeout,
-		TailBytes:     defaultTailBytes,
-	}
-	return runner, func() { _ = os.RemoveAll(scratch) }, nil
+	verdict.Enum = []any{VerdictPass, VerdictFail, VerdictTimeout, VerdictBlocked, VerdictNotRun}
+	// Task metadata is already a versioned sub-contract and is also projected
+	// by jacu_status. Keep its nested schema opaque here so the same command
+	// evidence is not duplicated in tools/list.
+	data.Properties["task"] = &jsonschema.Schema{Types: []string{"null", "object"}}
+	return schema
 }
 
-const commandTimeout = 120 * time.Second
-
-// digestOf hashes the per-command digests into one evidence digest. Hashing the
-// hashes keeps the receipt small and still covers every byte produced.
-func digestOf(digests []string) string {
-	hasher := sha256.New()
-	for _, digest := range digests {
-		_, _ = hasher.Write([]byte(digest))
-		_, _ = hasher.Write([]byte{0})
+// fitOutputCap keeps the answer inside the inline cap by dropping evidence in
+// priority order, instead of letting the runtime zero the whole payload on
+// overflow. The tails of commands that passed go first — nobody reads the
+// output of a test that succeeded — then the tails of the ones that did not.
+// argv, status, exit code, duration and the digests are never dropped: they are
+// what the verdict and the receipt are made of.
+func fitOutputCap(data Data, warnings []string) (Data, []string) {
+	if encodedSize(data) <= maxOutputBytes {
+		return data, warnings
 	}
-	return "sha256:" + hex.EncodeToString(hasher.Sum(nil))
+	dropped := 0
+	for index := range data.Commands {
+		if data.Commands[index].Status == StatusPassed {
+			data.Commands[index].StdoutTail = ""
+			data.Commands[index].StderrTail = ""
+			data.Commands[index].Truncated = true
+			dropped++
+		}
+	}
+	if encodedSize(data) > maxOutputBytes {
+		for index := range data.Commands {
+			data.Commands[index].StdoutTail = ""
+			data.Commands[index].StderrTail = ""
+			data.Commands[index].Truncated = true
+		}
+		dropped = len(data.Commands)
+	}
+	if dropped > 0 {
+		warnings = append(warnings,
+			"output tails dropped to fit the inline cap; the evidence digest still covers the full output")
+	}
+	return data, warnings
+}
+
+func encodedSize(data Data) int {
+	encoded, err := json.Marshal(data)
+	if err != nil {
+		return maxOutputBytes + 1
+	}
+	return len(encoded)
 }

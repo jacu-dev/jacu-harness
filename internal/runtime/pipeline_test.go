@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"os"
@@ -124,5 +125,26 @@ func TestExecuteTelemetryFailureDoesNotChangeOperation(t *testing.T) {
 	result := Execute(context.Background(), c, json.RawMessage(`{}`))
 	if result.Status != "ok" || result.Summary != "preserved" {
 		t.Fatalf("telemetry failure changed operation result: %+v", result)
+	}
+}
+
+func TestExecuteTeesLiveEvents(t *testing.T) {
+	t.Setenv("JACU_HOME", t.TempDir())
+	var buf bytes.Buffer
+	ctx := WithLiveEvents(context.Background(), &buf)
+	c := Capability{ProjectID: "prj_0123456789abcdef", Spec: okSpec(), Handler: func(ctx context.Context, in json.RawMessage) (Result, error) {
+		time.Sleep(20 * time.Millisecond)
+		return Result{Status: "ok", Summary: "x"}, nil
+	}}
+	result := Execute(ctx, c, json.RawMessage(`{}`))
+	if result.Status != "ok" {
+		t.Fatalf("status = %q", result.Status)
+	}
+	if buf.Len() == 0 {
+		t.Fatal("live events writer stayed empty")
+	}
+	line := strings.TrimSpace(buf.String())
+	if !strings.Contains(line, `"event":"tool_call"`) || !strings.Contains(line, `"status":"ok"`) {
+		t.Fatalf("live event = %s; want tool_call ok", line)
 	}
 }

@@ -44,10 +44,73 @@ jacu status [--json]
 List every run still holding a worktree, across all projects. Global on
 purpose: requiring a repository would reproduce the blindness it exists to fix.
 
+## inspect
+
+```
+jacu inspect [--json] [--events] [--input JSON]
+```
+
+Inspect the open project without opening a workspace. Same core as
+`jacu_project_inspect`. `--json` prints the capability envelope; `--events`
+streams telemetry v2 NDJSON while the command runs (stderr when combined with
+`--json`, otherwise stdout).
+
+Exit codes: `0` ok/accepted/partial, `1` blocked/failed, `2` usage.
+
+## compile
+
+```
+jacu compile [--json] [--events] [--input JSON]
+```
+
+Compile a mission from the same JSON schema as `jacu_mission_compile`.
+
+## workspace
+
+```
+jacu workspace open|status|diff|apply|discard [--json] [--events] [--run-id ID] [--input JSON]
+```
+
+Drive the core loop without an MCP host. `workspace status` is the per-repo
+MCP `jacu_status` surface; `jacu status` stays the global parked-run scan.
+Apply records host `jacu-cli`.
+
+## memory
+
+```
+jacu memory save|recall [--json] [--events] [--input JSON]
+```
+
+Save or recall project memory. Same schemas as `jacu_memory_save` and
+`jacu_memory_recall`.
+
+## verify
+
+```
+jacu verify [--json] [--events] [--run-id ID] [--async] [--cancel] [--task-id ID] [--input JSON]
+```
+
+Run the mission's verification commands. `--events` emits a `verify` envelope
+with `status: running` before the batch finishes.
+
+## flow
+
+```
+jacu flow [--json] [--events] [--run-id ID] [--async] [--input JSON]
+```
+
+Execute a compiled orchestration graph. Same core as `jacu_flow_run`. Never
+confused with `jacu run`, which is the headless provider.
+
 ## report
+
+```
+jacu report [--json] [--events]
+```
 
 Project structured workspace state as deterministic Markdown. Headless
 projection of the audit state — same data the `jacu_report` MCP tool serves.
+`--json` prints the capability envelope instead of Markdown.
 
 ## statusline
 

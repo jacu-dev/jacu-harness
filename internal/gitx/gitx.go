@@ -44,6 +44,41 @@ func New() (*Git, error) {
 	return NewWithRunner(bin, execCommandRunner{}), nil
 }
 
+// OwningRepository returns the checkout that stores `.git/jacu` runstate.
+// A linked worktree's `.git` file points at `<repo>/.git/worktrees/<id>`;
+// a normal checkout is returned unchanged.
+func OwningRepository(dir string) string {
+	if dir == "" {
+		return dir
+	}
+	gitPath := filepath.Join(dir, ".git")
+	info, err := os.Lstat(gitPath)
+	if err != nil || info.IsDir() {
+		return dir
+	}
+	// #nosec G304 -- dir is a caller-supplied repository or worktree root.
+	content, err := os.ReadFile(gitPath)
+	if err != nil {
+		return dir
+	}
+	line := strings.TrimSpace(string(content))
+	gitdir, found := strings.CutPrefix(line, "gitdir:")
+	if !found {
+		return dir
+	}
+	gitdir = strings.TrimSpace(gitdir)
+	marker := string(filepath.Separator) + filepath.Join(".git", "worktrees") + string(filepath.Separator)
+	index := strings.Index(gitdir, marker)
+	if index <= 0 {
+		return dir
+	}
+	repo := filepath.Clean(gitdir[:index])
+	if !filepath.IsAbs(repo) || strings.Contains(repo, "..") {
+		return dir
+	}
+	return repo
+}
+
 func NewWithRunner(bin string, runner CommandRunner) *Git {
 	if runner == nil {
 		runner = execCommandRunner{}
@@ -474,6 +509,29 @@ func (g *Git) LogCommits(ctx context.Context, repo, rng string) ([]Commit, error
 		})
 	}
 	return commits, nil
+}
+
+func (g *Git) Output(ctx context.Context, repo string, args ...string) (string, error) {
+	stdout, _, err := g.run(ctx, repo, args...)
+	return strings.TrimSpace(stdout), err
+}
+
+func (g *Git) Exec(ctx context.Context, repo string, args ...string) error {
+	_, _, err := g.run(ctx, repo, args...)
+	return err
+}
+
+func (g *Git) OutputRaw(ctx context.Context, repo string, args ...string) (string, error) {
+	stdout, _, err := g.run(ctx, repo, args...)
+	return stdout, err
+}
+
+func (g *Git) RevParseGitDir(ctx context.Context, repo string) (string, error) {
+	return g.Output(ctx, repo, "rev-parse", "--git-dir")
+}
+
+func (g *Git) StatusPorcelainZ(ctx context.Context, repo string) (string, error) {
+	return g.OutputRaw(ctx, repo, "status", "--porcelain=v1", "-z", "--untracked-files=all")
 }
 
 func (g *Git) ArchiveHead(ctx context.Context, repo string, writer io.Writer) error {

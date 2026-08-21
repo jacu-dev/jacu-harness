@@ -8,7 +8,7 @@ description: "Use after jacu-mission returns ceremony light or full to isolate a
 A reviewed diff plus explicit human approval gates the apply.
 
 1. If you do not already hold a `run_id` — a new session, or a session that
-   lost it — call `jacu_status` before opening anything. The legacy alias
+   lost it — call `jacu_status` (or `jacu workspace status --json`) before opening anything. The legacy alias
    `jacu_workspace_status` is equivalent. It takes no arguments and lists every
    run with its `run_id`, `status`, `age_seconds`,
    `disk_bytes`, `diff_lines`, and `base_behind`. Resume the run that matches

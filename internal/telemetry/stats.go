@@ -2,13 +2,15 @@ package telemetry
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"math"
 	"os"
-	"os/exec"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/jacu-dev/jacu-harness/internal/gitx"
 )
 
 const (
@@ -271,14 +273,19 @@ func percentile(values []int64, fraction float64) int64 {
 }
 
 func (history GitHistory) revertedApplies(since, until time.Time) (int, error) {
-	// #nosec G204 -- git is fixed and the repository is an explicit local root; dates are formatted RFC3339 and all flags are fixed.
-	command := exec.Command("git", "-C", history.Repo, "log", "--since="+since.UTC().Format(time.RFC3339), "--until="+until.UTC().Format(time.RFC3339), "--format=%aI%x00%B%x00")
-	output, err := command.Output()
+	git, err := gitx.New()
+	if err != nil {
+		return 0, fmt.Errorf("read git revert history: %w", err)
+	}
+	output, err := git.OutputRaw(context.Background(), history.Repo, "log",
+		"--since="+since.UTC().Format(time.RFC3339),
+		"--until="+until.UTC().Format(time.RFC3339),
+		"--format=%aI%x00%B%x00")
 	if err != nil {
 		return 0, fmt.Errorf("read git revert history: %w", err)
 	}
 	count := 0
-	for _, record := range bytes.Split(output, []byte{0}) {
+	for _, record := range bytes.Split([]byte(output), []byte{0}) {
 		message := string(record)
 		if strings.Contains(strings.ToLower(message), "revert") && strings.Contains(message, "Jacu-Run:") {
 			count++

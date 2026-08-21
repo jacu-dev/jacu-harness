@@ -14,6 +14,7 @@ import (
 
 	"github.com/jacu-dev/jacu-harness/internal/capability/missioncompile"
 	storagecap "github.com/jacu-dev/jacu-harness/internal/capability/storage"
+	"github.com/jacu-dev/jacu-harness/internal/gitx"
 	"github.com/jacu-dev/jacu-harness/internal/mcpadapter"
 	"github.com/jacu-dev/jacu-harness/internal/project"
 	headlessreport "github.com/jacu-dev/jacu-harness/internal/report"
@@ -21,7 +22,6 @@ import (
 	"github.com/jacu-dev/jacu-harness/internal/runstate"
 	"github.com/jacu-dev/jacu-harness/internal/telemetry"
 	"github.com/jacu-dev/jacu-harness/internal/userstate"
-	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 // Version is set via -ldflags at release; dev builds report "dev".
@@ -36,6 +36,12 @@ func usage(args []string) {
 	fmt.Fprintln(os.Stderr, "usage: jacu <command>")
 	fmt.Fprintln(os.Stderr)
 	fmt.Fprintln(os.Stderr, "  serve      speak MCP over stdio; this is what an MCP host runs")
+	fmt.Fprintln(os.Stderr, "  inspect    inspect the open project without opening a workspace")
+	fmt.Fprintln(os.Stderr, "  compile    compile a mission from JSON input")
+	fmt.Fprintln(os.Stderr, "  workspace  open, status, diff, apply, or discard a run")
+	fmt.Fprintln(os.Stderr, "  memory     save or recall project memory")
+	fmt.Fprintln(os.Stderr, "  verify     run the mission's verification commands")
+	fmt.Fprintln(os.Stderr, "  flow       execute a compiled orchestration graph")
 	fmt.Fprintln(os.Stderr, "  doctor     report versions, or emit a host pack with --emit <host> [--repo PATH]")
 	fmt.Fprintln(os.Stderr, "  init       install skills and emit/apply a host pack into named paths")
 	fmt.Fprintln(os.Stderr, "  report     project structured workspace state as deterministic Markdown")
@@ -73,32 +79,62 @@ func main() {
 				logger.Error("resolve project root failed", "error", err)
 				os.Exit(1)
 			}
-			srv := mcpadapter.NewServer(Version, root)
 			ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 			defer stop()
-			if err := srv.Run(ctx, &mcp.StdioTransport{}); err != nil && ctx.Err() == nil {
+			if err := mcpadapter.RunStdio(ctx, Version, root); err != nil && ctx.Err() == nil {
 				logger.Error("serve failed", "error", err)
 				os.Exit(1)
 			}
 			return
+		case "inspect":
+			root, err := projectRoot()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "resolve project root failed:", err)
+				os.Exit(1)
+			}
+			os.Exit(runInspect(root, os.Args[2:], os.Stdout, os.Stderr))
+		case "compile":
+			root, err := projectRoot()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "resolve project root failed:", err)
+				os.Exit(1)
+			}
+			os.Exit(runCompile(root, os.Args[2:], os.Stdout, os.Stderr))
+		case "workspace":
+			root, err := projectRoot()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "resolve project root failed:", err)
+				os.Exit(1)
+			}
+			os.Exit(runWorkspace(root, os.Args[2:], os.Stdout, os.Stderr))
+		case "memory":
+			root, err := projectRoot()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "resolve project root failed:", err)
+				os.Exit(1)
+			}
+			os.Exit(runMemory(root, os.Args[2:], os.Stdout, os.Stderr))
+		case "verify":
+			root, err := projectRoot()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "resolve project root failed:", err)
+				os.Exit(1)
+			}
+			os.Exit(runVerify(root, os.Args[2:], os.Stdout, os.Stderr))
+		case "flow":
+			root, err := projectRoot()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "resolve project root failed:", err)
+				os.Exit(1)
+			}
+			os.Exit(runFlow(root, os.Args[2:], os.Stdout, os.Stderr))
 		case "report":
 			root, err := projectRoot()
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "resolve project root failed:", err)
 				os.Exit(1)
 			}
-			report, err := headlessreport.BuildAudit(root)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "build report failed:", err)
-				os.Exit(1)
-			}
-			markdown, err := headlessreport.Markdown(report)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "render report failed:", err)
-				os.Exit(1)
-			}
-			fmt.Print(markdown)
-			return
+			os.Exit(runReport(root, os.Args[2:], os.Stdout, os.Stderr))
 		case "status":
 			// No projectRoot(): this command is deliberately global. Requiring
 			// a repository would reproduce the blindness it exists to fix.
@@ -382,5 +418,9 @@ func projectRoot() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.EvalSymlinks(root)
+	root, err = filepath.EvalSymlinks(root)
+	if err != nil {
+		return "", err
+	}
+	return gitx.OwningRepository(root), nil
 }

@@ -496,7 +496,9 @@ func gateTestResult(value string) capabilityruntime.Result {
 func registerGateTestTool(server *mcp.Server, gate workspaceOperationGate, capability capabilityruntime.Capability) {
 	mcp.AddTool(server, workspaceTool(capability.Spec.Name, "Exercise the workspace operation gate.", false, false, false, false),
 		func(ctx context.Context, _ *mcp.CallToolRequest, input gateTestInput) (*mcp.CallToolResult, envelope[gateTestData], error) {
-			return executeTyped[gateTestInput, gateTestData](ctx, gate, capability, input)
+			return executeRun[gateTestData](ctx, gate, capability.Spec.Timeout, func(ctx context.Context) capabilityruntime.Result {
+				return capabilityruntime.ExecuteInput(ctx, capability, input)
+			})
 		})
 }
 
