@@ -2,13 +2,9 @@ package missioncompile
 
 import (
 	"context"
-	"encoding/json"
-	"time"
 
 	"github.com/google/jsonschema-go/jsonschema"
 	"github.com/jacu-dev/jacu-harness/internal/capability/preflight"
-	capabilityruntime "github.com/jacu-dev/jacu-harness/internal/runtime"
-	"github.com/jacu-dev/jacu-harness/internal/telemetry"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -91,22 +87,6 @@ func Compile(root string, in Input) (Mission, string, []string) {
 func RegisterTool(server *mcp.Server, root string) {
 	destructive := false
 	openWorld := false
-	capability := capabilityruntime.Capability{
-		ProjectID: telemetry.ProjectID(root),
-		Spec: capabilityruntime.ToolSpec{
-			Name:           ToolName,
-			Version:        "1",
-			Risk:           capabilityruntime.RiskSafe,
-			ReadOnly:       true,
-			Idempotent:     true,
-			OpenWorld:      false,
-			Timeout:        10 * time.Second,
-			MaxInputBytes:  256 * 1024,
-			MaxOutputBytes: 16 * 1024,
-		},
-		Handler: capabilityruntime.RequireWorkTree(root, compileHandler(root)),
-	}
-
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        ToolName,
 		Description: "Compile.",
@@ -118,11 +98,7 @@ func RegisterTool(server *mcp.Server, root string) {
 			OpenWorldHint:   &openWorld,
 		},
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, input Input) (*mcp.CallToolResult, envelope[Mission], error) {
-		rawInput, err := json.Marshal(input)
-		if err != nil {
-			return nil, envelope[Mission]{}, err
-		}
-		result := capabilityruntime.Execute(ctx, capability, rawInput)
+		result := Run(ctx, root, input)
 		data, _ := result.Data.(Mission)
 		return nil, envelope[Mission]{
 			Status:      result.Status,
@@ -134,31 +110,6 @@ func RegisterTool(server *mcp.Server, root string) {
 			TraceID:     result.TraceID,
 		}, nil
 	})
-}
-
-func compileHandler(root string) capabilityruntime.Handler {
-	return func(_ context.Context, rawInput json.RawMessage) (capabilityruntime.Result, error) {
-		var input Input
-		if err := json.Unmarshal(rawInput, &input); err != nil {
-			return capabilityruntime.Result{}, err
-		}
-		mission, status, nextActions := Compile(root, input)
-		emitPreflightTelemetry(root, input, status, mission)
-		summary := "Mission compiled."
-		if status == "blocked" {
-			summary = "Mission compilation blocked."
-		} else if mission.Ceremony == "direct" {
-			summary = "No mission required; host answer suffices."
-		}
-		return capabilityruntime.Result{
-			Status:      status,
-			Summary:     summary,
-			Data:        mission,
-			Artifacts:   []string{},
-			Warnings:    []string{},
-			NextActions: nextActions,
-		}, nil
-	}
 }
 
 func emitPreflightTelemetry(root string, input Input, status string, mission Mission) {

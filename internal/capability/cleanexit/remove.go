@@ -2,9 +2,9 @@ package cleanexit
 
 import (
 	"context"
-	"os/exec"
 	"strings"
 
+	"github.com/jacu-dev/jacu-harness/internal/gitx"
 	"github.com/jacu-dev/jacu-harness/internal/runstate"
 )
 
@@ -71,7 +71,9 @@ func removeMergedBranch(project, branch string) bool {
 }
 
 func runCleanExitGit(project string, args ...string) error {
-	// #nosec G204 -- git is fixed and project is the validated repository root; args are bounded cleanup operations.
-	command := exec.CommandContext(context.Background(), "git", append([]string{"-C", project}, args...)...)
-	return command.Run()
+	git, err := gitx.New()
+	if err != nil {
+		return err
+	}
+	return git.Exec(context.Background(), project, args...)
 }

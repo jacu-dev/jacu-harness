@@ -71,7 +71,7 @@ One SDD open at a time. Order is dependency, not preference.
 | 008 | `audit-hardening` | audit remediation, bounded storage | merged · **signed tag, P6-P8 open** |
 | **016** | **`open-source-export`** | sanitize, rename, public repo `jacu-harness` | **next** · ADR-028 accepted |
 | 017 | `installable-cloud` | release proof P6-P8, `jacu init`, cloud bootstrap, cwd guard | queued · after 016 |
-| 009 | `core-surface` | `Run()` in 6 capabilities, CLI parity, `--json`, `--events` | written, no code · after 017 · rename and open decisions resolved by ADR-028 and SDD-016 |
+| 009 | `core-surface` | `Run()` in 6 capabilities, CLI parity, `--json`, `--events` | **doing** · after 016/017 code (owner T8/T7 remain); rename and open decisions resolved by ADR-028 and SDD-016 |
 | 010 | `repo-governance` | `.jacu/protected.json`, per-run `JACU_HOME`, `status` off the write gate, flow fan-out cap | written, no code |
 | 011 | `workspace-contract` | `report --json` as `quality.json`, `context --sdd` | written, no code |
 | 012 | `structural-debt` | `internal/scope`, `reportgen`, size ratchet, orchestration boundary test, `$defs`/`$ref`, `stats` without `git log` | written, no code |

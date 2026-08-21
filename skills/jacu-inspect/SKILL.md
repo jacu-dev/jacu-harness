@@ -6,7 +6,7 @@ description: 'Use when the user asks "what does this project do?" or requests pr
 # Inspect a project
 
 For project explanation or analysis without changes, call
-`jacu_project_inspect`. Answer from its structured result plus any files you
+`jacu_project_inspect` or `jacu inspect --json`. Answer from its structured result plus any files you
 read. Never compile a mission or open a workspace for it.
 
 When defining a requested change, use the inspected `project_id`, manifests,

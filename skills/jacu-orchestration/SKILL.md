@@ -5,7 +5,7 @@ description: "Use for a bounded multi-step flow with declarative edges, independ
 
 # Run a declarative flow
 
-Use `jacu_flow_run` when one mission has real dependent steps. A single
+Use `jacu_flow_run` or `jacu flow --json --input '{...}'` when one mission has real dependent steps. A single
 mission should use the ordinary mission/workspace/verify path; a graph is not
 free complexity.
 

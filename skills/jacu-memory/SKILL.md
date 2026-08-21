@@ -6,7 +6,7 @@ description: 'Use when the user says "remember this", asks to recall prior knowl
 # Use durable memory
 
 To recall memory, first use `jacu-inspect` to obtain the `project_id`, then
-call `jacu_memory_recall` with the request or objective as `query` and the
+call `jacu_memory_recall` (or `jacu memory recall --json`) with the request or objective as `query` and the
 inspected `project_id`. For a direct recall request, do not open a workspace.
 
 For a direct request to remember knowledge, first use `jacu-inspect` to obtain

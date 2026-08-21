@@ -7,7 +7,7 @@ description: "Use while a run is open to execute the mission's verification comm
 
 Verification runs inside the open run's worktree. It never runs a shell.
 
-1. Call `jacu_verify` with the active `run_id`. Without `argv`, it runs the
+1. Call `jacu_verify` (or `jacu verify --json --run-id ID`) with the active `run_id`. Without `argv`, it runs the
    mission's own `verification_commands`, in order. For one diagnostic test or
    linter, pass an `argv` array in the same call; it uses the identical policy.
    For a measured long operation, add `async: true`; the response is an

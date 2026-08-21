@@ -5,7 +5,7 @@ description: "Use when the host needs a deterministic headless audit projection 
 
 # Project a headless report
 
-Call `jacu_report` to read the structured workspace state and receive the
+Call `jacu_report` or `jacu report --json` to read the structured workspace state and receive the
 typed audit report, its deterministic Markdown projection, and its digest.
 
 - Treat the JSON report as the source of truth; Markdown is output only.

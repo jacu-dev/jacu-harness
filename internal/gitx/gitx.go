@@ -476,6 +476,29 @@ func (g *Git) LogCommits(ctx context.Context, repo, rng string) ([]Commit, error
 	return commits, nil
 }
 
+func (g *Git) Output(ctx context.Context, repo string, args ...string) (string, error) {
+	stdout, _, err := g.run(ctx, repo, args...)
+	return strings.TrimSpace(stdout), err
+}
+
+func (g *Git) Exec(ctx context.Context, repo string, args ...string) error {
+	_, _, err := g.run(ctx, repo, args...)
+	return err
+}
+
+func (g *Git) OutputRaw(ctx context.Context, repo string, args ...string) (string, error) {
+	stdout, _, err := g.run(ctx, repo, args...)
+	return stdout, err
+}
+
+func (g *Git) RevParseGitDir(ctx context.Context, repo string) (string, error) {
+	return g.Output(ctx, repo, "rev-parse", "--git-dir")
+}
+
+func (g *Git) StatusPorcelainZ(ctx context.Context, repo string) (string, error) {
+	return g.OutputRaw(ctx, repo, "status", "--porcelain=v1", "-z", "--untracked-files=all")
+}
+
 func (g *Git) ArchiveHead(ctx context.Context, repo string, writer io.Writer) error {
 	stdout, _, err := g.run(ctx, repo, "archive", "--format=tar", "HEAD")
 	if err != nil {

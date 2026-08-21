@@ -439,6 +439,12 @@ func EmitBestEffort(event Event) {
 }
 
 func EmitBestEffortInput(input EventInput) {
+	EmitBestEffortInputLive(nil, input)
+}
+
+// EmitBestEffortInputLive writes the same v2 envelope to the local store and,
+// when w is set, as one NDJSON line to w. Serve must not pass stdout.
+func EmitBestEffortInputLive(w io.Writer, input EventInput) {
 	if input.ProjectID == "" {
 		return
 	}
@@ -448,4 +454,34 @@ func EmitBestEffortInput(input EventInput) {
 		return
 	}
 	EmitBestEffort(event)
+	WriteLive(w, event)
+}
+
+// WriteLive encodes a validated event as NDJSON. It does not persist.
+func WriteLive(w io.Writer, event Event) {
+	if w == nil {
+		return
+	}
+	encoded, err := encodeEvent(event)
+	if err != nil {
+		slog.Warn("telemetry live encode failed")
+		return
+	}
+	if _, err := w.Write(encoded); err != nil {
+		slog.Warn("telemetry live write failed")
+	}
+}
+
+// WriteLiveInput encodes EventInput as NDJSON without persisting. Used for
+// progress pulses (verify running) that must appear before Execute finishes.
+func WriteLiveInput(w io.Writer, input EventInput) {
+	if w == nil || input.ProjectID == "" {
+		return
+	}
+	event, err := NewEvent(input)
+	if err != nil {
+		slog.Warn("telemetry live event rejected")
+		return
+	}
+	WriteLive(w, event)
 }

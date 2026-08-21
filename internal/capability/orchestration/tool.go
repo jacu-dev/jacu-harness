@@ -10,7 +10,6 @@ import (
 	"github.com/jacu-dev/jacu-harness/internal/capability/missioncompile"
 	"github.com/jacu-dev/jacu-harness/internal/capability/verify"
 	"github.com/jacu-dev/jacu-harness/internal/capability/workspace"
-	capabilityruntime "github.com/jacu-dev/jacu-harness/internal/runtime"
 	"github.com/jacu-dev/jacu-harness/internal/telemetry"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -36,63 +35,10 @@ func RegisterTool(server *mcp.Server, root string, manager *verify.TaskManager) 
 	if manager == nil {
 		panic("orchestration: task manager is nil")
 	}
-	if err := manager.RegisterRawExecutor(ToolName, func(ctx context.Context, raw json.RawMessage) (json.RawMessage, error) {
-		var input Input
-		if err := json.Unmarshal(raw, &input); err != nil {
-			return nil, err
-		}
-		input.Async = false
-		result, err := executeInput(ctx, root, input)
-		if err != nil {
-			return nil, err
-		}
-		return json.Marshal(result)
-	}); err != nil {
-		panic("orchestration: register task executor: " + err.Error())
-	}
+	bindFlowExecutor(root, manager)
 
 	destructive := false
 	openWorld := false
-	capability := capabilityruntime.Capability{
-		ProjectID: telemetry.ProjectID(root),
-		Spec: capabilityruntime.ToolSpec{
-			Name: ToolName, Version: "1", Risk: capabilityruntime.RiskWrite,
-			ReadOnly: false, Idempotent: false, OpenWorld: false,
-			Timeout: 15 * time.Minute, MaxInputBytes: 256 * 1024, MaxOutputBytes: 16 * 1024,
-		},
-		Handler: capabilityruntime.RequireWorkTree(root, func(ctx context.Context, rawInput json.RawMessage) (capabilityruntime.Result, error) {
-			var input Input
-			if err := json.Unmarshal(rawInput, &input); err != nil {
-				return capabilityruntime.Result{}, err
-			}
-			validation := Validate(input.Flow)
-			if validation.Blocked() {
-				flow := FlowResult{Status: "blocked", Summary: "Flow validation blocked.", Waves: [][]string{}, Trace: []TraceEvent{}, Findings: validation.Findings}
-				return capabilityruntime.Result{Status: "blocked", Summary: flow.Summary, Data: ToolData{Flow: &flow}, Artifacts: []string{}, Warnings: []string{}, NextActions: []string{}}, nil
-			}
-			if input.Async {
-				encoded, err := json.Marshal(input)
-				if err != nil {
-					return capabilityruntime.Result{}, err
-				}
-				info, err := manager.StartRaw(ctx, ToolName, input.RunID, encoded)
-				if err != nil {
-					return capabilityruntime.Result{}, err
-				}
-				return capabilityruntime.Result{Status: "accepted", Summary: "Flow task accepted.", Data: ToolData{Task: &info}, Artifacts: []string{}, Warnings: []string{}, NextActions: []string{"poll jacu_status with this task_id"}}, nil
-			}
-			flow, err := executeInput(ctx, root, input)
-			if err != nil {
-				return capabilityruntime.Result{}, err
-			}
-			status := flow.Status
-			if status == "ok" {
-				status = "ok"
-			}
-			return capabilityruntime.Result{Status: status, Summary: flow.Summary, Data: ToolData{Flow: &flow}, Artifacts: []string{}, Warnings: []string{}, NextActions: []string{}}, nil
-		}),
-	}
-
 	mcp.AddTool(server, &mcp.Tool{
 		Name:         ToolName,
 		Description:  "Flow.",
@@ -100,11 +46,7 @@ func RegisterTool(server *mcp.Server, root string, manager *verify.TaskManager) 
 		OutputSchema: outputSchema(),
 		Annotations:  &mcp.ToolAnnotations{ReadOnlyHint: false, DestructiveHint: &destructive, IdempotentHint: false, OpenWorldHint: &openWorld},
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, input Input) (*mcp.CallToolResult, envelope[ToolData], error) {
-		rawInput, err := json.Marshal(input)
-		if err != nil {
-			return nil, envelope[ToolData]{}, err
-		}
-		result := capabilityruntime.Execute(ctx, capability, rawInput)
+		result := RunWithManager(ctx, root, input, manager)
 		data, _ := result.Data.(ToolData)
 		return nil, envelope[ToolData]{Status: result.Status, Summary: result.Summary, Data: data, Artifacts: result.Artifacts, Warnings: result.Warnings, NextActions: result.NextActions, TraceID: result.TraceID}, nil
 	})

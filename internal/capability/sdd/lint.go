@@ -2,17 +2,18 @@ package sdd
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/jacu-dev/jacu-harness/internal/capability/workspace"
+	"github.com/jacu-dev/jacu-harness/internal/gitx"
 )
 
 var requiredSections = []string{
@@ -240,14 +241,16 @@ func changedPathsFor(directory string) ([]string, error) {
 		// repository. There is no changed-path claim to make in that mode.
 		return []string{}, nil
 	}
-	// #nosec G204 -- git is fixed and root is discovered from the local repository boundary.
-	command := exec.Command("git", "-C", root, "status", "--porcelain=v1", "-z", "--untracked-files=all")
-	output, err := command.Output()
+	git, err := gitx.New()
+	if err != nil {
+		return nil, err
+	}
+	output, err := git.StatusPorcelainZ(context.Background(), root)
 	if err != nil {
 		return nil, err
 	}
 	paths := make([]string, 0)
-	for _, record := range bytes.Split(output, []byte{0}) {
+	for _, record := range bytes.Split([]byte(output), []byte{0}) {
 		if len(record) < 4 {
 			continue
 		}

@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
-	"strings"
+
+	"github.com/jacu-dev/jacu-harness/internal/gitx"
 )
 
 type Receipt struct {
@@ -97,14 +97,12 @@ func WriteReceipt(root string, result RemovalReport) (string, error) {
 }
 
 func resolveGitDir(root string) (string, error) {
-	// #nosec G204 -- git is fixed and root is the already validated project boundary.
-	command := exec.CommandContext(context.Background(), "git", "-C", root, "rev-parse", "--git-dir")
-	output, err := command.Output()
+	git, err := gitx.New()
 	if err != nil {
 		return "", fmt.Errorf("cleanexit git directory unavailable")
 	}
-	gitDir := strings.TrimSpace(string(output))
-	if gitDir == "" {
+	gitDir, err := git.RevParseGitDir(context.Background(), root)
+	if err != nil || gitDir == "" {
 		return "", fmt.Errorf("cleanexit git directory unavailable")
 	}
 	if !filepath.IsAbs(gitDir) {

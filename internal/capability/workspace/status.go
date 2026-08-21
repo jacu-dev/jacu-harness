@@ -15,7 +15,7 @@ import (
 	"github.com/jacu-dev/jacu-harness/internal/runstate"
 )
 
-type RunStatus struct {
+type ListedRun struct {
 	RunID        string          `json:"run_id"`
 	Status       runstate.Status `json:"status"`
 	AgeSeconds   int64           `json:"age_seconds"`
@@ -54,7 +54,7 @@ func statusInputSchema() *jsonschema.Schema {
 }
 
 type StatusData struct {
-	Runs  []RunStatus           `json:"runs"`
+	Runs  []ListedRun           `json:"runs"`
 	Tasks []verify.TaskSnapshot `json:"tasks,omitempty"`
 }
 
@@ -86,7 +86,7 @@ func WorkspaceStatusWithTasks(ctx context.Context, root string, manager *verify.
 		return StatusResult{}, err
 	}
 	now := time.Now().UTC()
-	data := StatusData{Runs: make([]RunStatus, 0, len(runs))}
+	data := StatusData{Runs: make([]ListedRun, 0, len(runs))}
 	if manager != nil {
 		if input.TaskID != "" {
 			if retainErr := manager.RetainTasks(); retainErr != nil {
@@ -107,7 +107,7 @@ func WorkspaceStatusWithTasks(ctx context.Context, root string, manager *verify.
 	}
 	warnings := []string{}
 	for _, run := range runs {
-		item := RunStatus{RunID: run.RunID, Status: run.Status, ProgramID: run.ProgramID, ProgramIndex: run.ProgramCursor}
+		item := ListedRun{RunID: run.RunID, Status: run.Status, ProgramID: run.ProgramID, ProgramIndex: run.ProgramCursor}
 		reportCorrupted := func(cause error) {
 			item.Status = runstate.StatusCorrupted
 			warnings = append(warnings, fmt.Sprintf("run %s reported as corrupted: %v; use discard --gc", run.RunID, cause))
