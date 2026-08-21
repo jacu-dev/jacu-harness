@@ -19,6 +19,20 @@ func TestRunProvenanceUnknownOption(t *testing.T) {
 	}
 }
 
+func TestRunProvenanceCommitPlanJSON(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := runProvenance(t.TempDir(), []string{"--commit-plan", "--json"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("commit-plan exit = %d stderr=%s", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "chore: import the sanitized public tree") {
+		t.Fatalf("stdout missing commit plan: %s", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "ecouto123@gmail.com") {
+		t.Fatalf("stdout missing author: %s", stdout.String())
+	}
+}
+
 func TestMergeReportsAddsCounts(t *testing.T) {
 	left := provenance.Report{Traces: 1, Products: 2, Policies: 3, Gaps: []provenance.Gap{{Check: "a"}}}
 	right := provenance.Report{Traces: 4, Products: 5, Policies: 6, Gaps: []provenance.Gap{{Check: "b"}}}

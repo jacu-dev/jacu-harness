@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_c730b4e64c75c319",
-  "content_sha256": "c730b4e64c75c31901dbc4dab1e442ceac2aebf5f301637cc5daa802e2eabe26",
+  "sdd_id": "sdd_665930767a129349",
+  "content_sha256": "665930767a12934992d1a88ae05607ac47f187ef5f7a5bcc9e211cab408b086f",
   "requirements": [
     {
       "name": "AI-trace inventory reaches zero in the exported tree",
@@ -61,12 +61,12 @@
     {
       "number": "T7",
       "verify": "first public PR green",
-      "status": "in-progress"
+      "status": "done"
     },
     {
       "number": "T8",
       "verify": "`git log` scan = zero traces",
-      "status": "todo"
+      "status": "done"
     }
   ]
 }

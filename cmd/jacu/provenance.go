@@ -9,18 +9,21 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jacu-dev/jacu-harness/internal/export"
 	"github.com/jacu-dev/jacu-harness/internal/gitx"
 	"github.com/jacu-dev/jacu-harness/internal/provenance"
 )
 
 func runProvenance(root string, args []string, stdout, stderr io.Writer) int {
-	files, history, rng, jsonOutput := false, false, "", false
+	files, history, commitPlan, rng, jsonOutput := false, false, false, "", false
 	for index := 0; index < len(args); index++ {
 		switch args[index] {
 		case "--json":
 			jsonOutput = true
 		case "--files":
 			files = true
+		case "--commit-plan":
+			commitPlan = true
 		case "--history":
 			history = true
 			remaining := args[index+1:]
@@ -30,9 +33,12 @@ func runProvenance(root string, args []string, stdout, stderr io.Writer) int {
 			}
 		default:
 			_, _ = fmt.Fprintf(stderr, "provenance: unknown option %s\n", args[index])
-			_, _ = fmt.Fprintln(stderr, "usage: jacu provenance [--json] [--files] [--history [range]]")
+			_, _ = fmt.Fprintln(stderr, "usage: jacu provenance [--json] [--files] [--history [range]] [--commit-plan]")
 			return 2
 		}
+	}
+	if commitPlan && !files && !history {
+		return writeCommitPlan(stdout, stderr, jsonOutput)
 	}
 	if !files && !history {
 		files, history = true, true
@@ -97,6 +103,29 @@ func runProvenance(root string, args []string, stdout, stderr io.Writer) int {
 	}
 	if !report.Clean() {
 		return 1
+	}
+	return 0
+}
+
+func writeCommitPlan(stdout, stderr io.Writer, jsonOutput bool) int {
+	if err := export.Validate(); err != nil {
+		_, _ = fmt.Fprintln(stderr, "provenance:", err)
+		return 1
+	}
+	if jsonOutput {
+		payload := struct {
+			Author  string          `json:"author"`
+			Commits []export.Commit `json:"commits"`
+		}{Author: export.Author, Commits: export.Plan()}
+		if err := json.NewEncoder(stdout).Encode(payload); err != nil {
+			_, _ = fmt.Fprintln(stderr, "provenance: encode:", err)
+			return 1
+		}
+		return 0
+	}
+	_, _ = fmt.Fprintf(stdout, "author %s\n", export.Author)
+	for _, commit := range export.Plan() {
+		_, _ = fmt.Fprintf(stdout, "%s\t%s\n", commit.Subject, commit.Area)
 	}
 	return 0
 }
