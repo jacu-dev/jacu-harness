@@ -138,6 +138,9 @@ func runFlow(root string, args []string, stdout, stderr io.Writer) int {
 }
 
 func runReport(root string, args []string, stdout, stderr io.Writer) int {
+	if isReportVisualCommand(args) {
+		return runReportVisual(args, stdout, stderr)
+	}
 	jsonOnly := false
 	events := false
 	for _, arg := range args {

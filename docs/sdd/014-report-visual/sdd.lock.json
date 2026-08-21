@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_0a1af228ab4809aa",
-  "content_sha256": "0a1af228ab4809aad2011894ded4b0403cde26b3324913f5c5b5bfc314c550af",
+  "sdd_id": "sdd_00e96835a0b405e4",
+  "content_sha256": "00e96835a0b405e4622a85b236a89105a9ce07a924b27eef755565a4543e2e6e",
   "requirements": [
     {
       "name": "Headless export binds no port",
@@ -27,37 +27,37 @@
     {
       "number": "T1",
       "verify": "`wc -l` under 120; owner ratifies separately",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T2",
       "verify": "`wc -l` under 120; owner ratifies separately",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T3",
       "verify": "`go test ./internal/reportgen -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T4",
       "verify": "`go test ./internal/reportgen -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T5",
       "verify": "`go test ./internal/reportgen ./cmd/jacu -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T6",
       "verify": "`test -f docs/relatorios/sdd-014-execucao.md`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T7",
       "verify": "`go test -tags=e2e ./test/e2e/ -run Governed`",
-      "status": "todo"
+      "status": "done"
     }
   ]
 }
