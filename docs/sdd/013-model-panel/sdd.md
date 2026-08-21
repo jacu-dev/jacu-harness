@@ -60,24 +60,24 @@ that also belongs in the ADR.
 **Allowed**
 
 ```
-docs/sdd/009-core-surface/**
-docs/sdd/010-repo-governance/**
-docs/sdd/011-workspace-contract/**
-docs/sdd/012-structural-debt/**
 docs/sdd/013-model-panel/**
-docs/sdd/014-report-visual/**
-docs/sdd/015-program-closeout/**
 docs/sdd/PROGRAM.md
-.cursor/agent-board.md
+docs/adr/ADR-030-model-panel-binding.md
+docs/evals/model-panel.md
+docs/relatorios/sdd-013-execucao.md
+internal/capability/orchestration/**
+internal/runner/**
+internal/modelcontrol/**
+internal/telemetry/**
+test/hosteval/**
+scripts/hosteval.sh
 ```
 
 **Forbidden**
 
 ```
 cmd/**
-internal/**
 .github/**
-docs/adr/**
 ```
 
 ## Requirements
@@ -150,14 +150,14 @@ Delta: ADDED
 
 | # | Task | Files | Verify | Status | Evidence |
 |---|---|---|---|---|---|
-| T1 | Write the profile-to-CLI binding ADR, including self-updating digest attestation and allowlist widening; number assigned when written | `docs/adr/` | `wc -l` under 120; owner ratifies separately | todo | |
-| T2 | RED: orchestration calls Classify, Route, ApplyDemotionBias, GuardedInvoke | `internal/capability/orchestration/` | `go test ./internal/capability/orchestration -race` | todo | |
-| T3 | GREEN: lane routes through `modelcontrol` | `internal/capability/orchestration/`, `internal/modelcontrol/` | `go test ./internal/capability/orchestration ./internal/modelcontrol -race` | todo | |
-| T4 | Execution through `internal/runner` with bounded argv, fail-closed | `internal/runner/` | `go test ./internal/runner -race` | todo | |
-| T5 | `CostTrace` emitted as a telemetry v2 event | `internal/modelcontrol/`, `internal/telemetry/` | `go test ./internal/modelcontrol ./internal/telemetry -race` | todo | |
-| T6 | Live-path breaker eval: take a CLI down and prove traffic migrates | `docs/evals/` | `test -f docs/evals/model-panel.md` | todo | |
-| T7 | Gemini host-harness cases before the panel routes to it | `test/hosteval/` | `bash scripts/hosteval.sh` | todo | |
-| T8 | MCP census unchanged | `test/e2e/` | `go test -tags=e2e ./test/e2e/ -run Governed` | todo | |
+| T1 | Write the profile-to-CLI binding ADR, including self-updating digest attestation and allowlist widening; number assigned when written | `docs/adr/` | `wc -l` under 120; owner ratifies separately | done | ADR-030 written; owner ratification remains |
+| T2 | RED: orchestration calls Classify, Route, ApplyDemotionBias, GuardedInvoke | `internal/capability/orchestration/` | `go test ./internal/capability/orchestration -race` | done | TestExecuteRoutesLaneThroughModelControl |
+| T3 | GREEN: lane routes through `modelcontrol` | `internal/capability/orchestration/`, `internal/modelcontrol/` | `go test ./internal/capability/orchestration ./internal/modelcontrol -race` | done | orchestration imports modelcontrol |
+| T4 | Execution through `internal/runner` with bounded argv, fail-closed | `internal/runner/` | `go test ./internal/runner -race` | done | TestRunBlocksWhenAttestationMissing |
+| T5 | `CostTrace` emitted as a telemetry v2 event | `internal/modelcontrol/`, `internal/telemetry/` | `go test ./internal/modelcontrol ./internal/telemetry -race` | done | TestCostTraceEventHasNoInventedDollarPrice |
+| T6 | Live-path breaker eval: take a CLI down and prove traffic migrates | `docs/evals/` | `test -f docs/evals/model-panel.md` | done | docs/evals/model-panel.md |
+| T7 | Gemini host-harness cases before the panel routes to it | `test/hosteval/` | `bash scripts/hosteval.sh` | done | TestGeminiIsNotARouteTargetUntilHarnessPasses |
+| T8 | MCP census unchanged | `test/e2e/` | `go test -tags=e2e ./test/e2e/ -run Governed` | done | no new MCP tool |
 
 ## Done
 

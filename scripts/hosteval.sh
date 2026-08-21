@@ -9,7 +9,7 @@
 #   scripts/hosteval.sh                          # every host, every case
 #   scripts/hosteval.sh --host codex             # one host
 #   scripts/hosteval.sh --case 4.1-inspect       # one case
-#   scripts/hosteval.sh --host codex --case 4.1-inspect
+#   scripts/hosteval.sh --host gemini            # refused until T7 host cases exist
 #
 # Live hosts also need JACU_HOSTEVAL_PROJECT_ID. The catalogue assert below
 # does not: a filter that matches nothing would make every routing case look
@@ -28,7 +28,7 @@ while [ $# -gt 0 ]; do
 done
 
 # Catalogue fidelity is a machine assert and does not need a live host.
-go test -count=1 ./test/hosteval/ -run 'TestCatalogue|TestTruncating|TestEmptyHost'
+go test -count=1 ./test/hosteval/ -run 'TestCatalogue|TestTruncating|TestEmptyHost|TestGemini'
 
 if [ -z "${JACU_HOSTEVAL_PROJECT_ID:-}" ]; then
   echo "hosteval: catalogue assert OK; set JACU_HOSTEVAL_PROJECT_ID to drive live hosts"

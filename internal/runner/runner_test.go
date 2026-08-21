@@ -4,6 +4,8 @@ package runner
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"io"
 	"os"
 	"os/exec"
@@ -14,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jacu-dev/jacu-harness/internal/modelcontrol"
 	"github.com/jacu-dev/jacu-harness/internal/telemetry"
 )
 
@@ -31,12 +34,12 @@ cat
 	t.Setenv("ANTHROPIC_API_KEY", "parent-secret")
 	t.Setenv("GIT_DIR", filepath.Join(t.TempDir(), ".git"))
 
-	result := Run(context.Background(), Request{
+	result := Run(context.Background(), attest(t, Request{
 		Provider:  ProviderClaude,
 		Worktree:  t.TempDir(),
 		Objective: "Implement the provider runner safely",
 		TailBytes: 32 * 1024,
-	})
+	}, filepath.Join(binDir, "claude")))
 	if result.Status != StatusCompleted {
 		t.Fatalf("status = %q (%s); want completed", result.Status, result.Reason)
 	}
@@ -64,7 +67,7 @@ exit 3
 `)
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+"/usr/bin:/bin")
 	start := time.Now()
-	result := Run(context.Background(), Request{Provider: ProviderCodex, Worktree: t.TempDir(), Objective: "Run the bounded provider test", TailBytes: 256})
+	result := Run(context.Background(), attest(t, Request{Provider: ProviderCodex, Worktree: t.TempDir(), Objective: "Run the bounded provider test", TailBytes: 256}, filepath.Join(binDir, "codex")))
 	if elapsed := time.Since(start); elapsed > 8*time.Second {
 		t.Fatalf("provider output stalled for %v", elapsed)
 	}
@@ -93,7 +96,7 @@ wait
 	defer cancel()
 	results := make(chan Result, 1)
 	go func() {
-		results <- Run(ctx, Request{Provider: ProviderClaude, Worktree: t.TempDir(), Objective: "Cancel the bounded provider test", Timeout: time.Minute, TailBytes: 4096})
+		results <- Run(ctx, attest(t, Request{Provider: ProviderClaude, Worktree: t.TempDir(), Objective: "Cancel the bounded provider test", Timeout: time.Minute, TailBytes: 4096}, filepath.Join(binDir, "claude")))
 	}()
 	// The FIFO is an explicit process-to-test handshake: cancellation cannot
 	// happen until the grandchild PID has been written and is blocked in wait.
@@ -181,9 +184,9 @@ func TestRunEmitsClosedRunnerTelemetry(t *testing.T) {
 	binDir := t.TempDir()
 	writeExecutable(t, filepath.Join(binDir, "claude"), "#!/bin/sh\nexit 0\n")
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+"/usr/bin:/bin")
-	result := Run(context.Background(), Request{
+	result := Run(context.Background(), attest(t, Request{
 		Provider: ProviderClaude, ProjectID: "prj_0123456789abcdef", Worktree: t.TempDir(), Objective: "bounded runner test",
-	})
+	}, filepath.Join(binDir, "claude")))
 	if result.Status != StatusCompleted {
 		t.Fatalf("runner status = %q; want completed", result.Status)
 	}
@@ -194,6 +197,32 @@ func TestRunEmitsClosedRunnerTelemetry(t *testing.T) {
 	if len(events) != 1 || events[0].Event != telemetry.EventFlowNode || events[0].Tool != string(ProviderClaude) || events[0].Status != StatusCompleted {
 		t.Fatalf("runner telemetry = %+v", events)
 	}
+}
+
+func TestRunBlocksWhenAttestationMissing(t *testing.T) {
+	result := Run(context.Background(), Request{Provider: ProviderClaude, Worktree: t.TempDir(), Objective: "missing attestation"})
+	if result.Status != StatusBlocked || result.Reason != "attestation incomplete" {
+		t.Fatalf("result = %#v; want blocked before spawn", result)
+	}
+}
+
+func attest(t *testing.T, request Request, binary string) Request {
+	t.Helper()
+	abs, err := filepath.Abs(binary)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := os.ReadFile(abs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sum := sha256.Sum256(raw)
+	request.CLI = modelcontrol.SignedCLI{
+		Path: abs, SHA256: "sha256:" + hex.EncodeToString(sum[:]),
+		Signer: "test-signer", Signature: "test-signature",
+	}
+	request.Verifier = func(modelcontrol.SignedCLI) bool { return true }
+	return request
 }
 
 func writeExecutable(t *testing.T, path, content string) {

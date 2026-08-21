@@ -43,6 +43,7 @@ const (
 	EventContextAnchor       = "context.anchor"
 	EventContextHandoff      = "context.handoff"
 	EventLedgerDecision      = "ledger.decision"
+	EventCostTrace           = "cost.trace"
 )
 
 // Event is the only record written to the local stream. Keep this struct
@@ -153,7 +154,7 @@ var safeIdentifier = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$`)
 
 var allowedEvents = map[string]struct{}{
 	EventToolCall: {}, EventVerify: {}, EventApply: {}, EventDiscard: {},
-	EventRemediation: {}, EventEscalation: {}, EventFlowNode: {}, EventGateDecision: {}, EventVerifyDenial: {}, EventReviewDisagreement: {}, EventCleanExitClose: {}, EventPreflightCheck: {}, EventMissionInterruption: {}, EventClarityProbe: {}, EventContextPack: {}, EventContextAnchor: {}, EventContextHandoff: {}, EventLedgerDecision: {},
+	EventRemediation: {}, EventEscalation: {}, EventFlowNode: {}, EventGateDecision: {}, EventVerifyDenial: {}, EventReviewDisagreement: {}, EventCleanExitClose: {}, EventPreflightCheck: {}, EventMissionInterruption: {}, EventClarityProbe: {}, EventContextPack: {}, EventContextAnchor: {}, EventContextHandoff: {}, EventLedgerDecision: {}, EventCostTrace: {},
 }
 
 var allowedLevels = map[string]struct{}{LevelUser: {}, LevelFull: {}, NoData: {}}
@@ -164,7 +165,7 @@ var allowedModules = map[string]struct{}{
 }
 var allowedStages = map[string]struct{}{
 	"tool_call": {}, "verify": {}, "apply": {}, "discard": {}, "remediation": {}, "escalation": {}, "gate": {}, "denial": {}, "review": {}, "close": {},
-	"flow_node": {}, "emit": {}, "preflight": {}, "interruption": {}, "probe": {}, "pack": {}, "anchor": {}, "handoff": {}, "decision": {}, NoData: {},
+	"flow_node": {}, "emit": {}, "preflight": {}, "interruption": {}, "probe": {}, "pack": {}, "anchor": {}, "handoff": {}, "decision": {}, "cost": {}, NoData: {},
 }
 var allowedMeasurements = map[string]struct{}{
 	"exact_bytes": {}, "cli_reported_tokens": {}, "estimated_tokens": {}, NoData: {},
@@ -463,6 +464,8 @@ func defaultModule(event string) string {
 		return "context"
 	case EventLedgerDecision:
 		return "ledger"
+	case EventCostTrace:
+		return "modelcontrol"
 	case EventApply, EventDiscard, EventRemediation, EventEscalation:
 		return "workspace"
 	case EventFlowNode:

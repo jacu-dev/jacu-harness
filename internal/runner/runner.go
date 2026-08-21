@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jacu-dev/jacu-harness/internal/modelcontrol"
 	"github.com/jacu-dev/jacu-harness/internal/telemetry"
 )
 
@@ -49,6 +50,8 @@ type Request struct {
 	Permission string
 	Timeout    time.Duration
 	TailBytes  int
+	CLI        modelcontrol.SignedCLI
+	Verifier   modelcontrol.SignatureVerifier
 }
 
 // HarnessProcess owns one bounded provider process. Keeping the request on
@@ -108,17 +111,22 @@ func run(ctx context.Context, request Request) (result Result) {
 		result.Reason = err.Error()
 		return result
 	}
+	if err := modelcontrol.ValidateSignedCLI(request.CLI, request.Verifier); err != nil {
+		result.Reason = "attestation incomplete"
+		return result
+	}
+	actual, digestErr := fileSHA256(request.CLI.Path)
+	if digestErr != nil || actual != request.CLI.SHA256 {
+		result.Reason = "attestation incomplete"
+		return result
+	}
 	if err := ctx.Err(); err != nil {
 		result.Status = StatusCancelled
 		result.Reason = "cancelled before spawn"
 		return result
 	}
 
-	binary, err := exec.LookPath(string(request.Provider))
-	if err != nil {
-		result.Reason = "provider is not installed"
-		return result
-	}
+	binary := request.CLI.Path
 	call, err := buildInvocation(request, binary)
 	if err != nil {
 		result.Reason = err.Error()
@@ -234,6 +242,15 @@ func validateRequest(request Request) error {
 		return errors.New("timeout exceeds the runner limit")
 	}
 	return nil
+}
+
+func fileSHA256(path string) (string, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	sum := sha256.Sum256(raw)
+	return "sha256:" + hex.EncodeToString(sum[:]), nil
 }
 
 func buildInvocation(request Request, binary string) (invocation, error) {

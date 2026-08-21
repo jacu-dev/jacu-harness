@@ -14,6 +14,7 @@ var allowedOrchestrationFiles = map[string]struct{}{
 	"fanin.go":  {},
 	"graph.go":  {},
 	"panel.go":  {},
+	"route.go":  {},
 	"run.go":    {},
 	"tool.go":   {},
 }
@@ -24,6 +25,7 @@ var allowedOrchestrationImports = map[string]struct{}{
 	"github.com/jacu-dev/jacu-harness/internal/capability/verify":         {},
 	"github.com/jacu-dev/jacu-harness/internal/capability/workspace":      {},
 	"github.com/jacu-dev/jacu-harness/internal/gitx":                      {},
+	"github.com/jacu-dev/jacu-harness/internal/modelcontrol":              {},
 	"github.com/jacu-dev/jacu-harness/internal/runtime":                   {},
 	"github.com/jacu-dev/jacu-harness/internal/scope":                     {},
 	"github.com/jacu-dev/jacu-harness/internal/telemetry":                 {},
