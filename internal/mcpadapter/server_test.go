@@ -778,6 +778,8 @@ func TestRepoScopedToolsBlockOutsideAGitWorkTree(t *testing.T) {
 		"jacu_apply",
 		"jacu_discard",
 		"jacu_report",
+		"jacu_verify",
+		"jacu_flow_run",
 	}
 	for _, name := range repoScoped {
 		args := map[string]any{}

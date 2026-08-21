@@ -46,3 +46,20 @@ func TestEmptyHostDescriptionFailsTheMatrix(t *testing.T) {
 		t.Fatalf("error must name the tool and empty length: %v", err)
 	}
 }
+
+func TestCatalogueFailsWhenHostOmitsATool(t *testing.T) {
+	t.Parallel()
+	err := CompareToolCatalogue(
+		[]ToolDesc{
+			{Name: "jacu_project_inspect", Description: "Inspect."},
+			{Name: "jacu_verify", Description: "Run checks."},
+		},
+		[]ToolDesc{{Name: "jacu_project_inspect", Description: "Inspect."}},
+	)
+	if err == nil {
+		t.Fatal("omitted tool must fail")
+	}
+	if !strings.Contains(err.Error(), "jacu_verify") {
+		t.Fatalf("error must name the omitted tool: %v", err)
+	}
+}

@@ -6,7 +6,7 @@
 #
 #   cloud-install.sh                  build from this checkout (default)
 #   cloud-install.sh --from-source    same
-#   cloud-install.sh --version vX.Y.Z verified release install (github.com)
+#   cloud-install.sh --version vX.Y.Z verified release install (github.com only)
 set -euo pipefail
 
 from_source=true
@@ -80,7 +80,14 @@ if [ "$from_source" = false ]; then
     args+=(--prefix "$prefix")
   fi
   bash "$root/scripts/install.sh" "${args[@]}"
-  command -v jacu >/dev/null 2>&1 && jacu doctor || true
+  if command -v jacu >/dev/null 2>&1; then
+    jacu doctor
+  elif [ -n "$prefix" ] && [ -x "$prefix/jacu" ]; then
+    "$prefix/jacu" doctor
+  else
+    echo "cloud-install.sh: jacu is not on PATH after release install; doctor did not run" >&2
+    exit 1
+  fi
   exit 0
 fi
 
