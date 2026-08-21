@@ -105,6 +105,7 @@ func TestPolicyPathsAreClosedSet(t *testing.T) {
 		"docs/sdd/016-open-source-export/",
 		"docs/plans/one-shot-open-source.md",
 		"CONTRIBUTING.md",
+		"AGENTS.md",
 		"internal/export/",
 		"docs/export/",
 		"scripts/export/",

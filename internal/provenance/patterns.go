@@ -5,12 +5,18 @@ import (
 	"unicode"
 )
 
+// A policy path may name the forbidden markers, but only inside quotes: a file
+// that states the rule has to spell the string it forbids, and quoting is what
+// separates "here is the marker to avoid" from the marker itself. AGENTS.md
+// joins CONTRIBUTING.md for that reason — it carries the same rule for the
+// tooling that reads it, and it cannot state the rule without naming it.
 var policyPaths = []string{
 	"internal/provenance/",
 	"docs/adr/ADR-028-open-source-export.md",
 	"docs/sdd/016-open-source-export/",
 	"docs/plans/one-shot-open-source.md",
 	"CONTRIBUTING.md",
+	"AGENTS.md",
 	"internal/export/",
 	"docs/export/",
 	"scripts/export/",
