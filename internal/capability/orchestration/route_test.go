@@ -26,7 +26,7 @@ func TestValidateRejectsNamedCLIAndUnknownLane(t *testing.T) {
 
 func TestExecuteRoutesLaneThroughModelControl(t *testing.T) {
 	binary := filepath.Join(t.TempDir(), "cli")
-	if err := os.WriteFile(binary, []byte("#!/bin/sh\nexit 0\n"), 0o700); err != nil {
+	if err := os.WriteFile(binary, []byte("#!/bin/sh\nexit 0\n"), 0o700); err != nil { // #nosec G306 -- test CLI stub must be executable
 		t.Fatal(err)
 	}
 	sum := sha256.Sum256([]byte("#!/bin/sh\nexit 0\n"))

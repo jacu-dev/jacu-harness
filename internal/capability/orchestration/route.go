@@ -75,7 +75,7 @@ func RouteNode(ctx context.Context, panel Panel, node Node) (modelcontrol.HostPr
 }
 
 func fileDigest(path string) (string, error) {
-	raw, err := os.ReadFile(path)
+	raw, err := os.ReadFile(path) // #nosec G304 -- path is the routed HostProfile CLI absolute path
 	if err != nil {
 		return "", err
 	}

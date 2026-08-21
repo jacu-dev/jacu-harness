@@ -212,7 +212,7 @@ func attest(t *testing.T, request Request, binary string) Request {
 	if err != nil {
 		t.Fatal(err)
 	}
-	raw, err := os.ReadFile(abs)
+	raw, err := os.ReadFile(abs) // #nosec G304 -- abs is the test binary created in TempDir
 	if err != nil {
 		t.Fatal(err)
 	}

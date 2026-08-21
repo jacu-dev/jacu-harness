@@ -245,7 +245,7 @@ func validateRequest(request Request) error {
 }
 
 func fileSHA256(path string) (string, error) {
-	raw, err := os.ReadFile(path)
+	raw, err := os.ReadFile(path) // #nosec G304 -- path is the attested absolute CLI path after ValidateSignedCLI
 	if err != nil {
 		return "", err
 	}
