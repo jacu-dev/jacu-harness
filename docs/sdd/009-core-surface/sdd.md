@@ -193,7 +193,7 @@ Delta: ADDED
 - `jacu sdd archive` as a subcommand; its trigger is unchanged.
 - Execution report `docs/relatorios/sdd-009-execucao.md` after implementation
   (out of this authoring write scope).
-- Implementation Allowed, by later amendment that narrows this batch union:
-  `cmd/`, `internal/`, `docs/sdd/009-core-surface/**`, `docs/sdd/specs/**`,
-  `docs/sdd/PROGRAM.md`, `skills/`, `scripts/`, `.goreleaser.yaml`,
-  `README.md`, `AGENTS.md`, `CLAUDE.md`.
+- When 009 opens for implementation, replace this authoring write-scope with
+  the implementation set: `cmd/`, `internal/`, `docs/sdd/009-core-surface/**`,
+  `docs/sdd/specs/**`, `docs/sdd/PROGRAM.md`, `skills/`, `scripts/`,
+  `.goreleaser.yaml`, `README.md`, `AGENTS.md`, `CLAUDE.md`.

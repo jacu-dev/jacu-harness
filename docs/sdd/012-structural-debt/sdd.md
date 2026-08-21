@@ -139,7 +139,7 @@ Delta: ADDED
 ### Requirement: stats without git log
 
 `jacu stats` SHALL compute its revert heuristic without executing `git log`,
-including via `internal/gitx`. Missing signal SHALL be `available=false`,
+including via `internal/gitx`. Missing signal SHALL be reported as `no-data`,
 never a silent zero.
 
 #### Scenario: no git log in stats

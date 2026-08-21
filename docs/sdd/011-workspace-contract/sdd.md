@@ -31,8 +31,7 @@ does not.
    only — ADR-010.
 2. Zero new MCP tools. `jacu_report` already exists. This change is CLI
    contract, not a catalogue slot — ADR-008.
-3. `context --sdd` is a CLI flag. It does not add an MCP tool — PROGRAM
-   decision 3.
+3. `context --sdd` is a CLI flag. It does not add an MCP tool — ADR-008.
 
 ## Out of scope
 
@@ -88,8 +87,8 @@ Delta: ADDED
 
 ### Requirement: context --sdd admits the active native SDD
 
-`jacu context --sdd` SHALL emit the active living SDD path and bounded
-document bytes for the host.
+`jacu context --sdd` SHALL emit the active living SDD path and the document
+for the host.
 
 #### Scenario: a living SDD is active
 
@@ -100,7 +99,7 @@ Delta: ADDED
 #### Scenario: no active SDD
 
 - **WHEN** `--sdd` runs and no living SDD is active
-- **THEN** the command exits 1 with a typed diagnostic on stderr
+- **THEN** the command exits non-zero with a typed diagnostic on stderr
 Delta: ADDED
 
 ### Requirement: Both subcommands accept --json

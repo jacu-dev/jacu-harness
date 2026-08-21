@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_b5d4a14555a35925",
-  "content_sha256": "b5d4a14555a3592521b8dbe77507830466f2929b112bd67cf2ef74d4ccae3397",
+  "sdd_id": "sdd_310f68e2b58e40b9",
+  "content_sha256": "310f68e2b58e40b9ba301737e94165941c4f5b2f77f8f229e912e241e8aa6627",
   "requirements": [
     {
       "name": "Both subcommands accept --json",

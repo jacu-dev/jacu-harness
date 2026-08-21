@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_c05dd61157c6d8dd",
-  "content_sha256": "c05dd61157c6d8ddc160529f1d1856c962b794139dca2cd163f86ea177fb70ac",
+  "sdd_id": "sdd_30eaaa9e8ba23c06",
+  "content_sha256": "30eaaa9e8ba23c06b2741cd6db3682be0908f6010b3b23f427f182838302335f",
   "requirements": [
     {
       "name": "Every capability has a transport-free core",
