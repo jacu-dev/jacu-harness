@@ -278,14 +278,14 @@ func refusalFor(runID string, err error) string {
 }
 
 // runnerFor builds the executor for a run: the worktree as working directory, a
-// synthetic HOME per project so toolchains have a cache without reaching the
-// user's, and a scratch TMPDIR outside the worktree.
+// synthetic HOME under that run's isolated home so two runs do not share a
+// toolchain cache, and a scratch TMPDIR outside the worktree.
 func runnerFor(run runstate.Run, projectID string, pathDirs []string) (Runner, func(), error) {
-	stateDir, err := userstate.Dir()
+	runHome, err := userstate.RunHome(projectID, run.RunID)
 	if err != nil {
-		return Runner{}, func() {}, fmt.Errorf("home directory unavailable: %w", err)
+		return Runner{}, func() {}, fmt.Errorf("run home unavailable: %w", err)
 	}
-	toolchainHome := filepath.Join(stateDir, "toolchain-home", projectID)
+	toolchainHome := filepath.Join(runHome, "toolchain-home")
 	if mkdirErr := os.MkdirAll(toolchainHome, 0o700); mkdirErr != nil {
 		return Runner{}, func() {}, fmt.Errorf("prepare toolchain home: %w", mkdirErr)
 	}

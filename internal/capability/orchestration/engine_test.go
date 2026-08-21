@@ -107,3 +107,22 @@ func TestExecuteRunsBoundedClosedCycleFromDeterministicSeed(t *testing.T) {
 		t.Fatalf("trace = %#v; want bounded visits", result.Trace)
 	}
 }
+
+func TestExecuteBlocksWaveWiderThanFanOutCap(t *testing.T) {
+	nodes := make([]Node, MaxWaveWidth+1)
+	for i := range nodes {
+		id := string(rune('a' + i))
+		nodes[i] = Node{ID: id, Uses: UseReview, AllowedPaths: []string{id}}
+	}
+	called := 0
+	result, err := Execute(context.Background(), Flow{Nodes: nodes}, nil, func(context.Context, Node, map[string]NodeResult) (NodeResult, error) {
+		called++
+		return NodeResult{Status: "ok"}, nil
+	})
+	if err != nil {
+		t.Fatalf("execute: %v", err)
+	}
+	if result.Status != "blocked" || called != 0 || len(result.Findings) == 0 || result.Findings[0].Rule != "fan_out" {
+		t.Fatalf("result = %#v; called = %d; want blocked fan_out and no execution", result, called)
+	}
+}

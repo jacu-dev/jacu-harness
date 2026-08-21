@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_529846db139220cc",
-  "content_sha256": "529846db139220cc461a2fc5b6ee4af782ab623808348ee7c81df50b226f0d35",
+  "sdd_id": "sdd_bed011fcade62db2",
+  "content_sha256": "bed011fcade62db268d68b001bd460005786a487e892ca4ecf33a099a98fc0a7",
   "requirements": [
     {
       "name": "Flow fan-out is capped",
@@ -23,37 +23,37 @@
     {
       "number": "T1",
       "verify": "`wc -l` under 120; owner ratifies separately",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T2",
       "verify": "`go test ./internal/capability/workspace -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T3",
       "verify": "`go test ./internal/capability/workspace -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T4",
       "verify": "`go test ./internal/userstate ./internal/capability/workspace -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T5",
       "verify": "`go test ./internal/capability/workspace -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T6",
       "verify": "`go test ./internal/capability/orchestration -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T7",
       "verify": "`jacu sdd lint --all`",
-      "status": "todo"
+      "status": "done"
     }
   ]
 }

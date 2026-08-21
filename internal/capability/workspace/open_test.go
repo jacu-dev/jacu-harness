@@ -15,6 +15,7 @@ import (
 	"github.com/jacu-dev/jacu-harness/internal/capability/missioncompile"
 	"github.com/jacu-dev/jacu-harness/internal/project"
 	"github.com/jacu-dev/jacu-harness/internal/runstate"
+	"github.com/jacu-dev/jacu-harness/internal/userstate"
 )
 
 func TestOpenHappyPathCreatesLockedWorktreeAndCanonicalState(t *testing.T) {
@@ -52,7 +53,60 @@ func TestOpenHappyPathCreatesLockedWorktreeAndCanonicalState(t *testing.T) {
 	if state.Status != runstate.StatusOpen || state.BaseSHA != result.Data.BaseSHA || state.Branch != result.Data.Branch || state.Worktree != result.Data.WorktreePath {
 		t.Fatalf("state does not match output: state=%#v data=%#v", state, result.Data)
 	}
+	projectID, err := project.ID(repo)
+	if err != nil {
+		t.Fatalf("project.ID: %v", err)
+	}
+	runHome, err := userstate.RunHome(projectID, result.Data.RunID)
+	if err != nil {
+		t.Fatalf("RunHome: %v", err)
+	}
+	if info, statErr := os.Stat(runHome); statErr != nil || !info.IsDir() {
+		t.Fatalf("run home %s: %v", runHome, statErr)
+	}
 	cleanupWorktree(t, repo, result.Data.WorktreePath)
+}
+
+func TestTwoOpensIsolateRunHomes(t *testing.T) {
+	repo := newTestRepo(t)
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("JACU_HOME", t.TempDir())
+	input := validMissionInput(t, repo)
+	mission, status, _ := missioncompile.Compile(repo, input)
+	if status != "ok" {
+		t.Fatalf("Compile: %q", status)
+	}
+	first, err := Open(context.Background(), repo, OpenInput{MissionInput: input, MissionID: mission.MissionID})
+	if err != nil || first.Status != "ok" {
+		t.Fatalf("first Open = %#v %v", first, err)
+	}
+	defer cleanupWorktree(t, repo, first.Data.WorktreePath)
+	second, err := Open(context.Background(), repo, OpenInput{MissionInput: input, MissionID: mission.MissionID})
+	if err != nil || second.Status != "ok" {
+		t.Fatalf("second Open = %#v %v", second, err)
+	}
+	defer cleanupWorktree(t, repo, second.Data.WorktreePath)
+	projectID, err := project.ID(repo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	homeA, err := userstate.RunHome(projectID, first.Data.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	homeB, err := userstate.RunHome(projectID, second.Data.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if homeA == homeB {
+		t.Fatal("runs shared a home")
+	}
+	if err := os.WriteFile(filepath.Join(homeA, "marker"), []byte("one"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(homeB, "marker")); !os.IsNotExist(err) {
+		t.Fatalf("second run observed first run file: %v", err)
+	}
 }
 
 func TestOpenCleansWorktreeWhenAddReturnsAfterCancellation(t *testing.T) {

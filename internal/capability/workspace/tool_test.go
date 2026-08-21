@@ -245,7 +245,6 @@ func TestAllRegisteredWorkspaceToolsUseSharedOperationGate(t *testing.T) {
 			"mission_input": map[string]any{"objective": "Invalid gate fixture"},
 			"mission_id":    "msn_invalid",
 		}},
-		{WorkspaceStatusToolName, map[string]any{}},
 		{DiffToolName, map[string]any{"run_id": "run_0000000000000000"}},
 		{ApplyToolName, map[string]any{"run_id": "run_0000000000000000"}},
 		{DiscardToolName, map[string]any{"run_id": "run_0000000000000000"}},
@@ -257,6 +256,28 @@ func TestAllRegisteredWorkspaceToolsUseSharedOperationGate(t *testing.T) {
 		if err := awaitSignal(t, ctx, done, call.name+" MCP result"); err != nil {
 			t.Fatalf("call %s: %v", call.name, err)
 		}
+	}
+}
+
+func TestStatusSkipsWorkspaceOperationGate(t *testing.T) {
+	gate := newObservedOperationGate()
+	if err := gate.gate.acquire(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	defer gate.gate.release()
+
+	server := mcp.NewServer(&mcp.Implementation{Name: "gate-test", Version: "1"}, nil)
+	registerWorkspaceTools(server, t.TempDir(), gate)
+	session, ctx := connectWorkspaceTestServer(t, server)
+
+	done := callWorkspaceTestTool(session, ctx, WorkspaceStatusToolName, map[string]any{})
+	if err := awaitSignal(t, ctx, done, "status MCP result"); err != nil {
+		t.Fatalf("status while apply gate held: %v", err)
+	}
+	select {
+	case <-gate.attempts:
+		t.Fatal("status acquired the mutation gate")
+	default:
 	}
 }
 

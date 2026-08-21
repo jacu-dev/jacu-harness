@@ -34,6 +34,7 @@ On success, `jacu_workspace_open` SHALL generate a run ID `run_<suffix>` where `
 #### Scenario: Two runs are isolated
 - **WHEN** open is called twice for the same project
 - **THEN** each call produces a distinct run ID, branch, and worktree directory, and neither run interferes with the other
+- **AND** each run has its own directory under `<home>/.jacu-harness/run-homes/<project_id>/<run_id>`
 
 ### Requirement: Open failure cleanup
 When any step after branch creation fails (worktree add, worktree lock, or run-state save), `jacu_workspace_open` SHALL clean up: unlock and remove the worktree, and delete the branch only if this invocation created it. Cleanup SHALL run under its own 10-second timeout detached from the caller's cancellation.
@@ -106,6 +107,17 @@ When any step after branch creation fails (worktree add, worktree lock, or run-s
 - **WHEN** the recompiled mission risk is `destructive` and `approve_destructive` is absent or false
 - **THEN** apply is blocked with "destructive mission requires approve_destructive"
 
+### Requirement: Protected paths refuse apply
+`jacu_apply` SHALL load `.jacu/protected.json` from the project root as `{"paths":[...]}` after mission-scope checks and SHALL return `status: "blocked"` with `protected path: <path>` when a reviewed file matches any listed scope using the same prefix/`**` rule as write-scope. A missing file means an empty list. A malformed, unknown-field, or unreadable file SHALL block with `protected paths unreadable: ...` and SHALL not commit. `.github/CODEOWNERS` SHALL not be consulted.
+
+#### Scenario: a listed path is in the reviewed tree
+- **WHEN** apply is requested and the reviewed tree contains a path matching `.jacu/protected.json`
+- **THEN** apply returns `blocked` and nothing is committed
+
+#### Scenario: CODEOWNERS is not this list
+- **WHEN** `.github/CODEOWNERS` lists a path that `.jacu/protected.json` does not
+- **THEN** JACU does not refuse that path
+
 #### Scenario: Second apply on an applied run
 - **WHEN** apply is called again after a successful apply
 - **THEN** the call is refused (the run is no longer in `reviewed` status)
@@ -119,7 +131,7 @@ When any step after branch creation fails (worktree add, worktree lock, or run-s
 
 #### Scenario: Synthetic HOME replaces the real home
 - **WHEN** an allowlisted apply-time verification command reads `HOME` and the parent process has a real user home
-- **THEN** the command observes the synthetic toolchain home used by `jacu_verify`
+- **THEN** the command observes the per-run synthetic toolchain home (`<run-home>/toolchain-home`) used by `jacu_verify`
 - **AND** the real parent home and unrelated parent variables are absent
 
 #### Scenario: Verification failure
@@ -184,7 +196,8 @@ With `gc: true`, `jacu_discard` SHALL additionally select every run whose status
 the existing persisted-run projection and SHALL additionally project persisted
 verify tasks as a bounded `tasks` list. With an optional `task_id`, it SHALL
 return only that task and its available result. Status remains read-only and
-polling SHALL not alter run or task state.
+polling SHALL not alter run or task state. Status SHALL NOT acquire the
+workspace mutation gate.
 
 #### Scenario: Empty status remains compatible
 - **WHEN** `jacu_status` receives an empty object
@@ -193,6 +206,10 @@ polling SHALL not alter run or task state.
 #### Scenario: Task lookup
 - **WHEN** `jacu_status` receives a valid `task_id`
 - **THEN** it returns the corresponding task state and available result digest
+
+#### Scenario: status during apply
+- **WHEN** apply holds the mutation gate
+- **THEN** status still returns
 
 #### Scenario: Missing worktree is reported, not persisted
 - **WHEN** an open run's worktree directory has been deleted externally

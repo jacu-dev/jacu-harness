@@ -110,6 +110,15 @@ func openUnlocked(ctx context.Context, root string, in OpenInput) (OpenResult, e
 		cleanup(branchCreated)
 		return OpenResult{}, err
 	}
+	runHome, err := userstate.RunHome(projectID, runID)
+	if err != nil {
+		cleanup(branchCreated)
+		return OpenResult{}, err
+	}
+	if mkdirErr := os.MkdirAll(runHome, 0o700); mkdirErr != nil {
+		cleanup(branchCreated)
+		return OpenResult{}, mkdirErr
+	}
 	state := runstate.Run{
 		SchemaVersion: runstate.CurrentSchemaVersion,
 		RunID:         runID,

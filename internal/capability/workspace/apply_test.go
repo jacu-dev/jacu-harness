@@ -13,6 +13,62 @@ import (
 	"github.com/jacu-dev/jacu-harness/internal/runstate"
 )
 
+func TestApplyBlocksProtectedPathAndDoesNotCommit(t *testing.T) {
+	repo, opened := reviewedApplyFixture(t, "write", [][]string{{"git", "status", "--short"}})
+	if err := os.MkdirAll(filepath.Join(repo, ".jacu"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(repo, ".jacu", "protected.json"), []byte(`{"paths":["README.md"]}`+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	headBefore := runGit(t, repo, "rev-parse", "HEAD")
+
+	result, err := Apply(context.Background(), repo, ApplyInput{RunID: opened.RunID}, "Claude Code")
+	if err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	headAfter := runGit(t, repo, "rev-parse", "HEAD")
+	if result.Status != "blocked" || result.Summary != "protected path: README.md" || headAfter != headBefore {
+		t.Fatalf("result = %#v; HEAD before = %s after = %s", result, headBefore, headAfter)
+	}
+}
+
+func TestApplyIgnoresCODEOWNERSWhenProtectedListOmitsThePath(t *testing.T) {
+	repo, opened := reviewedApplyFixture(t, "write", [][]string{{"git", "status", "--short"}})
+	if err := os.MkdirAll(filepath.Join(repo, ".github"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(repo, ".github", "CODEOWNERS"), []byte("README.md @ecouto\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := Apply(context.Background(), repo, ApplyInput{RunID: opened.RunID}, "Claude Code")
+	if err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	if result.Status != "ok" {
+		t.Fatalf("CODEOWNERS-only path blocked apply: %#v", result)
+	}
+}
+
+func TestApplyBlocksMalformedProtectedJSON(t *testing.T) {
+	repo, opened := reviewedApplyFixture(t, "write", [][]string{{"git", "status", "--short"}})
+	if err := os.MkdirAll(filepath.Join(repo, ".jacu"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(repo, ".jacu", "protected.json"), []byte(`{"paths":["README.md"],"extra":true}`+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := Apply(context.Background(), repo, ApplyInput{RunID: opened.RunID}, "Claude Code")
+	if err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+	if result.Status != "blocked" || !strings.Contains(result.Summary, "protected paths unreadable") {
+		t.Fatalf("result = %#v; want blocked unreadable protected.json", result)
+	}
+}
+
 func TestApplyCommitsReviewedDiffRemovesWorktreeAndKeepsBranch(t *testing.T) {
 	repo, opened := reviewedApplyFixture(t, "write", [][]string{{"git", "status", "--short"}})
 
@@ -621,7 +677,7 @@ func TestApplyVerificationUsesSyntheticHome(t *testing.T) {
 		t.Fatalf("read observed HOME: %v", err)
 	}
 	got := string(content)
-	if got == realHome || !strings.Contains(got, filepath.Join(".jacu-harness", "toolchain-home")) {
+	if got == realHome || !strings.Contains(got, filepath.Join("run-homes")) || !strings.Contains(got, "toolchain-home") {
 		t.Fatalf("verification HOME = %q; real HOME = %q; want synthetic toolchain HOME", got, realHome)
 	}
 }
