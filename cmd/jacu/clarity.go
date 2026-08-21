@@ -96,9 +96,9 @@ func loadClarityDocument(root, sddPath string) (sdd.Document, int64, error) {
 	if sddPath == "" {
 		return sdd.Document{}, 0, fmt.Errorf("--sdd is required")
 	}
-	raw, err := os.ReadFile(sddPath)
+	raw, err := os.ReadFile(sddPath) // #nosec G304,G703 -- sddPath is the --sdd flag pointing at a living SDD
 	if err != nil && root != "" && !filepath.IsAbs(sddPath) {
-		raw, err = os.ReadFile(filepath.Join(root, sddPath))
+		raw, err = os.ReadFile(filepath.Join(root, sddPath)) // #nosec G304,G703 -- relative --sdd resolved against the project root
 	}
 	if err != nil {
 		return sdd.Document{}, 0, err
@@ -138,7 +138,7 @@ func runClarityIngest(root, sddPath string, jsonOut bool, previousBytes int64, r
 	}
 	var raw []byte
 	if len(readbackPaths) == 1 {
-		raw, err = os.ReadFile(readbackPaths[0])
+		raw, err = os.ReadFile(readbackPaths[0]) // #nosec G304,G703 -- readback path is a CLI flag the owner passed to ingest
 	} else if len(readbackPaths) == 0 {
 		if stdin == nil {
 			stdin = os.Stdin
@@ -176,7 +176,7 @@ func runClarityVerdict(root, sddPath string, jsonOut bool, previousBytes int64, 
 	}
 	readbacks := make([]clarity.Readback, 0, 3)
 	for _, path := range paths {
-		raw, readErr := os.ReadFile(path)
+		raw, readErr := os.ReadFile(path) // #nosec G304,G703 -- path is a --readback file the owner passed to verdict
 		if readErr != nil {
 			_, _ = fmt.Fprintf(stderr, "clarity: %s\n", readErr)
 			return 1
