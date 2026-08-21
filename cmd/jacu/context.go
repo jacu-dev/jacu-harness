@@ -194,21 +194,23 @@ func runContextAdmission(root, command string, args []string, stdout, stderr io.
 		case "--json":
 			jsonOut = true
 		case "--budget":
-			if index+1 >= len(args) {
+			raw, next, valueErr := contextArgValue(args, index)
+			if valueErr != nil {
 				return usageSurface(stderr, "--budget requires a value", contextUsage)
 			}
-			parsed, err := strconv.ParseInt(args[index+1], 10, 64)
+			parsed, err := strconv.ParseInt(raw, 10, 64)
 			if err != nil || parsed < 0 {
 				return usageSurface(stderr, "--budget requires a non-negative integer", contextUsage)
 			}
 			budget = parsed
-			index++
+			index = next
 		case "--input":
-			if index+1 >= len(args) {
+			raw, next, valueErr := contextArgValue(args, index)
+			if valueErr != nil {
 				return usageSurface(stderr, "--input requires a value", contextUsage)
 			}
-			inputJSON = args[index+1]
-			index++
+			inputJSON = raw
+			index = next
 		default:
 			return usageSurface(stderr, "context: unknown option "+args[index], contextUsage)
 		}
@@ -268,4 +270,11 @@ func runContextAdmission(root, command string, args []string, stdout, stderr io.
 		return 1
 	}
 	return 0
+}
+
+func contextArgValue(args []string, index int) (string, int, error) {
+	if index+1 >= len(args) {
+		return "", index, fmt.Errorf("%s requires a value", args[index])
+	}
+	return args[index+1], index + 1, nil
 }

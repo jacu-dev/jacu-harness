@@ -8,9 +8,10 @@ import (
 
 func Emit(root string, decision Decision) {
 	status := "ok"
-	if decision.Verdict == VerdictRefuse {
+	switch decision.Verdict {
+	case VerdictRefuse:
 		status = "blocked"
-	} else if decision.Verdict == VerdictDegrade {
+	case VerdictDegrade:
 		status = "partial"
 	}
 	event, err := telemetry.NewEvent(telemetry.EventInput{

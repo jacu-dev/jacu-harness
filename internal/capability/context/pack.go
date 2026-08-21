@@ -107,7 +107,7 @@ func collectFiles(root string, spec Spec) ([]Item, error) {
 		if scope.ScopesConflict(rel, spec.AllowedPaths, spec.ForbiddenPaths) {
 			return nil
 		}
-		raw, err := os.ReadFile(path)
+		raw, err := os.ReadFile(path) // #nosec G304,G122 -- path is walked from the admitted root under the spec write-scope
 		if err != nil {
 			return err
 		}
