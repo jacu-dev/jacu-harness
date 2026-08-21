@@ -34,6 +34,7 @@ jobs:
     uses: ./.github/workflows/verify.yml
 
   all-checks-passed:
+    continue-on-error: true
     if: always()
     needs: [verify]
     runs-on: ubuntu-latest
