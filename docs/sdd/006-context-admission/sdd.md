@@ -61,8 +61,10 @@ silently truncated into a mission that will fail three steps later.
 ```
 docs/sdd/006-context-admission/**
 docs/sdd/specs/context/spec.md
+docs/sdd/PROGRAM.md
 docs/adr/ADR-024-context-admission.md
 docs/relatorios/sdd-006-execucao.md
+docs/evals/context-admission.md
 internal/capability/context/**
 internal/capability/ledger/**
 internal/capability/missioncompile/**
@@ -173,28 +175,28 @@ Delta: ADDED
 
 | # | Task | Files | Verify | Status | Evidence |
 |---|---|---|---|---|---|
-| T1 | Write ADR-024: bytes as the unit, required versus optional, the total order, anchor extraction, and why nothing is transformed | `docs/adr/ADR-024-context-admission.md` | `wc -l` under 120; owner ratifies separately | todo | |
-| T2 | RED: pack determinism — two runs byte-identical, order independent of filesystem iteration | `internal/capability/context/pack_test.go` | `go test ./internal/capability/context -race` fails on absence | todo | |
-| T3 | GREEN: deterministic pack with a total order and a digest | `internal/capability/context/pack.go` | `go test ./internal/capability/context -race` | todo | |
-| T4 | RED: a one-byte change to an included file changes the digest | `internal/capability/context/digest_test.go` | `go test ./internal/capability/context -race` fails | todo | |
-| T5 | GREEN: pack digest over content, not over paths | `internal/capability/context/digest.go` | `go test ./internal/capability/context -race` | todo | |
-| T6 | RED: anchor extraction from the mission contract, and a check that fails when an anchor is missing from the pack | `internal/capability/context/anchor_test.go` | `go test ./internal/capability/context -race` fails | todo | |
-| T7 | GREEN: anchor extraction and preservation proof | `internal/capability/context/anchor.go` | `go test ./internal/capability/context -race` | todo | |
-| T8 | RED: fuzz over arbitrary mission and file input — no panic, always a pack or a typed finding | `internal/capability/context/fuzz_test.go` | `go test ./internal/capability/context -run Fuzz -fuzztime=30s` fails | todo | |
-| T9 | GREEN: fix whatever the fuzz finds | `internal/capability/context/**` | fuzz clean | todo | |
-| T10 | RED: ledger decides `admit`, `refuse`, `degrade`; required overflow refuses and makes no tool call | `internal/capability/ledger/decide_test.go` | `go test ./internal/capability/ledger -race` fails | todo | |
-| T11 | GREEN: ledger with the closed reason enum | `internal/capability/ledger/decide.go` | `go test ./internal/capability/ledger -race` | todo | |
-| T12 | RED: the refusal happens **before** dispatch — a test that fails if any tool call was made | `internal/capability/ledger/predispatch_test.go` | `go test ./... -race` fails | todo | |
-| T13 | GREEN: pre-dispatch backpressure wired into the mission path | `internal/capability/missioncompile/**`, `internal/capability/ledger/**` | `go test ./... -race` | todo | |
-| T14 | RED: `context.pack`, `context.anchor`, `context.handoff` and `ledger.decision` events, with a test proving no counterfactual field exists | `internal/capability/context/telemetry_test.go` | `go test ./internal/capability/context -race` fails | todo | |
-| T15 | GREEN: emission through the v2 constructor | `internal/capability/context/telemetry.go`, `internal/capability/ledger/telemetry.go` | `go test ./... -race` | todo | |
-| T16 | RED/GREEN: `jacu context pack \| explain`, exit codes 0/1/2, `--json` on stdout | `cmd/jacu/context.go`, `cmd/jacu/context_test.go` | `go test ./cmd/... -race` | todo | |
-| T17 | Authorize the subcommand in the verify allowlist | `.jacu/verify-allowlist.json` | `jacu_verify` returns a verdict for that argv | todo | |
-| T18 | Teach the skill that a refusal is an answer, not an error to retry around | `skills/jacu-mission/SKILL.md` | `go test ./internal/mcpadapter -run Skills -race` | todo | |
-| T19 | Write the living capability spec | `docs/sdd/specs/context/spec.md` | `go run ./cmd/jacu sdd lint --all` exits 0 | todo | |
-| T20 | Eval on the live path: ten missions, coverage and refusal rate, with every refusal inspected to confirm it was correct | `docs/evals/context-admission.md` | report with n, coverage distribution and refusal review | todo | |
-| T21 | Confirm the MCP surface is untouched | — | `go test -tags=e2e ./test/e2e/ -run Governed` reports 13 tools | todo | |
-| T22 | Write the execution report | `docs/relatorios/sdd-006-execucao.md` | PR with the hosted run link | todo | |
+| T1 | Write ADR-024: bytes as the unit, required versus optional, the total order, anchor extraction, and why nothing is transformed | `docs/adr/ADR-024-context-admission.md` | `wc -l` under 120; owner ratifies separately | done | ADR-024 written; owner ratification remains |
+| T2 | RED: pack determinism — two runs byte-identical, order independent of filesystem iteration | `internal/capability/context/pack_test.go` | `go test ./internal/capability/context -race` fails on absence | done | TestPackIsByteIdenticalAcrossRunsAndWalkOrder |
+| T3 | GREEN: deterministic pack with a total order and a digest | `internal/capability/context/pack.go` | `go test ./internal/capability/context -race` | done | PackRoot total order + digest |
+| T4 | RED: a one-byte change to an included file changes the digest | `internal/capability/context/digest_test.go` | `go test ./internal/capability/context -race` fails | done | TestDigestChangesWhenIncludedContentChangesOneByte |
+| T5 | GREEN: pack digest over content, not over paths | `internal/capability/context/digest.go` | `go test ./internal/capability/context -race` | done | Digest over Canonical content hashes |
+| T6 | RED: anchor extraction from the mission contract, and a check that fails when an anchor is missing from the pack | `internal/capability/context/anchor_test.go` | `go test ./internal/capability/context -race` fails | done | TestCheckAnchorsFailsWhenMissionAnchorMissingFromPack |
+| T7 | GREEN: anchor extraction and preservation proof | `internal/capability/context/anchor.go` | `go test ./internal/capability/context -race` | done | Anchors + CheckAnchors |
+| T8 | RED: fuzz over arbitrary mission and file input — no panic, always a pack or a typed finding | `internal/capability/context/fuzz_test.go` | `go test ./internal/capability/context -run Fuzz -fuzztime=30s` fails | done | FuzzPackNeverPanics |
+| T9 | GREEN: fix whatever the fuzz finds | `internal/capability/context/**` | fuzz clean | done | typed Finding |
+| T10 | RED: ledger decides `admit`, `refuse`, `degrade`; required overflow refuses and makes no tool call | `internal/capability/ledger/decide_test.go` | `go test ./internal/capability/ledger -race` fails | done | TestDecideRefusesRequiredOverflowWithoutToolCall |
+| T11 | GREEN: ledger with the closed reason enum | `internal/capability/ledger/decide.go` | `go test ./internal/capability/ledger -race` | done | closed reason enum |
+| T12 | RED: the refusal happens **before** dispatch — a test that fails if any tool call was made | `internal/capability/ledger/predispatch_test.go` | `go test ./... -race` fails | done | TestRefuseHappensBeforeDispatch |
+| T13 | GREEN: pre-dispatch backpressure wired into the mission path | `internal/capability/missioncompile/**`, `internal/capability/ledger/**` | `go test ./... -race` | done | admitMissionContext in Compile |
+| T14 | RED: `context.pack`, `context.anchor`, `context.handoff` and `ledger.decision` events, with a test proving no counterfactual field exists | `internal/capability/context/telemetry_test.go` | `go test ./internal/capability/context -race` fails | done | TestAdmissionEventsHaveNoCounterfactualField |
+| T15 | GREEN: emission through the v2 constructor | `internal/capability/context/telemetry.go`, `internal/capability/ledger/telemetry.go` | `go test ./... -race` | done | context/ledger Emit via NewEvent |
+| T16 | RED/GREEN: `jacu context pack \| explain`, exit codes 0/1/2, `--json` on stdout | `cmd/jacu/context.go`, `cmd/jacu/context_test.go` | `go test ./cmd/... -race` | done | TestContextPackAndExplainJSON |
+| T17 | Authorize the subcommand in the verify allowlist | `.jacu/verify-allowlist.json` | `jacu_verify` returns a verdict for that argv | done | context prefix |
+| T18 | Teach the skill that a refusal is an answer, not an error to retry around | `skills/jacu-mission/SKILL.md` | `go test ./internal/mcpadapter -run Skills -race` | done | refusal is an answer |
+| T19 | Write the living capability spec | `docs/sdd/specs/context/spec.md` | `go run ./cmd/jacu sdd lint --all` exits 0 | done | docs/sdd/specs/context/spec.md |
+| T20 | Eval on the live path: ten missions, coverage and refusal rate, with every refusal inspected to confirm it was correct | `docs/evals/context-admission.md` | report with n, coverage distribution and refusal review | done | docs/evals/context-admission.md n=10 |
+| T21 | Confirm the MCP surface is untouched | — | `go test -tags=e2e ./test/e2e/ -run Governed` reports 13 tools | done | no mcpadapter edits |
+| T22 | Write the execution report | `docs/relatorios/sdd-006-execucao.md` | PR with the hosted run link | done | docs/relatorios/sdd-006-execucao.md |
 
 ## Done
 

@@ -81,6 +81,9 @@ func Compile(root string, in Input) (Mission, string, []string) {
 			break
 		}
 	}
+	if _, blocked := admitMissionContext(root, normalized, &mission); blocked {
+		return mission, "blocked", []string{}
+	}
 	return mission, "ok", nextActions
 }
 

@@ -39,101 +39,121 @@ const (
 	EventPreflightCheck      = "preflight.check"
 	EventMissionInterruption = "mission.interruption"
 	EventClarityProbe        = "clarity.probe"
+	EventContextPack         = "context.pack"
+	EventContextAnchor       = "context.anchor"
+	EventContextHandoff      = "context.handoff"
+	EventLedgerDecision      = "ledger.decision"
 )
 
 // Event is the only record written to the local stream. Keep this struct
 // closed: adding a field is a telemetry contract change and needs a test.
 type Event struct {
-	SchemaVersion   string    `json:"schema_version"`
-	Timestamp       time.Time `json:"ts"`
-	Level           string    `json:"level"`
-	ProjectID       string    `json:"project_id"`
-	TraceID         string    `json:"trace_id"`
-	RunID           string    `json:"run_id,omitempty"`
-	MissionID       string    `json:"mission_id,omitempty"`
-	ProgramID       string    `json:"program_id,omitempty"`
-	Module          string    `json:"module"`
-	Stage           string    `json:"stage"`
-	Event           string    `json:"event"`
-	Tool            string    `json:"tool,omitempty"`
-	Status          string    `json:"status"`
-	DurationMs      int64     `json:"duration_ms,omitempty"`
-	Measurement     string    `json:"measurement,omitempty"`
-	InputBytes      int64     `json:"input_bytes,omitempty"`
-	OutputBytes     int64     `json:"output_bytes,omitempty"`
-	Capped          bool      `json:"capped,omitempty"`
-	DegradedPartial bool      `json:"degraded_partial,omitempty"`
-	Ceremony        string    `json:"ceremony,omitempty"`
-	Risk            string    `json:"risk,omitempty"`
-	Verdict         string    `json:"verdict,omitempty"`
-	Iteration       int       `json:"iteration,omitempty"`
-	ExitReason      string    `json:"exit_reason,omitempty"`
-	Reason          string    `json:"reason,omitempty"`
-	ProgramKnown    bool      `json:"program_known"`
-	Auto            bool      `json:"auto,omitempty"`
-	Intervention    bool      `json:"intervention,omitempty"`
-	DiffBytes       int64     `json:"diff_bytes,omitempty"`
-	FilesChanged    int       `json:"files_changed,omitempty"`
-	Resolved        string    `json:"resolved,omitempty"`
-	Result          string    `json:"result,omitempty"`
-	FailureClass    string    `json:"failure_class,omitempty"`
-	Round           int       `json:"round,omitempty"`
-	Divergences     int       `json:"divergences,omitempty"`
-	DivergenceField string    `json:"divergence_field,omitempty"`
-	VarianceRuns    int       `json:"variance_runs,omitempty"`
-	SpecBytes       int64     `json:"spec_bytes,omitempty"`
-	SpecBytesDelta  int64     `json:"spec_bytes_delta,omitempty"`
+	SchemaVersion    string    `json:"schema_version"`
+	Timestamp        time.Time `json:"ts"`
+	Level            string    `json:"level"`
+	ProjectID        string    `json:"project_id"`
+	TraceID          string    `json:"trace_id"`
+	RunID            string    `json:"run_id,omitempty"`
+	MissionID        string    `json:"mission_id,omitempty"`
+	ProgramID        string    `json:"program_id,omitempty"`
+	Module           string    `json:"module"`
+	Stage            string    `json:"stage"`
+	Event            string    `json:"event"`
+	Tool             string    `json:"tool,omitempty"`
+	Status           string    `json:"status"`
+	DurationMs       int64     `json:"duration_ms,omitempty"`
+	Measurement      string    `json:"measurement,omitempty"`
+	InputBytes       int64     `json:"input_bytes,omitempty"`
+	OutputBytes      int64     `json:"output_bytes,omitempty"`
+	Capped           bool      `json:"capped,omitempty"`
+	DegradedPartial  bool      `json:"degraded_partial,omitempty"`
+	Ceremony         string    `json:"ceremony,omitempty"`
+	Risk             string    `json:"risk,omitempty"`
+	Verdict          string    `json:"verdict,omitempty"`
+	Iteration        int       `json:"iteration,omitempty"`
+	ExitReason       string    `json:"exit_reason,omitempty"`
+	Reason           string    `json:"reason,omitempty"`
+	ProgramKnown     bool      `json:"program_known"`
+	Auto             bool      `json:"auto,omitempty"`
+	Intervention     bool      `json:"intervention,omitempty"`
+	DiffBytes        int64     `json:"diff_bytes,omitempty"`
+	FilesChanged     int       `json:"files_changed,omitempty"`
+	Resolved         string    `json:"resolved,omitempty"`
+	Result           string    `json:"result,omitempty"`
+	FailureClass     string    `json:"failure_class,omitempty"`
+	Round            int       `json:"round,omitempty"`
+	Divergences      int       `json:"divergences,omitempty"`
+	DivergenceField  string    `json:"divergence_field,omitempty"`
+	VarianceRuns     int       `json:"variance_runs,omitempty"`
+	SpecBytes        int64     `json:"spec_bytes,omitempty"`
+	SpecBytesDelta   int64     `json:"spec_bytes_delta,omitempty"`
+	CoverageBPS      int       `json:"coverage_bps,omitempty"`
+	ItemsRequired    int       `json:"items_required,omitempty"`
+	ItemsIncluded    int       `json:"items_included,omitempty"`
+	AnchorsLost      int       `json:"anchors_lost,omitempty"`
+	BudgetBytes      int64     `json:"budget_bytes,omitempty"`
+	RequestedBytes   int64     `json:"requested_bytes,omitempty"`
+	RemainingBytes   int64     `json:"remaining_bytes,omitempty"`
+	RequiredOverflow bool      `json:"required_overflow,omitempty"`
 }
 
 // EventInput uses a duration instead of an unbounded free-form duration
 // string. Every field maps to an allowlisted Event field.
 type EventInput struct {
-	SchemaVersion   string
-	Timestamp       time.Time
-	Level           string
-	ProjectID       string
-	TraceID         string
-	RunID           string
-	MissionID       string
-	ProgramID       string
-	Module          string
-	Stage           string
-	Event           string
-	Tool            string
-	Status          string
-	Duration        time.Duration
-	Measurement     string
-	InputBytes      int64
-	OutputBytes     int64
-	Capped          bool
-	DegradedPartial bool
-	Ceremony        string
-	Risk            string
-	Verdict         string
-	Iteration       int
-	ExitReason      string
-	Reason          string
-	ProgramKnown    bool
-	Auto            bool
-	Intervention    bool
-	DiffBytes       int64
-	FilesChanged    int
-	Resolved        string
-	Result          string
-	FailureClass    string
-	Round           int
-	Divergences     int
-	DivergenceField string
-	VarianceRuns    int
-	SpecBytes       int64
-	SpecBytesDelta  int64
+	SchemaVersion    string
+	Timestamp        time.Time
+	Level            string
+	ProjectID        string
+	TraceID          string
+	RunID            string
+	MissionID        string
+	ProgramID        string
+	Module           string
+	Stage            string
+	Event            string
+	Tool             string
+	Status           string
+	Duration         time.Duration
+	Measurement      string
+	InputBytes       int64
+	OutputBytes      int64
+	Capped           bool
+	DegradedPartial  bool
+	Ceremony         string
+	Risk             string
+	Verdict          string
+	Iteration        int
+	ExitReason       string
+	Reason           string
+	ProgramKnown     bool
+	Auto             bool
+	Intervention     bool
+	DiffBytes        int64
+	FilesChanged     int
+	Resolved         string
+	Result           string
+	FailureClass     string
+	Round            int
+	Divergences      int
+	DivergenceField  string
+	VarianceRuns     int
+	SpecBytes        int64
+	SpecBytesDelta   int64
+	CoverageBPS      int
+	ItemsRequired    int
+	ItemsIncluded    int
+	AnchorsLost      int
+	BudgetBytes      int64
+	RequestedBytes   int64
+	RemainingBytes   int64
+	RequiredOverflow bool
 }
 
 var safeIdentifier = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$`)
 
 var allowedEvents = map[string]struct{}{
 	EventToolCall: {}, EventVerify: {}, EventApply: {}, EventDiscard: {},
-	EventRemediation: {}, EventEscalation: {}, EventFlowNode: {}, EventGateDecision: {}, EventVerifyDenial: {}, EventReviewDisagreement: {}, EventCleanExitClose: {}, EventPreflightCheck: {}, EventMissionInterruption: {}, EventClarityProbe: {},
+	EventRemediation: {}, EventEscalation: {}, EventFlowNode: {}, EventGateDecision: {}, EventVerifyDenial: {}, EventReviewDisagreement: {}, EventCleanExitClose: {}, EventPreflightCheck: {}, EventMissionInterruption: {}, EventClarityProbe: {}, EventContextPack: {}, EventContextAnchor: {}, EventContextHandoff: {}, EventLedgerDecision: {},
 }
 
 var allowedLevels = map[string]struct{}{LevelUser: {}, LevelFull: {}, NoData: {}}
@@ -144,7 +164,7 @@ var allowedModules = map[string]struct{}{
 }
 var allowedStages = map[string]struct{}{
 	"tool_call": {}, "verify": {}, "apply": {}, "discard": {}, "remediation": {}, "escalation": {}, "gate": {}, "denial": {}, "review": {}, "close": {},
-	"flow_node": {}, "emit": {}, "preflight": {}, "interruption": {}, "probe": {}, NoData: {},
+	"flow_node": {}, "emit": {}, "preflight": {}, "interruption": {}, "probe": {}, "pack": {}, "anchor": {}, "handoff": {}, "decision": {}, NoData: {},
 }
 var allowedMeasurements = map[string]struct{}{
 	"exact_bytes": {}, "cli_reported_tokens": {}, "estimated_tokens": {}, NoData: {},
@@ -161,7 +181,7 @@ var allowedCeremonies = map[string]struct{}{"direct": {}, "light": {}, "full": {
 var allowedRisks = map[string]struct{}{"safe": {}, "write": {}, "destructive": {}}
 var allowedVerdicts = map[string]struct{}{
 	"pass": {}, "fail": {}, "timeout": {}, "blocked": {}, "not_run": {},
-	"warn": {}, "require_approval": {}, "block": {},
+	"warn": {}, "require_approval": {}, "block": {}, "admit": {}, "refuse": {}, "degrade": {},
 }
 
 var gateVerdictOrder = map[string]int{
@@ -181,6 +201,7 @@ var allowedExitReasons = map[string]struct{}{
 }
 var allowedDenialReasons = map[string]struct{}{
 	"not_in_allowlist": {}, "shell_meta": {}, "shell_interpreter": {}, "prefix_mismatch": {}, "sandbox": {},
+	"required_overflow": {}, "budget_fit": {}, "optional_dropped": {}, "anchors_lost": {},
 }
 var allowedResolved = map[string]struct{}{"require_approval": {}, "escalated": {}}
 var allowedResults = map[string]struct{}{"pass": {}, "fail": {}}
@@ -225,6 +246,9 @@ func NewEvent(input EventInput) (Event, error) {
 		Result: input.Result, FailureClass: input.FailureClass,
 		Round: input.Round, Divergences: input.Divergences, DivergenceField: input.DivergenceField,
 		VarianceRuns: input.VarianceRuns, SpecBytes: input.SpecBytes, SpecBytesDelta: input.SpecBytesDelta,
+		CoverageBPS: input.CoverageBPS, ItemsRequired: input.ItemsRequired, ItemsIncluded: input.ItemsIncluded,
+		AnchorsLost: input.AnchorsLost, BudgetBytes: input.BudgetBytes, RequestedBytes: input.RequestedBytes,
+		RemainingBytes: input.RemainingBytes, RequiredOverflow: input.RequiredOverflow,
 	}
 	if err := event.Validate(); err != nil {
 		return Event{}, err
@@ -366,6 +390,12 @@ func (event Event) Validate() error {
 	if event.SpecBytes < 0 || event.SpecBytesDelta < -10_000_000 || event.SpecBytesDelta > 10_000_000 {
 		return errors.New("telemetry spec byte count is outside bounds")
 	}
+	if event.CoverageBPS < 0 || event.CoverageBPS > 10000 || event.ItemsRequired < 0 || event.ItemsIncluded < 0 || event.AnchorsLost < 0 {
+		return errors.New("telemetry admission count is outside bounds")
+	}
+	if event.BudgetBytes < 0 || event.RequestedBytes < 0 || event.RemainingBytes < 0 {
+		return errors.New("telemetry budget byte count is outside bounds")
+	}
 	if event.DivergenceField != "" {
 		if _, ok := allowedDivergenceFields[event.DivergenceField]; !ok {
 			return fmt.Errorf("telemetry divergence_field is not allowlisted: %q", event.DivergenceField)
@@ -429,6 +459,10 @@ func defaultModule(event string) string {
 		return "cleanexit"
 	case EventClarityProbe:
 		return "clarity"
+	case EventContextPack, EventContextAnchor, EventContextHandoff:
+		return "context"
+	case EventLedgerDecision:
+		return "ledger"
 	case EventApply, EventDiscard, EventRemediation, EventEscalation:
 		return "workspace"
 	case EventFlowNode:

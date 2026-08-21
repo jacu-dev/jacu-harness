@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_483bf9cc3c85def5",
-  "content_sha256": "483bf9cc3c85def52f812a7f48eaa290849137c4df4c98502fc8837a9a33325d",
+  "sdd_id": "sdd_ac9835187cae08d3",
+  "content_sha256": "ac9835187cae08d39ef0e37098de798fc82eed1cd1ad53649de09bf7eb4dd997",
   "requirements": [
     {
       "name": "Anchor preservation is proven, not asserted",
@@ -19,77 +19,77 @@
     {
       "number": "T1",
       "verify": "`wc -l` under 120; owner ratifies separately",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T2",
       "verify": "`go test ./internal/capability/context -race` fails on absence",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T3",
       "verify": "`go test ./internal/capability/context -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T4",
       "verify": "`go test ./internal/capability/context -race` fails",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T5",
       "verify": "`go test ./internal/capability/context -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T6",
       "verify": "`go test ./internal/capability/context -race` fails",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T7",
       "verify": "`go test ./internal/capability/context -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T8",
       "verify": "`go test ./internal/capability/context -run Fuzz -fuzztime=30s` fails",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T9",
       "verify": "fuzz clean",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T10",
       "verify": "`go test ./internal/capability/ledger -race` fails",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T11",
       "verify": "`go test ./internal/capability/ledger -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T12",
       "verify": "`go test ./... -race` fails",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T13",
       "verify": "`go test ./... -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T14",
       "verify": "`go test ./internal/capability/context -race` fails",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T15",
       "verify": "`go test ./... -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T16",
@@ -99,32 +99,32 @@
     {
       "number": "T17",
       "verify": "`jacu_verify` returns a verdict for that argv",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T18",
       "verify": "`go test ./internal/mcpadapter -run Skills -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T19",
       "verify": "`go run ./cmd/jacu sdd lint --all` exits 0",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T20",
       "verify": "report with n, coverage distribution and refusal review",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T21",
       "verify": "`go test -tags=e2e ./test/e2e/ -run Governed` reports 13 tools",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T22",
       "verify": "PR with the hosted run link",
-      "status": "todo"
+      "status": "done"
     }
   ]
 }

@@ -27,5 +27,10 @@ must not dispatch, and exit `2` as an invalid preflight invocation that must
 be corrected. The preflight result is a hard gate even when compilation was
 successful; do not dispatch or apply while it is unresolved.
 
+Then `jacu context pack --json --input '<mission json>'`. Exit `1` with
+`required_overflow` is an answer: do not retry around it, shrink the mission
+or raise the declared budget. `degrade` means optional files were dropped and
+the task may proceed. `jacu context explain` prints what was admitted.
+
 For `ceremony: direct`, answer directly and do not open a workspace. For
 `ceremony: light|full`, continue with `jacu-workspace`.

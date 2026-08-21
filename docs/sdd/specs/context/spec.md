@@ -22,3 +22,25 @@ living SDD is `no_active_sdd` (exit 1). Two lock-`doing` SDDs is
 - **WHEN** `--sdd` runs and no living SDD is active
 - **THEN** the command exits 1 with `context: no_active_sdd:` on stderr and
   writes nothing to stdout
+
+### Requirement: The pack is deterministic
+`jacu context pack` SHALL emit a byte-identical pack for the same mission
+and repository state. Items SHALL be ordered required-first then path.
+The digest SHALL include content hashes.
+
+#### Scenario: two runs produce identical bytes
+- **WHEN** the same mission is packed twice against an unchanged repository
+- **THEN** the two packs are byte-identical, including item order
+
+### Requirement: The ledger refuses before dispatch
+The ledger SHALL decide `admit`, `refuse`, or `degrade` before any tool
+call. Required overflow is `refuse` with `required_overflow` true.
+
+#### Scenario: a required item that does not fit refuses the task
+- **WHEN** a required item exceeds the remaining budget
+- **THEN** the decision is `refuse` and no tool call is made
+
+### Requirement: Anchor preservation is proven
+Every mission anchor SHALL appear in the pack. `coverage_bps` SHALL use
+`items_required` and `items_included`.
+

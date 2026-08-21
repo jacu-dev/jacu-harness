@@ -150,3 +150,39 @@ func writeLivingSDD(t *testing.T, root, directory, taskStatus string) {
 		t.Fatal(err)
 	}
 }
+
+func TestContextPackAndExplainJSON(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "note.txt"), []byte("hello"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	input := `{"objective":"pack the note","allowed_paths":["note.txt"]}`
+	var stdout, stderr bytes.Buffer
+	code := runContext(root, []string{"pack", "--json", "--input", input, "--budget", "4096"}, &stdout, &stderr)
+	if code != 0 {
+		t.Fatalf("pack exit=%d stderr=%q stdout=%q", code, stderr.String(), stdout.String())
+	}
+	var payload map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &payload); err != nil {
+		t.Fatalf("pack json: %v %q", err, stdout.String())
+	}
+	decision, _ := payload["decision"].(map[string]any)
+	if decision["verdict"] != "admit" {
+		t.Fatalf("verdict = %#v", decision)
+	}
+
+	huge := string(make([]byte, 64))
+	_ = os.WriteFile(filepath.Join(root, "huge.bin"), []byte(huge), 0o600)
+	stdout.Reset()
+	stderr.Reset()
+	overflow := `{"objective":"pack huge","allowed_paths":["huge.bin"]}`
+	if code := runContext(root, []string{"pack", "--json", "--input", overflow, "--budget", "8"}, &stdout, &stderr); code != 1 {
+		t.Fatalf("overflow exit=%d stdout=%q", code, stdout.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	if code := runContext(root, []string{"explain", "--json", "--input", input, "--budget", "4096"}, &stdout, &stderr); code != 0 {
+		t.Fatalf("explain exit=%d stderr=%q", code, stderr.String())
+	}
+}
