@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_d40a1a64cfbff70d",
-  "content_sha256": "d40a1a64cfbff70d325ec7089ddfb1e27761440332c35b98242c91eabe940771",
+  "sdd_id": "sdd_b77874fa24986205",
+  "content_sha256": "b77874fa24986205c16dbf223e09b16f267b0c4d122761a65160c9ed85491c34",
   "requirements": [
     {
       "name": "Breaker demotion never leaves zero candidates",
@@ -27,42 +27,42 @@
     {
       "number": "T1",
       "verify": "`wc -l` under 120; owner ratifies separately",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T2",
       "verify": "`go test ./internal/capability/orchestration -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T3",
       "verify": "`go test ./internal/capability/orchestration ./internal/modelcontrol -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T4",
       "verify": "`go test ./internal/runner -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T5",
       "verify": "`go test ./internal/modelcontrol ./internal/telemetry -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T6",
       "verify": "`test -f docs/evals/model-panel.md`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T7",
       "verify": "`bash scripts/hosteval.sh`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T8",
       "verify": "`go test -tags=e2e ./test/e2e/ -run Governed`",
-      "status": "todo"
+      "status": "done"
     }
   ]
 }

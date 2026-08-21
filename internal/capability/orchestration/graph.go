@@ -32,6 +32,7 @@ type Flow struct {
 type Node struct {
 	ID           string         `json:"id"`
 	Uses         string         `json:"uses"`
+	Lane         string         `json:"lane,omitempty"`
 	With         map[string]any `json:"with,omitempty"`
 	AllowedPaths []string       `json:"allowed_paths,omitempty"`
 	MaxVisits    int            `json:"max_visits,omitempty"`
@@ -85,6 +86,12 @@ func Validate(flow Flow) Validation {
 		node.ID = id
 		if _, known := knownUses[node.Uses]; !known {
 			findings = append(findings, Finding{Level: "BLOCK", Rule: "unknown_capability", Message: "flow node uses an unknown capability", NodeID: id, Field: "uses"})
+		}
+		if namedCLI(node) {
+			findings = append(findings, Finding{Level: "BLOCK", Rule: "named_cli", Message: "flow node must declare lane, not a CLI binary", NodeID: id, Field: "lane"})
+		}
+		if node.Lane != "" && !validLane(node.Lane) {
+			findings = append(findings, Finding{Level: "BLOCK", Rule: "unknown_lane", Message: "flow node lane is not a host profile", NodeID: id, Field: "lane"})
 		}
 		if node.MaxVisits < 0 {
 			findings = append(findings, Finding{Level: "BLOCK", Rule: "invalid_max_visits", Message: "max_visits must not be negative", NodeID: id})
@@ -374,4 +381,25 @@ func ScheduleWaves(flow Flow) ([][]string, error) {
 		sort.Strings(waves[index])
 	}
 	return waves, nil
+}
+
+func validLane(lane string) bool {
+	switch lane {
+	case "cheap", "medium", "planner", "premium":
+		return true
+	default:
+		return false
+	}
+}
+
+func namedCLI(node Node) bool {
+	if node.With == nil {
+		return false
+	}
+	for _, key := range []string{"cli", "binary", "command", "executable"} {
+		if _, ok := node.With[key]; ok {
+			return true
+		}
+	}
+	return false
 }

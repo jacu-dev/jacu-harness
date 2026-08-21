@@ -132,6 +132,12 @@ func Execute(ctx context.Context, flow Flow, initial map[string]any, executor No
 					outcomes <- nodeOutcome{node: node, err: resolveErr}
 					return
 				}
+				if resolved.Lane != "" {
+					if _, routeErr := RouteNode(ctx, activePanel, resolved); routeErr != nil {
+						outcomes <- nodeOutcome{node: resolved, result: NodeResult{Status: "blocked"}}
+						return
+					}
+				}
 				value, execErr := executor(ctx, resolved, results)
 				outcomes <- nodeOutcome{node: resolved, result: value, err: execErr}
 			}()
