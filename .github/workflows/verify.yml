@@ -95,7 +95,10 @@ jobs:
       # run, and `Merge <sha> into <sha>` is not a Conventional Commit subject.
       # That commit belongs to the run, not to the pull request, so the range
       # is base..head and never touches it.
-      - name: provenance-lint history
+      # Conventional-commit subjects, English-only subjects, and zero AI
+      # attribution are the same scan. The step name is the SDD-016
+      # commit-convention check; the binary is provenance-lint.
+      - name: provenance-lint history / commit-convention
         if: github.event_name == 'pull_request' && github.repository == 'jacu-dev/jacu-harness'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}

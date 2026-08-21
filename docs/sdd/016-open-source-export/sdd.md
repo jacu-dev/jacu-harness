@@ -180,8 +180,8 @@ Delta: ADDED
 | T4 | Mechanical rename (module, cmd dir, binary, user dir shim) | tree-wide | `bash scripts/verify.sh` | done | rename is the export transform; private tree unchanged; `TestExportRealHead` |
 | T5 | go.mod floor lowering | `go.mod` | `GOTOOLCHAIN=local go test ./... -race` | done | `go 1.25.0`, no `toolchain` line; SDK binding recorded in ADR-028 §7; the CI toolchain lives in `.go-version` (go1.25.13) because `setup-go` reads a floor as an exact version |
 | T6 | Translate living PT-BR docs; write README/CONTRIBUTING/SECURITY/CHANGELOG | `docs/**`, root | `bash scripts/hygiene.sh` | done | English overlays for shipping ADRs 001–020, threat-model and design docs; `scripts/host-smoke/` excluded as owner-present eval evidence; `PortugueseInventory` empty is a `TestExportRealHead` gate; README/SECURITY overlays and in-tree English CONTRIBUTING/CHANGELOG already existed |
-| T7 | Vendor verify workflow + provenance-lint + commit check | `.github/**` | first public PR green | in-progress | `.github/workflows/verify.yml` vendored; `ci.yml` calls it; `.go-version` pins the gate's toolchain in verify, release and weekly; public PR remains owner |
-| T8 | Curated import series; archive private repo with ARCHIVED.md | new repo | `git log` scan = zero traces | todo | `docs/export/import-playbook.md` + `internal/export/commitplan.go` |
+| T7 | Vendor verify workflow + provenance-lint + commit check | `.github/**` | first public PR green | done | `.github/workflows/verify.yml` vendored; `ci.yml` calls it; `.go-version` pins the toolchain; step `provenance-lint history / commit-convention` is the commit check; public PRs #20–#28 ran `verify / verify` green |
+| T8 | Curated import series; archive private repo with ARCHIVED.md | new repo | `git log` scan = zero traces | done | in-tree `docs/export/import-playbook.md`, `docs/export/ARCHIVED.md`, `internal/export/commitplan.go`; `jacu provenance --commit-plan --json`; owner still copies ARCHIVED.md onto the former private repo |
 
 ## Done
 
@@ -192,3 +192,4 @@ Delta: ADDED
 ## Follow-ups
 
 - SDD-017 makes the public artifact installable (release proof, init, cloud bootstrap).
+- Owner copies `docs/export/ARCHIVED.md` onto the former private repository and archives that repository read-only. This change does not rewrite history and does not archive a foreign remote.

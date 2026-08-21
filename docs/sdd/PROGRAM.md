@@ -69,18 +69,18 @@ One SDD open at a time. Order is dependency, not preference.
 | 003 | `clean-exit` | `sdd close`, receipt, closing gate | merged · **eval and ADR-021 open** |
 | 004 | `preflight` | checklist over 8 interruption classes | merged · **eval and ADR-022 open** |
 | 008 | `audit-hardening` | audit remediation, bounded storage | merged · **signed tag, P6-P8 open** |
-| **016** | **`open-source-export`** | sanitize, rename, public repo `jacu-harness` | **next** · ADR-028 accepted |
+| **016** | **`open-source-export`** | sanitize, rename, public repo `jacu-harness` | **doing** · T1–T8 in-tree; owner still archives the former private repo |
 | 017 | `installable-cloud` | release proof P6-P8, `jacu init`, cloud bootstrap, cwd guard | queued · after 016 |
-| 009 | `core-surface` | `Run()` in 6 capabilities, CLI parity, `--json`, `--events` | **doing** · after 016/017 code (owner T8/T7 remain); rename and open decisions resolved by ADR-028 and SDD-016 |
-| **010** | **`repo-governance`** | `.jacu/protected.json`, per-run `JACU_HOME`, `status` off the write gate, flow fan-out cap | **doing** · after 009 |
-| **011** | **`workspace-contract`** | `report --json` as `quality.json`, `context --sdd` | **doing** · after 010 |
-| 012 | `structural-debt` | `internal/scope`, `reportgen`, size ratchet, orchestration boundary test, `$defs`/`$ref`, `stats` without `git log` | **doing** · after 011 |
-| 005 | `clarity-gate` | readback, variance over 3 runs, rewrite loop | **doing** · after 012 |
-| 006 | `context-admission` | per-task budget, ledger refusing pre-dispatch | **doing** · after 005 |
-| 013 | `model-panel` | wires `modelcontrol` — **finish it, do not remove it** | **doing** · after 006 |
+| 009 | `core-surface` | `Run()` in 6 capabilities, CLI parity, `--json`, `--events` | merged · `3d22487` |
+| **010** | **`repo-governance`** | `.jacu/protected.json`, per-run `JACU_HOME`, `status` off the write gate, flow fan-out cap | merged · `c9fb999` |
+| **011** | **`workspace-contract`** | `report --json` as `quality.json`, `context --sdd` | merged · `a252a18` |
+| 012 | `structural-debt` | `internal/scope`, `reportgen`, size ratchet, orchestration boundary test, `$defs`/`$ref`, `stats` without `git log` | merged · `2e2c7d9` |
+| 005 | `clarity-gate` | readback, variance over 3 runs, rewrite loop | merged · `c39f3e6` |
+| 006 | `context-admission` | per-task budget, ledger refusing pre-dispatch | merged · `1963c6e` |
+| 013 | `model-panel` | wires `modelcontrol` — **finish it, do not remove it** | merged · `f0ba403` |
 | 007 | `surface-profile` | surface profile only | deferred · entry conditions in its `sdd.md` · its `jacu init` half moved to 017 |
-| 014 | `report-visual` | self-contained HTML factory | **doing** · after 013 · ADR-031 and ADR-032 written |
-| 015 | `program-closeout` | closes 001-004 and 008, ratifies ADRs, unifies doc language | **doing** · last · written packet; owner gates remain |
+| 014 | `report-visual` | self-contained HTML factory | merged · `34d4172` |
+| 015 | `program-closeout` | closes 001-004 and 008, ratifies ADRs, unifies doc language | merged · `865386b` · owner gates remain |
 
 ## Owner-only work
 
@@ -104,9 +104,9 @@ None of it is code. Without it the program does not close.
 
 ## How the program proves itself
 
-Not by feel. By the net-cost protocol, which **has not been written** and is a
-prerequisite for any claim of gain: n, arms, task corpus, quality criterion and
-statistical test. Becomes a task of 015.
+Not by feel. By the net-cost protocol in
+`docs/sdd/015-program-closeout/net-cost-protocol.md`: n, arms, task corpus,
+quality criterion and statistical test. Filling the sheet is owner-only.
 
 ## Living references
 
