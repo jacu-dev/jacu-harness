@@ -71,6 +71,32 @@ concurrency:
 toque esses caminhos é recusado com `GH013`. Merge de PR passa. Se precisar
 mesmo, **peça ao dono** — existe uma porta, e ela é ato dele, não seu.
 
+
+## Pull request
+
+**Nunca abra como draft.** Draft **bloqueia** o auto-merge — o GitHub recusa
+enquanto o PR não estiver pronto para revisão. Se sua ferramenta abre em draft
+por padrão, marque como pronto (`gh pr ready <n>`) logo em seguida.
+
+O fluxo é abrir e deixar a esteira decidir:
+
+```bash
+gh pr create --title "..." --body "..."      # sem --draft
+gh pr merge --auto --squash                  # entra sozinho quando os checks passarem
+```
+
+Confira o método de merge que o repositório aceita antes — eles diferem:
+
+```bash
+gh api /repos/jacu-dev/<repo> --jq '{squash:.allow_squash_merge,merge:.allow_merge_commit,rebase:.allow_rebase_merge}'
+```
+
+`ecouto` só aceita merge commit; `homebrew-jacu` só squash.
+
+Vários repositórios exigem branch atualizada (`strict_required_status_checks_policy`).
+Se o PR ficar `BEHIND`, atualize contra a `main` — não force merge e não
+desabilite check.
+
 ## Banco em teste
 
 Teste de integração **nunca** alcança banco de produção. Use service container,
