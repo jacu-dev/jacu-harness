@@ -46,6 +46,7 @@ func usage(args []string) {
 	fmt.Fprintln(os.Stderr, "  init       install skills and emit/apply a host pack into named paths")
 	fmt.Fprintln(os.Stderr, "  report     project structured workspace state as Markdown or quality.json")
 	fmt.Fprintln(os.Stderr, "  context    admit the active living SDD, or pack a mission later")
+	fmt.Fprintln(os.Stderr, "  clarity    compile a spec readback probe, ingest answers, and gate")
 	fmt.Fprintln(os.Stderr, "  stats      print local telemetry metrics")
 	fmt.Fprintln(os.Stderr, "  status     list every run still holding a worktree, across all projects")
 	fmt.Fprintln(os.Stderr, "  statusline print one honest active-run status line")
@@ -143,6 +144,13 @@ func main() {
 				os.Exit(1)
 			}
 			os.Exit(runContext(root, os.Args[2:], os.Stdout, os.Stderr))
+		case "clarity":
+			root, err := projectRoot()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "resolve project root failed:", err)
+				os.Exit(1)
+			}
+			os.Exit(runClarity(root, os.Args[2:], os.Stdout, os.Stderr, os.Stdin))
 		case "status":
 			// No projectRoot(): this command is deliberately global. Requiring
 			// a repository would reproduce the blindness it exists to fix.

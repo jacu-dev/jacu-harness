@@ -23,7 +23,10 @@ binary only parses, lints, identifies, and gates it.
    the task Evidence cell, and human gates remain human gates.
 7. `jacu context --sdd` (or `--json`) admits the active living SDD path and
    document. It is CLI-only. A typed `no_active_sdd` on stderr means stop.
-8. `jacu sdd close <directory>` is the final verification step. It refuses
+8. Before executing a living SDD, run `jacu clarity probe --sdd <path> --json`,
+   have the host fill the closed JSON, then `ingest` three answers and
+   `verdict`. A fail is a stop. Do not grow the spec to pass the gate.
+9. `jacu sdd close <directory>` is the final verification step. It refuses
    unfinished tasks, missing evidence, lint BLOCKs, or a missing manual archive;
    it never performs the archive move or deletes user-created paths.
 

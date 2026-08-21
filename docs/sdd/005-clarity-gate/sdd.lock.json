@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_56111e05f09fa9cc",
-  "content_sha256": "56111e05f09fa9cc5ee14ddb8a53b56bf1643d84a976d4fe1d46174a227ccf16",
+  "sdd_id": "sdd_5f5d4c816c2539bf",
+  "content_sha256": "5f5d4c816c2539bfdf6b41e32d89b305d9c0275bd732c5eed940fb5706e5bc48",
   "requirements": [
     {
       "name": "Divergence is reported per field",
@@ -23,67 +23,67 @@
     {
       "number": "T1",
       "verify": "`wc -l` under 120; owner ratifies separately",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T2",
       "verify": "`go test ./internal/capability/clarity -race` fails on absence",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T3",
       "verify": "`go test ./internal/capability/clarity -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T4",
       "verify": "`go test ./internal/capability/clarity -run Fuzz -fuzztime=30s` fails",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T5",
       "verify": "fuzz clean",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T6",
       "verify": "`go test ./internal/capability/clarity -race` fails",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T7",
       "verify": "`go test ./... -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T8",
       "verify": "`go test ./internal/capability/clarity -race` fails",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T9",
       "verify": "`go test ./internal/capability/clarity -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T10",
       "verify": "`go test ./internal/capability/clarity -race` fails",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T11",
       "verify": "`go test ./internal/capability/clarity -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T12",
       "verify": "`go test ./internal/capability/clarity -race` fails",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T13",
       "verify": "`go test ./... -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T14",
@@ -93,37 +93,37 @@
     {
       "number": "T15",
       "verify": "`jacu_verify` returns a verdict for that argv",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T16",
       "verify": "`go test ./internal/mcpadapter -run Skills -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T17",
       "verify": "`go run ./cmd/jacu sdd lint --all` exits 0",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T18",
       "verify": "table of tier by detection rate, with n",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T19",
       "verify": "verdict and round count for a real SDD",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T20",
       "verify": "`go test -tags=e2e ./test/e2e/ -run Governed` reports 13 tools",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T21",
       "verify": "PR with the hosted run link",
-      "status": "todo"
+      "status": "done"
     }
   ]
 }
