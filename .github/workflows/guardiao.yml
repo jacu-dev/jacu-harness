@@ -1,0 +1,68 @@
+name: guardiao
+
+# ESTE ARQUIVO EXECUTA A VERSAO DA BRANCH DEFAULT, NUNCA A DO PULL REQUEST.
+#
+# `pull_request_target` roda "in the context of the default branch of the base
+# repository". Um pull request que altere este proprio arquivo nao altera o que
+# executa — e essa e a unica razao de ele existir.
+#
+# POR QUE SO AQUI, NOS PUBLICOS: em repositorio publico o evento
+# `pull_request` executa o workflow do HEAD do PR, entao um pull request
+# consegue reescrever o portao que ele mesmo precisa passar. E push ruleset NAO
+# alcanca repositorio publico — a doc e explicita ("push rulesets to block
+# pushes to a private or internal repository"), e nao e limitacao de plano, e do
+# produto. Nos privados existe o `esteira-imutavel-sdd-002`; aqui nao existe
+# nada, e este workflow e a unica defesa.
+#
+# TRES COISAS QUE NAO PODEM MUDAR:
+#
+# 1. SEM `if:` no job e SEM `paths:`/`paths-ignore:` no gatilho. Required status
+#    check aceita "successful, SKIPPED, or neutral" — job pulado conta como
+#    APROVADO. Qualquer condicao que o pull request consiga influenciar (titulo,
+#    label, arquivos tocados) vira um jeito de desligar o portao sem renomear
+#    nada. O portao roda sempre e decide dentro.
+#
+# 2. O checkout e da BRANCH DEFAULT, jamais do HEAD do pull request. Sem `ref:`,
+#    `actions/checkout` num `pull_request_target` pega o default branch, que e
+#    codigo da casa. Materializar o HEAD do PR aqui seria RCE: este evento
+#    recebe token com escrita e acesso a segredo. A doc de secure use e literal:
+#    "must not explicitly check out untrusted code".
+#
+# 3. `permissions` de leitura e nenhum `secrets:`. Ele so precisa ler o diff.
+#
+# O conteudo dos workflows do pull request e LIDO pela API (`gh api .../contents
+# ?ref=<head>`). Ler e seguro; executar nao seria.
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: guardiao-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  guardiao:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Sem `ref:` de proposito: em `pull_request_target` o default e a branch
+      # default do repositorio base. `persist-credentials: false` porque este
+      # job nao empurra nada e o token dele tem escrita.
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: A esteira continua sendo a esteira
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 -m pip install --quiet --disable-pip-version-check pyyaml
+          python3 .github/guardiao/conferir-esteira.py
