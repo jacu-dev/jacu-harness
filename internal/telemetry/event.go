@@ -38,6 +38,7 @@ const (
 	EventCleanExitClose      = "cleanexit.close"
 	EventPreflightCheck      = "preflight.check"
 	EventMissionInterruption = "mission.interruption"
+	EventClarityProbe        = "clarity.probe"
 )
 
 // Event is the only record written to the local stream. Keep this struct
@@ -76,6 +77,12 @@ type Event struct {
 	Resolved        string    `json:"resolved,omitempty"`
 	Result          string    `json:"result,omitempty"`
 	FailureClass    string    `json:"failure_class,omitempty"`
+	Round           int       `json:"round,omitempty"`
+	Divergences     int       `json:"divergences,omitempty"`
+	DivergenceField string    `json:"divergence_field,omitempty"`
+	VarianceRuns    int       `json:"variance_runs,omitempty"`
+	SpecBytes       int64     `json:"spec_bytes,omitempty"`
+	SpecBytesDelta  int64     `json:"spec_bytes_delta,omitempty"`
 }
 
 // EventInput uses a duration instead of an unbounded free-form duration
@@ -114,13 +121,19 @@ type EventInput struct {
 	Resolved        string
 	Result          string
 	FailureClass    string
+	Round           int
+	Divergences     int
+	DivergenceField string
+	VarianceRuns    int
+	SpecBytes       int64
+	SpecBytesDelta  int64
 }
 
 var safeIdentifier = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$`)
 
 var allowedEvents = map[string]struct{}{
 	EventToolCall: {}, EventVerify: {}, EventApply: {}, EventDiscard: {},
-	EventRemediation: {}, EventEscalation: {}, EventFlowNode: {}, EventGateDecision: {}, EventVerifyDenial: {}, EventReviewDisagreement: {}, EventCleanExitClose: {}, EventPreflightCheck: {}, EventMissionInterruption: {},
+	EventRemediation: {}, EventEscalation: {}, EventFlowNode: {}, EventGateDecision: {}, EventVerifyDenial: {}, EventReviewDisagreement: {}, EventCleanExitClose: {}, EventPreflightCheck: {}, EventMissionInterruption: {}, EventClarityProbe: {},
 }
 
 var allowedLevels = map[string]struct{}{LevelUser: {}, LevelFull: {}, NoData: {}}
@@ -131,7 +144,7 @@ var allowedModules = map[string]struct{}{
 }
 var allowedStages = map[string]struct{}{
 	"tool_call": {}, "verify": {}, "apply": {}, "discard": {}, "remediation": {}, "escalation": {}, "gate": {}, "denial": {}, "review": {}, "close": {},
-	"flow_node": {}, "emit": {}, "preflight": {}, "interruption": {}, NoData: {},
+	"flow_node": {}, "emit": {}, "preflight": {}, "interruption": {}, "probe": {}, NoData: {},
 }
 var allowedMeasurements = map[string]struct{}{
 	"exact_bytes": {}, "cli_reported_tokens": {}, "estimated_tokens": {}, NoData: {},
@@ -171,6 +184,9 @@ var allowedDenialReasons = map[string]struct{}{
 }
 var allowedResolved = map[string]struct{}{"require_approval": {}, "escalated": {}}
 var allowedResults = map[string]struct{}{"pass": {}, "fail": {}}
+var allowedDivergenceFields = map[string]struct{}{
+	"write_scope": {}, "forbidden_paths": {}, "requirements": {}, "out_of_scope": {}, "tasks": {},
+}
 var allowedFailureClasses = map[string]struct{}{
 	"branch_local": {}, "branch_remote": {}, "worktree": {}, "untracked": {}, "stash": {}, "run_open": {}, "main_mismatch": {},
 	"allowlist": {}, "program_not_on_path": {}, "path_missing": {}, "path_not_writable": {}, "credential_absent": {}, "network_undeclared": {}, "doc_missing": {}, "open_questions": {},
@@ -207,6 +223,8 @@ func NewEvent(input EventInput) (Event, error) {
 		Auto: input.Auto, Intervention: input.Intervention, DiffBytes: input.DiffBytes,
 		FilesChanged: input.FilesChanged, Resolved: input.Resolved,
 		Result: input.Result, FailureClass: input.FailureClass,
+		Round: input.Round, Divergences: input.Divergences, DivergenceField: input.DivergenceField,
+		VarianceRuns: input.VarianceRuns, SpecBytes: input.SpecBytes, SpecBytesDelta: input.SpecBytesDelta,
 	}
 	if err := event.Validate(); err != nil {
 		return Event{}, err
@@ -339,6 +357,20 @@ func (event Event) Validate() error {
 	if event.Iteration < 0 || event.Iteration > 1000 {
 		return errors.New("telemetry iteration is outside bounds")
 	}
+	if event.Round < 0 || event.Round > 1000 {
+		return errors.New("telemetry round is outside bounds")
+	}
+	if event.Divergences < 0 || event.Divergences > 1000 || event.VarianceRuns < 0 || event.VarianceRuns > 3 {
+		return errors.New("telemetry clarity count is outside bounds")
+	}
+	if event.SpecBytes < 0 || event.SpecBytesDelta < -10_000_000 || event.SpecBytesDelta > 10_000_000 {
+		return errors.New("telemetry spec byte count is outside bounds")
+	}
+	if event.DivergenceField != "" {
+		if _, ok := allowedDivergenceFields[event.DivergenceField]; !ok {
+			return fmt.Errorf("telemetry divergence_field is not allowlisted: %q", event.DivergenceField)
+		}
+	}
 	if event.ExitReason != "" {
 		if _, ok := allowedExitReasons[event.ExitReason]; !ok {
 			return fmt.Errorf("telemetry exit_reason is not allowlisted: %q", event.ExitReason)
@@ -395,6 +427,8 @@ func defaultModule(event string) string {
 		return "workspace"
 	case EventCleanExitClose:
 		return "cleanexit"
+	case EventClarityProbe:
+		return "clarity"
 	case EventApply, EventDiscard, EventRemediation, EventEscalation:
 		return "workspace"
 	case EventFlowNode:

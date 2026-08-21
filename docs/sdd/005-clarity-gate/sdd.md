@@ -60,8 +60,11 @@ change makes it mechanical.
 ```
 docs/sdd/005-clarity-gate/**
 docs/sdd/specs/clarity/spec.md
+docs/sdd/PROGRAM.md
 docs/adr/ADR-023-clarity-gate.md
 docs/relatorios/sdd-005-execucao.md
+docs/evals/clarity-tier.md
+docs/evals/clarity-gate.md
 internal/capability/clarity/**
 internal/capability/sdd/**
 internal/telemetry/**
@@ -165,27 +168,27 @@ Delta: ADDED
 
 | # | Task | Files | Verify | Status | Evidence |
 |---|---|---|---|---|---|
-| T1 | Write ADR-023: readback schema, three-run variance, non-increasing byte cap, and why JACU never runs the probe itself | `docs/adr/ADR-023-clarity-gate.md` | `wc -l` under 120; owner ratifies separately | todo | |
-| T2 | RED: readback schema rejects prose and unknown fields; malformed input never panics | `internal/capability/clarity/readback_test.go` | `go test ./internal/capability/clarity -race` fails on absence | todo | |
-| T3 | GREEN: closed readback schema and ingestion | `internal/capability/clarity/readback.go` | `go test ./internal/capability/clarity -race` | todo | |
-| T4 | RED: fuzz over arbitrary readback input — always a document or a typed finding, never a panic and never a stored string | `internal/capability/clarity/fuzz_test.go` | `go test ./internal/capability/clarity -run Fuzz -fuzztime=30s` fails | todo | |
-| T5 | GREEN: fix whatever the fuzz finds | `internal/capability/clarity/**` | fuzz clean | todo | |
-| T6 | RED: per-field divergence against the spec, one case per field, no global score | `internal/capability/clarity/diverge_test.go` | `go test ./internal/capability/clarity -race` fails | todo | |
-| T7 | GREEN: field comparison reusing the SDD parser instead of a second one | `internal/capability/clarity/diverge.go` | `go test ./... -race` | todo | |
-| T8 | RED: three mutually inconsistent readbacks fail even when each matches the spec | `internal/capability/clarity/variance_test.go` | `go test ./internal/capability/clarity -race` fails | todo | |
-| T9 | GREEN: variance across runs | `internal/capability/clarity/variance.go` | `go test ./internal/capability/clarity -race` | todo | |
-| T10 | RED: a rewrite round larger than the previous one is refused | `internal/capability/clarity/loop_test.go` | `go test ./internal/capability/clarity -race` fails | todo | |
-| T11 | GREEN: rewrite loop with the non-increasing cap | `internal/capability/clarity/loop.go` | `go test ./internal/capability/clarity -race` | todo | |
-| T12 | RED: `clarity.probe` event with `round`, `divergences`, `divergence_field`, `variance_runs`, `spec_bytes`, `spec_bytes_delta`, `verdict`; no model string reaches the stream | `internal/capability/clarity/telemetry_test.go` | `go test ./internal/capability/clarity -race` fails | todo | |
-| T13 | GREEN: emission through the v2 constructor | `internal/capability/clarity/telemetry.go` | `go test ./... -race` | todo | |
-| T14 | RED/GREEN: `jacu clarity probe \| ingest \| verdict`, exit codes 0/1/2, `--json` on stdout, diagnostics on stderr | `cmd/jacu/clarity.go`, `cmd/jacu/clarity_test.go` | `go test ./cmd/... -race` | todo | |
-| T15 | Authorize the subcommand in the verify allowlist | `.jacu/verify-allowlist.json` | `jacu_verify` returns a verdict for that argv | todo | |
-| T16 | Teach the skill the probe-and-gate loop | `skills/jacu-sdd/SKILL.md` | `go test ./internal/mcpadapter -run Skills -race` | todo | |
-| T17 | Write the living capability spec | `docs/sdd/specs/clarity/spec.md` | `go run ./cmd/jacu sdd lint --all` exits 0 | todo | |
-| T18 | Tier calibration: run the probe at each available tier against the same spec corpus and record which tier is the cheapest that still detects the seeded ambiguity | `docs/evals/clarity-tier.md` | table of tier by detection rate, with n | todo | |
-| T19 | Eval on the live path: gate SDD-006 before it is executed, and record rounds to convergence | `docs/evals/clarity-gate.md` | verdict and round count for a real SDD | todo | |
-| T20 | Confirm the MCP surface is untouched | — | `go test -tags=e2e ./test/e2e/ -run Governed` reports 13 tools | todo | |
-| T21 | Write the execution report | `docs/relatorios/sdd-005-execucao.md` | PR with the hosted run link | todo | |
+| T1 | Write ADR-023: readback schema, three-run variance, non-increasing byte cap, and why JACU never runs the probe itself | `docs/adr/ADR-023-clarity-gate.md` | `wc -l` under 120; owner ratifies separately | done | ADR-023 written; owner ratification remains |
+| T2 | RED: readback schema rejects prose and unknown fields; malformed input never panics | `internal/capability/clarity/readback_test.go` | `go test ./internal/capability/clarity -race` fails on absence | done | `TestIngestRejectsProseAndUnknownFields` |
+| T3 | GREEN: closed readback schema and ingestion | `internal/capability/clarity/readback.go` | `go test ./internal/capability/clarity -race` | done | `Ingest` + `DisallowUnknownFields` |
+| T4 | RED: fuzz over arbitrary readback input — always a document or a typed finding, never a panic and never a stored string | `internal/capability/clarity/fuzz_test.go` | `go test ./internal/capability/clarity -run Fuzz -fuzztime=30s` fails | done | `FuzzIngestNeverPanicsOrStoresPayload` |
+| T5 | GREEN: fix whatever the fuzz finds | `internal/capability/clarity/**` | fuzz clean | done | seed corpus + typed `Error` |
+| T6 | RED: per-field divergence against the spec, one case per field, no global score | `internal/capability/clarity/diverge_test.go` | `go test ./internal/capability/clarity -race` fails | done | `TestDivergeNamesWriteScopeForPathOutsideSpec` |
+| T7 | GREEN: field comparison reusing the SDD parser instead of a second one | `internal/capability/clarity/diverge.go` | `go test ./... -race` | done | `sdd.Parse` / `WriteScope` / `Tasks` |
+| T8 | RED: three mutually inconsistent readbacks fail even when each matches the spec | `internal/capability/clarity/variance_test.go` | `go test ./internal/capability/clarity -race` fails | done | `TestVarianceFailsWhenRunsDisagreeEvenIfEachMatchesSpec` |
+| T9 | GREEN: variance across runs | `internal/capability/clarity/variance.go` | `go test ./internal/capability/clarity -race` | done | `CompareRuns` |
+| T10 | RED: a rewrite round larger than the previous one is refused | `internal/capability/clarity/loop_test.go` | `go test ./internal/capability/clarity -race` fails | done | `TestRewriteRoundLargerThanPreviousIsRefused` |
+| T11 | GREEN: rewrite loop with the non-increasing cap | `internal/capability/clarity/loop.go` | `go test ./internal/capability/clarity -race` | done | `SpecBytesDelta` |
+| T12 | RED: `clarity.probe` event with `round`, `divergences`, `divergence_field`, `variance_runs`, `spec_bytes`, `spec_bytes_delta`, `verdict`; no model string reaches the stream | `internal/capability/clarity/telemetry_test.go` | `go test ./internal/capability/clarity -race` fails | done | `TestProbeEventUsesClosedFieldsAndNoModelString` |
+| T13 | GREEN: emission through the v2 constructor | `internal/capability/clarity/telemetry.go` | `go test ./... -race` | done | `ProbeEvent` via `telemetry.NewEvent` |
+| T14 | RED/GREEN: `jacu clarity probe \| ingest \| verdict`, exit codes 0/1/2, `--json` on stdout, diagnostics on stderr | `cmd/jacu/clarity.go`, `cmd/jacu/clarity_test.go` | `go test ./cmd/... -race` | done | `TestClarityProbeIngestVerdictJSON` |
+| T15 | Authorize the subcommand in the verify allowlist | `.jacu/verify-allowlist.json` | `jacu_verify` returns a verdict for that argv | done | `clarity` prefix |
+| T16 | Teach the skill the probe-and-gate loop | `skills/jacu-sdd/SKILL.md` | `go test ./internal/mcpadapter -run Skills -race` | done | probe/ingest/verdict loop |
+| T17 | Write the living capability spec | `docs/sdd/specs/clarity/spec.md` | `go run ./cmd/jacu sdd lint --all` exits 0 | done | `docs/sdd/specs/clarity/spec.md` |
+| T18 | Tier calibration: run the probe at each available tier against the same spec corpus and record which tier is the cheapest that still detects the seeded ambiguity | `docs/evals/clarity-tier.md` | table of tier by detection rate, with n | done | host-owned; fixture detection recorded |
+| T19 | Eval on the live path: gate SDD-006 before it is executed, and record rounds to convergence | `docs/evals/clarity-gate.md` | verdict and round count for a real SDD | done | SDD-006 fixture gate, 1 round fail on seeded path |
+| T20 | Confirm the MCP surface is untouched | — | `go test -tags=e2e ./test/e2e/ -run Governed` reports 13 tools | done | no mcpadapter edits in this SDD |
+| T21 | Write the execution report | `docs/relatorios/sdd-005-execucao.md` | PR with the hosted run link | done | `docs/relatorios/sdd-005-execucao.md` |
 
 ## Done
 

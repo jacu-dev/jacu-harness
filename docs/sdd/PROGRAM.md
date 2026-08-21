@@ -75,7 +75,7 @@ One SDD open at a time. Order is dependency, not preference.
 | **010** | **`repo-governance`** | `.jacu/protected.json`, per-run `JACU_HOME`, `status` off the write gate, flow fan-out cap | **doing** · after 009 |
 | **011** | **`workspace-contract`** | `report --json` as `quality.json`, `context --sdd` | **doing** · after 010 |
 | 012 | `structural-debt` | `internal/scope`, `reportgen`, size ratchet, orchestration boundary test, `$defs`/`$ref`, `stats` without `git log` | **doing** · after 011 |
-| 005 | `clarity-gate` | readback, variance over 3 runs, rewrite loop | written, no code |
+| 005 | `clarity-gate` | readback, variance over 3 runs, rewrite loop | **doing** · after 012 |
 | 006 | `context-admission` | per-task budget, ledger refusing pre-dispatch | written, no code |
 | 013 | `model-panel` | wires `modelcontrol` — **finish it, do not remove it** | written, no code · trigger fired |
 | 007 | `surface-profile` | surface profile only | deferred · entry conditions in its `sdd.md` · its `jacu init` half moved to 017 |

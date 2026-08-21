@@ -92,7 +92,7 @@ func lintDocumentWithLock(document Document, directory string, changedPaths []st
 		}
 	}
 
-	findings = append(findings, validateTasks(parseTasks(document))...)
+	findings = append(findings, validateTasks(Tasks(document))...)
 	findings = append(findings, lintRequirements(document.Requirements)...)
 	findings = append(findings, lintLockedDecisions(document, sections)...)
 	findings = append(findings, lintOpenDecisions(sections)...)
@@ -147,7 +147,7 @@ func lintOpenDecisions(sections map[string]Section) []Finding {
 }
 
 func lintScope(document Document, changedPaths []string) []Finding {
-	allowed, forbidden := writeScope(document)
+	allowed, forbidden := WriteScope(document)
 	for _, path := range changedPaths {
 		if scope.ScopesConflict(path, allowed, forbidden) {
 			return []Finding{{Code: "sdd_out_of_scope_touched", Severity: SeverityBlock, Target: path, Message: "changed path is outside the declared write scope"}}
@@ -156,7 +156,10 @@ func lintScope(document Document, changedPaths []string) []Finding {
 	return nil
 }
 
-func writeScope(document Document) (allowed, forbidden []string) {
+// WriteScope extracts the declared allowed and forbidden path lists from a
+// parsed SDD. Callers that compare against a spec must use this extraction
+// rather than a second parser.
+func WriteScope(document Document) (allowed, forbidden []string) {
 	for _, section := range document.Sections {
 		if !strings.EqualFold(section.Name, "Write scope") {
 			continue

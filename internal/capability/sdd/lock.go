@@ -35,7 +35,7 @@ func GenerateLock(document Document) Lock {
 	for _, requirement := range normalizeDocument(document).Requirements {
 		lock.Requirements = append(lock.Requirements, LockedRequirement{Name: requirement.Name, Delta: requirement.Delta})
 	}
-	for _, task := range parseTasks(document) {
+	for _, task := range Tasks(document) {
 		lock.Tasks = append(lock.Tasks, LockedTask{Number: task.Number, Verify: task.Verify, Status: task.Status})
 	}
 	return lock

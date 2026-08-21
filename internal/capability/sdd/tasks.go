@@ -24,7 +24,8 @@ const (
 	SeverityInfo  = "INFO"
 )
 
-func parseTasks(document Document) []Task {
+// Tasks extracts the task table from a parsed SDD.
+func Tasks(document Document) []Task {
 	for _, section := range document.Sections {
 		if !strings.EqualFold(section.Name, "Tasks") {
 			continue
