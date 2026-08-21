@@ -1,0 +1,68 @@
+{
+  "sdd_id": "sdd_d40a1a64cfbff70d",
+  "content_sha256": "d40a1a64cfbff70d325ec7089ddfb1e27761440332c35b98242c91eabe940771",
+  "requirements": [
+    {
+      "name": "Breaker demotion never leaves zero candidates",
+      "delta": "ADDED"
+    },
+    {
+      "name": "CostTrace is a telemetry v2 event",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Fail-closed spawn",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Profile routing, never a named binary on the node",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Wire modelcontrol, do not delete it",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`wc -l` under 120; owner ratifies separately",
+      "status": "todo"
+    },
+    {
+      "number": "T2",
+      "verify": "`go test ./internal/capability/orchestration -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T3",
+      "verify": "`go test ./internal/capability/orchestration ./internal/modelcontrol -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T4",
+      "verify": "`go test ./internal/runner -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T5",
+      "verify": "`go test ./internal/modelcontrol ./internal/telemetry -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T6",
+      "verify": "`test -f docs/evals/model-panel.md`",
+      "status": "todo"
+    },
+    {
+      "number": "T7",
+      "verify": "`bash scripts/hosteval.sh`",
+      "status": "todo"
+    },
+    {
+      "number": "T8",
+      "verify": "`go test -tags=e2e ./test/e2e/ -run Governed`",
+      "status": "todo"
+    }
+  ]
+}

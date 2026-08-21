@@ -71,16 +71,16 @@ One SDD open at a time. Order is dependency, not preference.
 | 008 | `audit-hardening` | audit remediation, bounded storage | merged · **signed tag, P6-P8 open** |
 | **016** | **`open-source-export`** | sanitize, rename, public repo `jacu-harness` | **next** · ADR-028 accepted |
 | 017 | `installable-cloud` | release proof P6-P8, `jacu init`, cloud bootstrap, cwd guard | queued · after 016 |
-| 009 | `core-surface` | `Run()` in 6 capabilities, CLI parity, `--json`, `--events` | queued · after 017 · design ready; rename and open decisions resolved by ADR-028 and SDD-016 |
-| 010 | `repo-governance` | `.jacu/protected.json`, per-run `JACU_HOME`, `status` off the write gate, flow fan-out cap | queued |
-| 011 | `workspace-contract` | `report --json` as `quality.json`, `context --sdd` | queued |
-| 012 | `structural-debt` | `internal/scope`, `reportgen`, size ratchet, orchestration boundary test, `$defs`/`$ref`, `stats` without `git log` | queued |
+| 009 | `core-surface` | `Run()` in 6 capabilities, CLI parity, `--json`, `--events` | written, no code · after 017 · rename and open decisions resolved by ADR-028 and SDD-016 |
+| 010 | `repo-governance` | `.jacu/protected.json`, per-run `JACU_HOME`, `status` off the write gate, flow fan-out cap | written, no code |
+| 011 | `workspace-contract` | `report --json` as `quality.json`, `context --sdd` | written, no code |
+| 012 | `structural-debt` | `internal/scope`, `reportgen`, size ratchet, orchestration boundary test, `$defs`/`$ref`, `stats` without `git log` | written, no code |
 | 005 | `clarity-gate` | readback, variance over 3 runs, rewrite loop | written, no code |
 | 006 | `context-admission` | per-task budget, ledger refusing pre-dispatch | written, no code |
-| 013 | `model-panel` | wires `modelcontrol` — **finish it, do not remove it** | trigger fired · design ready |
+| 013 | `model-panel` | wires `modelcontrol` — **finish it, do not remove it** | written, no code · trigger fired |
 | 007 | `surface-profile` | surface profile only | deferred · entry conditions in its `sdd.md` · its `jacu init` half moved to 017 |
-| 014 | `report-visual` | self-contained HTML factory | design ready · needs 2 ADRs |
-| 015 | `program-closeout` | closes 001-004 and 008, ratifies ADRs, unifies doc language | last |
+| 014 | `report-visual` | self-contained HTML factory | written, no code · needs 2 ADRs before coding |
+| 015 | `program-closeout` | closes 001-004 and 008, ratifies ADRs, unifies doc language | last · written, no code |
 
 ## Owner-only work
 

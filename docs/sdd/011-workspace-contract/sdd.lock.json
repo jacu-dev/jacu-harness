@@ -1,0 +1,45 @@
+{
+  "sdd_id": "sdd_310f68e2b58e40b9",
+  "content_sha256": "310f68e2b58e40b9ba301737e94165941c4f5b2f77f8f229e912e241e8aa6627",
+  "requirements": [
+    {
+      "name": "Both subcommands accept --json",
+      "delta": "ADDED"
+    },
+    {
+      "name": "context --sdd admits the active native SDD",
+      "delta": "ADDED"
+    },
+    {
+      "name": "report --json is the quality.json artifact",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`go test ./cmd/jacu ./internal/report -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T2",
+      "verify": "`go test ./cmd/jacu ./internal/report -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T3",
+      "verify": "`go test ./cmd/jacu -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T4",
+      "verify": "`go test ./internal/mcpadapter -run Skills -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T5",
+      "verify": "`jacu sdd lint --all`",
+      "status": "todo"
+    }
+  ]
+}
