@@ -20,8 +20,8 @@ func TestServeBindsLoopbackAndWritesDecisions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(path, encoded, 0o600); err != nil {
-		t.Fatal(err)
+	if writeErr := os.WriteFile(path, encoded, 0o600); writeErr != nil {
+		t.Fatal(writeErr)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -33,8 +33,8 @@ func TestServeBindsLoopbackAndWritesDecisions(t *testing.T) {
 	var addr string
 	select {
 	case addr = <-ready:
-	case err := <-errCh:
-		t.Fatalf("serve: %v", err)
+	case serveErr := <-errCh:
+		t.Fatalf("serve: %v", serveErr)
 	case <-time.After(2 * time.Second):
 		t.Fatal("serve did not become ready")
 	}
@@ -49,7 +49,7 @@ func TestServeBindsLoopbackAndWritesDecisions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("viewer status = %d", resp.StatusCode)
 	}
@@ -58,7 +58,7 @@ func TestServeBindsLoopbackAndWritesDecisions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer post.Body.Close()
+	defer func() { _ = post.Body.Close() }()
 	if post.StatusCode != http.StatusNoContent {
 		t.Fatalf("decision status = %d", post.StatusCode)
 	}
@@ -91,8 +91,8 @@ func TestServeRefusesNonLoopbackAndAuditWrites(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(path, encoded, 0o600); err != nil {
-		t.Fatal(err)
+	if writeErr := os.WriteFile(path, encoded, 0o600); writeErr != nil {
+		t.Fatal(writeErr)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -104,7 +104,7 @@ func TestServeRefusesNonLoopbackAndAuditWrites(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer post.Body.Close()
+	defer func() { _ = post.Body.Close() }()
 	if post.StatusCode != http.StatusForbidden {
 		t.Fatalf("audit write status = %d", post.StatusCode)
 	}

@@ -90,7 +90,7 @@ func runReportRender(inputPath, outputPath string, jsonOut bool, stdout, stderr 
 		return 1
 	}
 	if outputPath != "" {
-		if err := os.WriteFile(outputPath, []byte(body), 0o600); err != nil {
+		if err := os.WriteFile(outputPath, []byte(body), 0o600); err != nil { // #nosec G703 -- output path is a CLI flag the owner passed to render
 			_, _ = fmt.Fprintln(stderr, "report render:", err)
 			return 1
 		}

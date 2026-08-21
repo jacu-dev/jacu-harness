@@ -28,7 +28,7 @@ func TestReportRenderWritesDeterministicHTML(t *testing.T) {
 	if payload["bound_port"] != false {
 		t.Fatalf("render bound a port: %#v", payload)
 	}
-	body, err := os.ReadFile(output)
+	body, err := os.ReadFile(output) // #nosec G304 -- output is this test's TempDir HTML file
 	if err != nil {
 		t.Fatal(err)
 	}

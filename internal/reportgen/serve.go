@@ -41,7 +41,7 @@ func Serve(ctx context.Context, options ServeOptions) error {
 	if err != nil {
 		return err
 	}
-	defer listener.Close()
+	defer func() { _ = listener.Close() }()
 	if options.Ready != nil {
 		options.Ready <- listener.Addr().String()
 	}
@@ -54,7 +54,7 @@ func Serve(ctx context.Context, options ServeOptions) error {
 	}
 	go func() {
 		<-ctx.Done()
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+		shutdownCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Second)
 		defer cancel()
 		_ = server.Shutdown(shutdownCtx)
 	}()
@@ -135,7 +135,7 @@ func serveMux(path string, mu *sync.Mutex) http.Handler {
 }
 
 func Load(path string) (report.Report, error) {
-	raw, err := os.ReadFile(path)
+	raw, err := os.ReadFile(path) // #nosec G304 -- path is the owner-supplied report JSON file
 	if err != nil {
 		return report.Report{}, err
 	}
