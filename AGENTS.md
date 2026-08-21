@@ -23,10 +23,17 @@ exatamente qual recurso, para quê, e o que você faria com ele.
 
 ## CI — o que quebra e por quê
 
-**Runner hospedado do GitHub está BLOQUEADO.** A franquia estourou e jobs em
-`ubuntu-latest` morrem em dois segundos com *"recent account payments have
-failed"*, sem log e sem step. Isso vale para **todo** job, inclusive o
-agregador. Nunca escreva `runs-on: ubuntu-latest`.
+**Em repositório PRIVADO, runner hospedado do GitHub está BLOQUEADO.** A
+franquia da organização estourou e jobs em `ubuntu-latest` morrem em dois
+segundos com *"recent account payments have failed"*, sem log e sem step. Isso
+vale para **todo** job, inclusive o agregador.
+
+**Em repositório PÚBLICO, `ubuntu-latest` é grátis e continua sendo o certo.**
+`jacu-harness` e `homebrew-jacu` usam e passam. Não "conserte" isso — e não
+aponte repositório público para runner self-hosted, que é regra de segurança
+separada: pull request de fork é código de terceiro.
+
+Na dúvida sobre onde você está: `gh api /repos/jacu-dev/<repo> --jq .private`.
 
 Os runners que existem:
 
