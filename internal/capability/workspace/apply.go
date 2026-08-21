@@ -84,6 +84,17 @@ func applyUnlocked(ctx context.Context, root string, in ApplyInput, hostName str
 			return blockedApply("mission scope mismatch: "+path, ""), nil
 		}
 	}
+	protected, protectedErr := LoadProtectedPaths(root)
+	if protectedErr != nil {
+		emitWorkspaceGate(root, "block", "jacu_apply", run)
+		return blockedApply("protected paths unreadable: "+protectedErr.Error(), ""), nil
+	}
+	for _, path := range snapshot.Files {
+		if ProtectedPath(path, protected) {
+			emitWorkspaceGate(root, "block", "jacu_apply", run)
+			return blockedApply("protected path: "+path, ""), nil
+		}
+	}
 
 	if run.Mission.Risk == "destructive" && !in.ApproveDestructive {
 		emitWorkspaceGate(root, "require_approval", "jacu_apply", run)

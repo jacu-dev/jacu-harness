@@ -4,7 +4,7 @@ program: jacu-one-shot
 spec_id: spc_pending
 branch: 010-repo-governance
 phase: docs/sdd/PROGRAM.md
-adr: docs/adr/ADR-007.md
+adr: docs/adr/ADR-029-repo-governance.md
 status: draft
 ---
 
@@ -42,24 +42,32 @@ cap are implementation decisions, not this document's entry gate.
 **Allowed**
 
 ```
-docs/sdd/009-core-surface/**
+.jacu/protected.json
+cmd/**
+internal/capability/workspace/**
+internal/capability/orchestration/**
+internal/capability/verify/**
+internal/userstate/**
 docs/sdd/010-repo-governance/**
-docs/sdd/011-workspace-contract/**
-docs/sdd/012-structural-debt/**
-docs/sdd/013-model-panel/**
-docs/sdd/014-report-visual/**
-docs/sdd/015-program-closeout/**
+docs/sdd/specs/**
 docs/sdd/PROGRAM.md
-.cursor/agent-board.md
+docs/adr/ADR-029-repo-governance.md
 ```
 
 **Forbidden**
 
 ```
-cmd/**
-internal/**
+docs/relatorios/**
+docs/evals/**
+docs/heranca/**
+docs/sdd/archive/**
 .github/**
-docs/adr/**
+docs/sdd/009-core-surface/**
+docs/sdd/011-workspace-contract/**
+docs/sdd/012-structural-debt/**
+docs/sdd/013-model-panel/**
+docs/sdd/014-report-visual/**
+docs/sdd/015-program-closeout/**
 ```
 
 ## Requirements
@@ -129,13 +137,13 @@ Delta: ADDED
 
 | # | Task | Files | Verify | Status | Evidence |
 |---|---|---|---|---|---|
-| T1 | Record the protected-path ADR (fail-closed apply; CODEOWNERS is not this list) | `docs/adr/` | `wc -l` under 120; owner ratifies separately | todo | |
-| T2 | RED: apply blocked on a protected path | `internal/capability/workspace/` | `go test ./internal/capability/workspace -race` | todo | |
-| T3 | GREEN: load `.jacu/protected.json` and refuse listed paths | `internal/capability/workspace/` | `go test ./internal/capability/workspace -race` | todo | |
-| T4 | RED then GREEN: per-run home isolation | `internal/userstate/`, `internal/capability/workspace/` | `go test ./internal/userstate ./internal/capability/workspace -race` | todo | |
-| T5 | RED then GREEN: status skips the mutation gate | `internal/capability/workspace/` | `go test ./internal/capability/workspace -race` | todo | |
-| T6 | RED then GREEN: flow fan-out cap | `internal/capability/orchestration/` | `go test ./internal/capability/orchestration -race` | todo | |
-| T7 | Update living specs after implementation | `docs/sdd/specs/` | `jacu sdd lint --all` | todo | |
+| T1 | Record the protected-path ADR (fail-closed apply; CODEOWNERS is not this list) | `docs/adr/` | `wc -l` under 120; owner ratifies separately | done | `docs/adr/ADR-029-repo-governance.md` |
+| T2 | RED: apply blocked on a protected path | `internal/capability/workspace/` | `go test ./internal/capability/workspace -race` | done | `TestApplyBlocksProtectedPathAndDoesNotCommit` |
+| T3 | GREEN: load `.jacu/protected.json` and refuse listed paths | `internal/capability/workspace/` | `go test ./internal/capability/workspace -race` | done | `protected.go` + malformed fail-closed |
+| T4 | RED then GREEN: per-run home isolation | `internal/userstate/`, `internal/capability/workspace/` | `go test ./internal/userstate ./internal/capability/workspace -race` | done | `RunHome` + Open mkdir + verify toolchain home |
+| T5 | RED then GREEN: status skips the mutation gate | `internal/capability/workspace/` | `go test ./internal/capability/workspace -race` | done | `TestStatusSkipsWorkspaceOperationGate` |
+| T6 | RED then GREEN: flow fan-out cap | `internal/capability/orchestration/` | `go test ./internal/capability/orchestration -race` | done | `MaxWaveWidth=4` |
+| T7 | Update living specs after implementation | `docs/sdd/specs/` | `jacu sdd lint --all` | done | workspace + orchestration specs |
 
 ## Done
 

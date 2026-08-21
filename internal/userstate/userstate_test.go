@@ -320,6 +320,40 @@ func mustWriteFile(t *testing.T, path string) {
 	}
 }
 
+func TestRunHomeIsolatesTwoRunsUnderConfiguredHome(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv(HomeEnv, home)
+	first, err := RunHome("prj_1111111111111111", "run_1111111111111111")
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := RunHome("prj_1111111111111111", "run_2222222222222222")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first == second || !strings.HasPrefix(first, home) || !strings.HasPrefix(second, home) {
+		t.Fatalf("homes = %q %q under %q", first, second, home)
+	}
+	if err := os.MkdirAll(first, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(first, "marker"), []byte("a"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(second, "marker")); !os.IsNotExist(err) {
+		t.Fatalf("second run saw first run file: %v", err)
+	}
+}
+
+func TestRunHomeRequiresIDs(t *testing.T) {
+	if _, err := RunHome("", "run_1111111111111111"); err == nil {
+		t.Fatal("empty project_id accepted")
+	}
+	if _, err := RunHome("prj_1111111111111111", ""); err == nil {
+		t.Fatal("empty run_id accepted")
+	}
+}
+
 func mustSymlink(t *testing.T, target, link string) {
 	t.Helper()
 	if err := os.Symlink(target, link); err != nil {

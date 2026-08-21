@@ -51,6 +51,20 @@ type FlowResult struct {
 // prove path selection without processes or filesystem state.
 type NodeExecutor func(context.Context, Node, map[string]NodeResult) (NodeResult, error)
 
+// MaxWaveWidth is the scheduler fan-out cap: a wave wider than this blocks
+// before any of its nodes run.
+const MaxWaveWidth = 4
+
+func fanOutFinding(waves [][]string) *Finding {
+	for _, wave := range waves {
+		if len(wave) > MaxWaveWidth {
+			msg := fmt.Sprintf("wave width %d exceeds cap %d", len(wave), MaxWaveWidth)
+			return &Finding{Level: "BLOCK", Rule: "fan_out", Message: msg}
+		}
+	}
+	return nil
+}
+
 func Execute(ctx context.Context, flow Flow, initial map[string]any, executor NodeExecutor) (FlowResult, error) {
 	validation := Validate(flow)
 	if validation.Blocked() {
@@ -67,6 +81,9 @@ func Execute(ctx context.Context, flow Flow, initial map[string]any, executor No
 			return FlowResult{Status: "blocked", Summary: "Flow scheduling blocked.", Waves: [][]string{}, Trace: []TraceEvent{{Decision: "blocked", Reason: scheduleErr.Error()}}, Findings: []Finding{{Level: "BLOCK", Rule: "schedule", Message: scheduleErr.Error()}}}, nil
 		}
 		return executeBoundedCycle(ctx, flow, initial, executor)
+	}
+	if finding := fanOutFinding(waves); finding != nil {
+		return FlowResult{Status: "blocked", Summary: "Flow fan-out exceeds cap.", Waves: waves, Trace: []TraceEvent{}, Findings: []Finding{*finding}}, nil
 	}
 
 	nodes := make(map[string]Node, len(flow.Nodes))

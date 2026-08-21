@@ -47,6 +47,17 @@ be returned as scheduling errors.
 - **WHEN** two independent nodes declare `src/a` and `src/b`
 - **THEN** one lexical wave contains both nodes
 
+### Requirement: Flow fan-out is capped
+
+A scheduled DAG wave SHALL contain at most 4 nodes. A wider wave SHALL block
+with finding `fan_out` before any of those nodes execute. Bounded cycles are
+not DAG waves and keep their existing walker.
+
+#### Scenario: a wave exceeds the cap
+
+- **WHEN** a flow wave would exceed the cap
+- **THEN** the flow blocks with a typed finding and does not spawn the extra nodes
+
 ### Requirement: Capability governance
 
 Every executed node SHALL delegate to the existing capability seam. The flow

@@ -44,6 +44,20 @@ func DirIn(home string) string {
 	return filepath.Join(home, Name)
 }
 
+// RunHome is the isolated directory one workspace run may write. It is never
+// the process-wide user home: two open runs must not share toolchain, memory
+// or telemetry files.
+func RunHome(projectID, runID string) (string, error) {
+	if projectID == "" || runID == "" {
+		return "", errors.New("run home requires project_id and run_id")
+	}
+	dir, err := Dir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "run-homes", projectID, runID), nil
+}
+
 func WorktreesDir(home string) string {
 	return filepath.Join(DirIn(home), "worktrees")
 }

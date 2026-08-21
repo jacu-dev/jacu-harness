@@ -121,7 +121,7 @@ func registerStatusToolWithTaskManager(server *mcp.Server, root string, gate wor
 	tool.InputSchema = statusInputSchema()
 	tool.OutputSchema = statusOutputSchema()
 	mcp.AddTool(server, tool, func(ctx context.Context, _ *mcp.CallToolRequest, input StatusInput) (*mcp.CallToolResult, envelope[StatusData], error) {
-		return executeRun[StatusData](ctx, gate, workspaceStatusCapabilityWithTaskManager(root, manager).Spec.Timeout, func(ctx context.Context) capabilityruntime.Result {
+		return executeRun[StatusData](ctx, nil, workspaceStatusCapabilityWithTaskManager(root, manager).Spec.Timeout, func(ctx context.Context) capabilityruntime.Result {
 			return RunStatusWithManager(ctx, root, input, manager)
 		})
 	})
@@ -193,10 +193,12 @@ func workspaceTool(name, description string, readOnly, idempotent, destructive, 
 func executeRun[D any](ctx context.Context, gate workspaceOperationGate, timeout time.Duration, run func(context.Context) capabilityruntime.Result) (*mcp.CallToolResult, envelope[D], error) {
 	executionCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	if err := gate.acquire(executionCtx); err != nil {
-		return nil, envelope[D]{}, err
+	if gate != nil {
+		if err := gate.acquire(executionCtx); err != nil {
+			return nil, envelope[D]{}, err
+		}
+		defer gate.release()
 	}
-	defer gate.release()
 	result := run(executionCtx)
 	data, _ := result.Data.(D)
 	return nil, envelope[D]{
