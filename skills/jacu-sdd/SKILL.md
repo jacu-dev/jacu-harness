@@ -37,7 +37,9 @@ binary only parses, lints, identifies, and gates it.
    `verdict`. A fail is a stop. Do not grow the spec to pass the gate.
 9. `jacu sdd close <directory>` is the final verification step. It refuses
    unfinished tasks, missing evidence, lint BLOCKs, or a missing manual archive;
-   it never performs the archive move or deletes user-created paths.
+   it never performs the archive move. It does run the clean-exit removal of
+   JACU-owned leftovers (worktrees, receipts) and fails if that removal
+   fails; it never deletes user-created paths.
 10. After the last delivery merges into `main`, delete `sdd/<NNN>` locally and
    on `origin`. An integration branch that outlives its SDD is drift.
 

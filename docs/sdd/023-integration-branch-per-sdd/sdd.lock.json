@@ -1,9 +1,13 @@
 {
-  "sdd_id": "sdd_6cdd3ff71a31b0ca",
-  "content_sha256": "6cdd3ff71a31b0cae77525b4805a6b2d6829b1345f43f64e8e9a99ac48e53c38",
+  "sdd_id": "sdd_a610007b048a8e56",
+  "content_sha256": "a610007b048a8e56470e51ecee06fd4aa5b20d5e7ebe1f9b56e28d1e6bf9b2a3",
   "requirements": [
     {
-      "name": "Autonomy never arms auto-merge",
+      "name": "Autonomy integrates locally and never reaches origin",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Delivery is an explicit CLI act",
       "delta": "ADDED"
     },
     {
@@ -47,6 +51,11 @@
       "status": "todo"
     },
     {
+      "number": "T6a",
+      "verify": "`go test ./cmd/jacu -run Deliver`",
+      "status": "todo"
+    },
+    {
       "number": "T7",
       "verify": "docs-only probe PR under 60s; code PR runs verify",
       "status": "todo"
@@ -59,6 +68,21 @@
     {
       "number": "T9",
       "verify": "`go run ./cmd/jacu sdd lint --all`",
+      "status": "todo"
+    },
+    {
+      "number": "T10",
+      "verify": "`go run ./cmd/jacu sdd lint --all`",
+      "status": "done"
+    },
+    {
+      "number": "T11",
+      "verify": "`go test ./test/e2e -run TestGovernedChange`",
+      "status": "todo"
+    },
+    {
+      "number": "T12",
+      "verify": "`go test ./internal/capability/verify ./internal/report`",
       "status": "todo"
     }
   ]

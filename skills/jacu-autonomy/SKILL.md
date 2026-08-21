@@ -22,15 +22,21 @@ has opted into `.jacu/autonomy-policy.json`.
    The receipt proves what this local runtime emitted; it does not prove that
    reviewer and executor were different sessions. Never invent that claim.
 5. Call `jacu_apply` only after the policy requirements and receipt pass. The
-   runtime commits the run branch locally and stops. It does not push, open a
-   PR, or arm auto-merge. Remote integration stays in the outer loop. The
-   machine never creates, moves, or deletes a `v*` production tag.
+   runtime commits the run branch locally and merges it into the SDD's
+   integration branch `sdd/<NNN>` (see `jacu-sdd`); the next mission opens
+   from that HEAD. A merge conflict escalates the mission with its worktree
+   preserved. Nothing reaches `origin` during the program: the runtime does
+   not push, open a PR, or arm auto-merge. Delivery is a separate, explicit
+   act — `jacu deliver` — run by the owner, or once at the end of a program
+   that declared `deliver_at_end: true` and whose last mission passed. It
+   opens one pull request and never arms auto-merge. The machine never
+   creates, moves, or deletes a `v*` production tag.
 6. If a mission escalates, stop that mission and preserve its worktree, receipt,
    diff, and audit package. Continue independent missions; do not stop the
    whole program. A dependent mission waits for its prerequisites.
 7. For a failed CI check, collect the evidence, classify it, rerun a flaky
    check once, then create a separate policy-gated remediation mission. A
-   second failure of the same check after correction escalates to Erick.
+   second failure of the same check after correction escalates to the owner.
    A dedicated CI-status MCP tool is intentionally absent: the MCP byte cap is
    already full, so the bounded runner observes the PR with direct `gh` calls.
    Pending checks are not failures; remediation paths come only from safe
@@ -39,4 +45,5 @@ has opted into `.jacu/autonomy-policy.json`.
    the audit, never paste credentials or unbounded log output into a mission.
 9. Report each mission's objective, diff digest, verdict, evidence digest,
    receipt reference, iterations, warnings, and escalation state. Real-host
-   behavior checks remain pending until Erick runs the prepared eval sheet.
+   behavior checks remain pending until the owner runs the prepared eval
+   sheet.

@@ -62,11 +62,21 @@ here is short-lived and dies with its SDD.
    never per task.** The delivery is the smallest set of tasks that leaves
    `main` working and delivers something observable — as `AGENTS.md` already
    defines. The SDD's `## Entregas` (or `## Deliveries`) section names them.
-3. **The runtime never arms auto-merge and never targets a base it was not
-   told.** `autonomy_integration.go` loses `gh pr merge --auto`; `--base`
-   becomes an explicit input defaulting to the integration branch when one is
-   declared, else refusing. Arming auto-merge is the owner's act, in the
-   outer loop, as the skill already states.
+3. **The runtime never arms auto-merge and never opens a pull request on its
+   own.** `autonomy_integration.go` loses both `gh pr create` and
+   `gh pr merge --auto`. After a policy-gated apply, the autonomy executor
+   integrates **locally**: fast-forward or merge of the run branch into
+   `sdd/<NNN>`, then the next mission opens from the new HEAD. Nothing
+   reaches `origin` during the program. This is what makes one-shot
+   autonomous: a program of eight missions produces eight local merges and
+   zero pull requests.
+3a. **Delivery is an explicit act, by CLI, never by MCP tool.** A new
+   subcommand `jacu deliver [--base main] [--title …]` pushes `sdd/<NNN>`,
+   opens the pull request for the current delivery and prints its URL; it
+   never arms auto-merge. It runs when the owner asks, or when a program
+   declares `deliver_at_end: true` and its last mission applied with verdict
+   `pass`. PROGRAM: new capability enters through a CLI subcommand; the MCP
+   catalogue does not grow.
 4. **Prose does not pay the suite.** `ci.yml` gains a `changed-code` job that
    classifies the pull request diff; `verify` runs when code changed; the
    aggregator accepts `skipped` only when the recorded reason is
@@ -74,7 +84,33 @@ here is short-lived and dies with its SDD.
    itself.
 5. **Skills teach the branch model explicitly.** `jacu-workspace` step 7 and
    `jacu-sdd` gain the integration-branch hand-off; `jacu-autonomy` step 5
-   stays as written because it was already right.
+   gains the local merge and `jacu deliver`; `jacu-mission` gains the three
+   questions that separate a mission from a fragment.
+6. **Every skill claim is checked against the code in this SDD**, and what
+   does not match is corrected here, not deferred. The review is in the
+   section below.
+
+## Skill review against the code (2026-08-21)
+
+All twelve skills were read and each operational claim was checked against
+`cmd/jacu` and `internal/`.
+
+| Skill | Claim | Code | Verdict |
+|---|---|---|---|
+| `jacu-autonomy` §5 | runtime "does not push, open a PR, or arm auto-merge" | `autonomy_integration.go:46-49` pushes, creates, arms `--auto --squash` | **code wrong**; fixed by decision 3 (T4–T6) |
+| `jacu-autonomy` §7, §9 | "escalates to Erick", "until Erick runs the eval sheet" | public repository, skill read by every host | **personal name in a public skill**; replace with "the owner" (T10) |
+| `jacu-workspace` §1 | `jacu_status` "takes no arguments" | `status.go:62` accepts `task_id`; `jacu-verify` §2 relies on it | **contradiction between two skills**; fixed in this delivery |
+| `jacu-workspace` §1 | legacy alias `jacu_workspace_status` "is equivalent" | `tool.go:87` registers it as a **second MCP tool** | true — and it costs catalogue bytes under the 20 KiB ratchet while SDD-009 is fighting for them. Thirteen tools on the wire, not twelve; SDD-009's follow-up saying "the number is stale" was wrong, PROGRAM was right (T11) |
+| `jacu-sdd` §9 | `sdd close` "never … deletes user-created paths" | `sdd.go:93-97` runs `cleanexit.Remove` on JACU-owned leftovers | true but incomplete; reworded in this delivery |
+| `jacu-sdd` | `sdd status` is a summary | aborts on the first unlocked directory (SDD-009 T10) | documented there |
+| `jacu-runner` | "positive nine-variable environment allowlist" | `runner.go:305`: nine names | matches |
+| `jacu-model` | "at least 10 samples and failure rate strictly above 40%" | `resilience.go:36`: `TotalRuns >= 10 && rate > 0.40` | matches |
+| `jacu-orchestration` §1 | capabilities `mission, workspace, verify, review, apply` | `graph.go:13-17` | matches |
+| `jacu-verify` §3 | five verdicts | `core.go:24-28` | matches |
+| `jacu-verify` | "a cancelled run is `not_run`, never `fail`" | task status `cancelled` exists; verdict mapping not located | **unverified**; T12 adds the test or fixes the prose |
+| `jacu-report` | `report render` / `report serve` on 127.0.0.1 | `report_visual.go:31-33`, `--port` | matches; "eight v1 blocks" unverified (T12) |
+| `jacu-memory` | save refreshes only the sentinelled `AGENTS.md` region, checksum-guarded | `bridge.go:85-91` | matches |
+| `jacu-inspect`, `using-jacu` | routing only | — | no operational claim to check |
 
 ## Out of scope
 
@@ -83,6 +119,9 @@ here is short-lived and dies with its SDD.
   on HEAD and stop at the local commit.
 - Enforcing delivery granularity mechanically (a check that reads the SDD and
   refuses a pull request that does not close a delivery) — follow-up.
+- A new MCP tool for delivery. Delivery is CLI-only by PROGRAM rule and
+  because a tool that pushes is exactly the capability the MCP surface must
+  not have.
 - Changes to the sixteen `AGENTS.md` files in the organisation; this SDD
   changes this repository's skills and its own `AGENTS.md` only.
 
@@ -95,10 +134,20 @@ internal/capability/workspace/autonomy_integration.go
 internal/capability/workspace/autonomy_integration_test.go
 internal/capability/workspace/autonomy_executor.go
 internal/capability/workspace/autonomy_apply_test.go
+internal/capability/workspace/tool.go
+internal/capability/missioncompile/program.go
+internal/gitx/merge.go
+internal/gitx/merge_test.go
+cmd/jacu/deliver.go
+cmd/jacu/deliver_test.go
+cmd/jacu/main.go
 .github/workflows/ci.yml
 skills/jacu-workspace/SKILL.md
 skills/jacu-sdd/SKILL.md
 skills/jacu-mission/SKILL.md
+skills/jacu-autonomy/SKILL.md
+skills/jacu-verify/SKILL.md
+skills/jacu-report/SKILL.md
 AGENTS.md
 docs/reference/cli.md
 CHANGELOG.md
@@ -108,7 +157,7 @@ docs/sdd/023-integration-branch-per-sdd/**
 **Forbidden**
 
 ```
-internal/gitx/**
+internal/gitx/** except merge.go
 internal/capability/workspace/open.go
 internal/capability/workspace/apply.go
 .github/workflows/verify.yml
@@ -128,19 +177,40 @@ the checkout is expected to sit on `sdd/<NNN>` while an SDD is being worked.
 - **THEN** the commit lands on the run branch based on `sdd/023`'s HEAD, and the skill's next step is a local merge into `sdd/023`, not a pull request
 Delta: ADDED
 
-### Requirement: Autonomy never arms auto-merge
+### Requirement: Autonomy integrates locally and never reaches origin
 
-The system SHALL NOT run `gh pr merge --auto` from any code path, and SHALL
-refuse to create a pull request without an explicit base.
+The system SHALL NOT run `gh pr create` or `gh pr merge` from any autonomy
+code path. After a policy-gated apply it SHALL merge the run branch into the
+integration branch locally.
 
-#### Scenario: autonomy integration without a declared base
-- **WHEN** `integrateAutonomy` is called and no integration base is declared
-- **THEN** it returns `Escalated: true` with a warning naming the missing base and runs no `gh` command
+#### Scenario: program of N missions
+- **WHEN** a program with `deliver_at_end` unset applies N missions with verdict `pass`
+- **THEN** `sdd/<NNN>` advances by N local merges, `origin` is untouched, and no `gh` command runs
 Delta: ADDED
 
-#### Scenario: autonomy integration with a declared base
-- **WHEN** an integration base `sdd/<NNN>` is declared
-- **THEN** the branch is pushed and a pull request is created against that base; no merge command runs
+#### Scenario: local merge conflicts
+- **WHEN** the run branch does not merge cleanly into `sdd/<NNN>`
+- **THEN** the mission escalates with the worktree preserved; dependent missions wait, independent ones continue
+Delta: ADDED
+
+### Requirement: Delivery is an explicit CLI act
+
+The system SHALL provide `jacu deliver` that pushes the integration branch
+and opens one pull request, and SHALL NOT arm auto-merge.
+
+#### Scenario: owner delivers
+- **WHEN** `jacu deliver --base main` runs on `sdd/<NNN>` with a clean tree
+- **THEN** the branch is pushed, one pull request is created, its URL is printed, and no merge command runs
+Delta: ADDED
+
+#### Scenario: program delivers at end
+- **WHEN** a program declares `deliver_at_end: true` and its last mission applied with `pass`
+- **THEN** the executor runs the same code path as `jacu deliver` once, after the last local merge
+Delta: ADDED
+
+#### Scenario: deliver with a dirty tree or no integration branch
+- **WHEN** the checkout is not on `sdd/<NNN>` or has uncommitted changes
+- **THEN** `jacu deliver` exits 2 naming the condition and runs no `git push`
 Delta: ADDED
 
 ### Requirement: Prose-only pull requests skip the suite with a recorded reason
@@ -173,14 +243,16 @@ Delta: ADDED
 
 ## Entregas
 
-### ENTREGA-1 — the skills teach the model (T1..T3)
+### ENTREGA-1 — the skills teach the model (T1..T3, T10)
 After merge: every host that reads the skills works an SDD on `sdd/<NNN>`,
 merges runs locally, and opens one pull request per delivery. What goes red
 if wrong: `jacu sdd lint --all`, and the living-docs allowlist test.
 
-### ENTREGA-2 — the runtime stops opening pull requests by itself (T4..T6)
-After merge: no code path arms auto-merge; the base is explicit. What goes
-red if wrong: `go test ./internal/capability/workspace -run Autonomy`.
+### ENTREGA-2 — one-shot autonomy: local merges, `jacu deliver` at the end (T4..T6a, T11, T12)
+After merge: a program runs end to end with zero pull requests; `jacu
+deliver` opens the one pull request when the owner or the program asks. What
+goes red if wrong: `go test ./internal/capability/workspace -run Autonomy`
+and `go test ./cmd/jacu -run Deliver`.
 
 ### ENTREGA-3 — prose is cheap (T7..T8)
 After merge: a docs-only pull request finishes in under a minute, and a
@@ -194,19 +266,23 @@ request with a `skipped` verify and no `prose-only` reason.
 | T1 | `jacu-workspace` step 7: hand off to a local merge into `sdd/<NNN>`; pull request only per delivery; never `--auto` from the session | `skills/jacu-workspace/SKILL.md` | `go run ./cmd/jacu sdd lint --all` | done | edited with this SDD |
 | T2 | `jacu-sdd`: step 0 creates `sdd/<NNN>` from `main`; step 10 deletes it after the last delivery; deliveries section is mandatory for ceremony `full` | `skills/jacu-sdd/SKILL.md` | `go run ./cmd/jacu sdd lint --all` | done | edited with this SDD |
 | T3 | `jacu-mission`: compile refuses an objective that is a fragment of a delivery (no observable outcome) with a WARN naming the delivery | `skills/jacu-mission/SKILL.md` | `go run ./cmd/jacu sdd lint --all` | done | edited with this SDD |
-| T4 | Drop `gh pr merge --auto --squash` from `autonomyIntegrationCommands`; add `base string`; refuse when empty | `internal/capability/workspace/autonomy_integration.go` | `go test ./internal/capability/workspace -run Autonomy` | todo | |
-| T5 | Thread the base from the program declaration through the executor | `internal/capability/workspace/autonomy_executor.go` | `go test ./internal/capability/workspace -run Autonomy` | todo | |
-| T6 | Tests: no base → escalated, no command; base → push + create, no merge | `internal/capability/workspace/autonomy_integration_test.go`, `autonomy_apply_test.go` | `go test ./internal/capability/workspace -run Autonomy -race` | todo | |
+| T4 | Replace `autonomyIntegrationCommands` (push + `pr create` + `pr merge --auto`) with a local merge of the run branch into the integration branch through `gitx`; conflict → escalate with worktree preserved | `internal/capability/workspace/autonomy_integration.go`, `internal/gitx/**` (merge primitive only) | `go test ./internal/capability/workspace -run Autonomy` | todo | |
+| T5 | Executor: next mission opens from the advanced HEAD; `deliver_at_end` in the program schema | `internal/capability/workspace/autonomy_executor.go`, `internal/capability/missioncompile/program.go` | `go test ./internal/capability/workspace -run Autonomy` | todo | |
+| T6 | Tests: N missions → N local merges, zero `gh`; conflict → escalated; `deliver_at_end` → one deliver call | `internal/capability/workspace/autonomy_integration_test.go`, `autonomy_apply_test.go` | `go test ./internal/capability/workspace -run Autonomy -race` | todo | |
+| T6a | `jacu deliver [--base main] [--title …] [--json]`: preconditions, push, `gh pr create`, print URL, never `--auto`; exit codes documented | `cmd/jacu/deliver.go`, `cmd/jacu/deliver_test.go`, `docs/reference/cli.md` | `go test ./cmd/jacu -run Deliver` | todo | |
 | T7 | `changed-code` job in `ci.yml`; `verify` gated on it; aggregator reads the reason | `.github/workflows/ci.yml` | docs-only probe PR under 60s; code PR runs verify | todo | |
 | T8 | Probe PR with `verify` skipped for a non-prose reason is refused | `.github/workflows/ci.yml` | probe PR blocked | todo | |
-| T9 | `AGENTS.md` of this repository names `sdd/<NNN>`, the local merge, and the one-PR-per-delivery rule; CHANGELOG Unreleased/Changed | `AGENTS.md`, `CHANGELOG.md` | `go run ./cmd/jacu sdd lint --all` | todo | |
+| T9 | `AGENTS.md` of this repository names `sdd/<NNN>`, the local merge, `jacu deliver`, and the one-PR-per-delivery rule; CHANGELOG Unreleased/Changed | `AGENTS.md`, `CHANGELOG.md` | `go run ./cmd/jacu sdd lint --all` | todo | |
+| T10 | `jacu-autonomy`: §5 describes the local merge and `jacu deliver`; §7 and §9 lose the personal name | `skills/jacu-autonomy/SKILL.md` | `go run ./cmd/jacu sdd lint --all` | done | edited with this SDD |
+| T11 | Decide the legacy tool alias `jacu_workspace_status`: drop it (frees catalogue bytes for SDD-009) or keep it and say why in `tool.go` | `internal/capability/workspace/tool.go`, `skills/jacu-workspace/SKILL.md` | `go test ./test/e2e -run TestGovernedChange` | todo | |
+| T12 | Prove or fix the two unverified skill claims: cancelled verify → `not_run`; report has eight v1 blocks | `internal/capability/verify/task_test.go`, `internal/report/report_test.go`, or the two skills | `go test ./internal/capability/verify ./internal/report` | todo | |
 
 ## Done
 
 | Level | Proof |
 |---|---|
 | Core | an SDD with three tasks produces one pull request, opened by the owner, from `sdd/<NNN>`; the run branches never reach `origin` |
-| Runtime | `grep -rn 'pr merge' internal/` returns nothing; autonomy without a base escalates |
+| Runtime | `grep -rn 'gh.*pr' internal/` returns nothing; a program of N missions leaves `origin` untouched; `jacu deliver` is the only path that pushes |
 | Esteira | docs-only pull request: `verify` skipped with reason `prose-only`, aggregator green in under a minute; any other skip is red |
 
 ## Follow-ups
