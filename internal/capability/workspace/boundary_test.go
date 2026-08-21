@@ -18,6 +18,7 @@ func TestWorkspaceInternalImportBoundary(t *testing.T) {
 		"github.com/jacu-dev/jacu-harness/internal/runner",
 		"github.com/jacu-dev/jacu-harness/internal/runstate",
 		"github.com/jacu-dev/jacu-harness/internal/runtime",
+		"github.com/jacu-dev/jacu-harness/internal/scope",
 		"github.com/jacu-dev/jacu-harness/internal/telemetry",
 		"github.com/jacu-dev/jacu-harness/internal/userstate",
 	}

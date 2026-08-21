@@ -3,10 +3,10 @@ package sdd
 import (
 	"testing"
 
-	"github.com/jacu-dev/jacu-harness/internal/capability/workspace"
+	"github.com/jacu-dev/jacu-harness/internal/scope"
 )
 
-func TestLintAndWorkspaceUseTheSameScopeVerdict(t *testing.T) {
+func TestLintAndScopeUseTheSameVerdict(t *testing.T) {
 	allowed := []string{"internal/capability/sdd/**"}
 	forbidden := []string{"internal/capability/sdd/private/**"}
 	for _, testCase := range []struct {
@@ -19,9 +19,9 @@ func TestLintAndWorkspaceUseTheSameScopeVerdict(t *testing.T) {
 	} {
 		document := Document{Sections: []Section{{Name: "Write scope", Lines: []string{"**Allowed**", allowed[0], "**Forbidden**", forbidden[0]}}}}
 		lintVerdict := findCode(lintScope(document, []string{testCase.path}), "sdd_out_of_scope_touched") != nil
-		workspaceVerdict := workspace.ScopesConflict(testCase.path, allowed, forbidden)
-		if lintVerdict != testCase.want || workspaceVerdict != testCase.want || lintVerdict != workspaceVerdict {
-			t.Fatalf("path %q: lint=%v workspace=%v want=%v", testCase.path, lintVerdict, workspaceVerdict, testCase.want)
+		scopeVerdict := scope.ScopesConflict(testCase.path, allowed, forbidden)
+		if lintVerdict != testCase.want || scopeVerdict != testCase.want || lintVerdict != scopeVerdict {
+			t.Fatalf("path %q: lint=%v scope=%v want=%v", testCase.path, lintVerdict, scopeVerdict, testCase.want)
 		}
 	}
 }

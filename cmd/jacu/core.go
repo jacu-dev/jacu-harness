@@ -12,6 +12,7 @@ import (
 	"github.com/jacu-dev/jacu-harness/internal/capability/verify"
 	"github.com/jacu-dev/jacu-harness/internal/capability/workspace"
 	headlessreport "github.com/jacu-dev/jacu-harness/internal/report"
+	"github.com/jacu-dev/jacu-harness/internal/reportgen"
 )
 
 func runInspect(root string, args []string, stdout, stderr io.Writer) int {
@@ -170,7 +171,7 @@ func runReport(root string, args []string, stdout, stderr io.Writer) int {
 		_, _ = stdout.Write(append(encoded, '\n'))
 		return 0
 	}
-	markdown, err := headlessreport.Markdown(report)
+	markdown, err := reportgen.Markdown(report)
 	if err != nil {
 		_, _ = fmt.Fprintln(stderr, "render report failed:", err)
 		return 1

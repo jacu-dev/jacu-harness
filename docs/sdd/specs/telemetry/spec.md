@@ -86,12 +86,14 @@ The CLI SHALL expose `jacu stats` with an optional `--since 30d` duration filter
 
 ### Requirement: Heuristic revert derivation
 
-The telemetry statistics reader SHALL derive apply reverts by scanning Git history for revert commits whose message references the `Jacu-Run` trailer. The result SHALL be labeled heuristic, SHALL not require a collection event, and SHALL not claim certainty when Git history is unavailable.
+The telemetry statistics reader SHALL NOT execute `git log` (including via
+`internal/gitx`) to derive apply reverts. The revert metric SHALL be reported
+as `no-data` (`available=false`), never as a silent zero that looks measured.
 
-#### Scenario: Revert trailer is counted
+#### Scenario: Revert metric is honest without git log
 
-- **WHEN** Git history contains a revert commit referencing a `Jacu-Run` trailer within the selected window
-- **THEN** the statistics include it in the heuristic reverted-apply numerator
+- **WHEN** `jacu stats` computes the revert heuristic
+- **THEN** the metric is `no-data` and stats does not invoke `git log`
 
 #### Scenario: Missing Git history remains honest
 

@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_75e4547fe94d7c6d",
-  "content_sha256": "75e4547fe94d7c6d5d9aa6e7afeb4c26995050b3d00ac3c7d3f0acb7fc65d80f",
+  "sdd_id": "sdd_1b6889831777ce98",
+  "content_sha256": "1b6889831777ce98d29ead061b7b5b440218d11ac36b79c29acb6364c05d33a5",
   "requirements": [
     {
       "name": "Catalogue compaction via $defs/$ref",
@@ -31,42 +31,42 @@
     {
       "number": "T1",
       "verify": "`go test ./internal/scope ./internal/capability/sdd ./internal/capability/workspace -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T2",
       "verify": "`go test ./internal/scope ./internal/capability/sdd ./internal/capability/workspace -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T3",
       "verify": "`go test ./internal/reportgen ./internal/report -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T4",
       "verify": "`bash scripts/verify.sh`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T5",
       "verify": "`go test ./internal/capability/orchestration -run Boundary -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T6",
-      "verify": "`go test -tags=e2e ./test/e2e/ -run Governed`",
-      "status": "todo"
+      "verify": "`go test ./internal/mcpadapter -run Catalogue -race`",
+      "status": "done"
     },
     {
       "number": "T7",
       "verify": "`go test ./internal/telemetry -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T8",
       "verify": "`jacu sdd lint --all`",
-      "status": "todo"
+      "status": "done"
     }
   ]
 }

@@ -1,10 +1,8 @@
 package telemetry
 
 import (
-	"github.com/jacu-dev/jacu-harness/internal/testgit"
+	"bytes"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -87,47 +85,27 @@ func TestFilterProjectKeepsOnlyCurrentProject(t *testing.T) {
 	}
 }
 
-func TestComputeStatsCountsHeuristicJacuRunRevert(t *testing.T) {
-	repo := t.TempDir()
-	gitInit(t, repo)
-	if err := os.WriteFile(filepath.Join(repo, "note"), []byte("one\n"), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	gitRun(t, repo, "add", "note")
-	gitRun(t, repo, "commit", "-m", "apply\n\nJacu-Run: run_0123456789abcdef")
-	if err := os.WriteFile(filepath.Join(repo, "note"), []byte("reverted\n"), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	gitRun(t, repo, "add", "note")
-	gitRun(t, repo, "commit", "-m", "Revert apply\n\nJacu-Run: run_0123456789abcdef")
+func TestComputeStatsTreatsRevertHeuristicAsNoDataWithoutGitLog(t *testing.T) {
 	event := statsEvent(time.Now().UTC(), EventApply, "jacu_apply", "applied", "run_0123456789abcdef", "msn_0123456789abcdef", 1)
-	stats, err := ComputeStats([]Event{event}, time.Now().Add(-time.Hour), time.Now().Add(time.Hour), &GitHistory{Repo: repo})
+	stats, err := ComputeStats([]Event{event}, time.Now().Add(-time.Hour), time.Now().Add(time.Hour), &GitHistory{Repo: t.TempDir()})
 	if err != nil {
 		t.Fatalf("ComputeStats: %v", err)
 	}
-	if !stats.Available[MetricRevertedApplyPct] || stats.RevertedApplyPct != 100 || !stats.RevertHeuristic {
-		t.Fatalf("revert stats = %+v", stats)
+	if stats.Available[MetricRevertedApplyPct] || stats.RevertHeuristic || stats.RevertedApplyPct != 0 {
+		t.Fatalf("revert stats claimed a git-log measurement: %+v", stats)
+	}
+}
+
+func TestStatsSourceDoesNotInvokeGitLog(t *testing.T) {
+	body, err := os.ReadFile("stats.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Contains(body, []byte(`"log"`)) || bytes.Contains(body, []byte("OutputRaw")) {
+		t.Fatal("stats.go still invokes git log")
 	}
 }
 
 func statsEvent(ts time.Time, kind, tool, status, runID, missionID string, duration int64) Event {
 	return Event{Timestamp: ts, ProjectID: "prj_0123456789abcdef", TraceID: NewTraceID(), Event: kind, Tool: tool, Status: status, RunID: runID, MissionID: missionID, DurationMs: duration}
-}
-
-func gitInit(t *testing.T, repo string) {
-	t.Helper()
-	gitRun(t, repo, "init", "-q")
-	gitRun(t, repo, "config", "user.email", "telemetry@example.invalid")
-	gitRun(t, repo, "config", "user.name", "Telemetry Test")
-	gitRun(t, repo, "config", "commit.gpgsign", "false")
-}
-
-func gitRun(t *testing.T, repo string, args ...string) {
-	t.Helper()
-	// #nosec G204 -- test invokes fixed git with a test-owned repository and controlled fixture arguments.
-	command := exec.Command("git", append([]string{"-C", repo}, args...)...)
-	command.Env = testgit.Env()
-	if output, err := command.CombinedOutput(); err != nil {
-		t.Fatalf("git %v: %v: %s", args, err, output)
-	}
 }

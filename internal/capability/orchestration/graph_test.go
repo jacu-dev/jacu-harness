@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/jacu-dev/jacu-harness/internal/scope"
 )
 
 func TestScheduleWavesInheritedContract(t *testing.T) {
@@ -135,8 +137,8 @@ func TestScopeConflictNormalizesGlobsAndDirectoryBoundaries(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := scopesConflict(tt.left, tt.right); got != tt.want {
-				t.Fatalf("scopesConflict(%v,%v) = %v; want %v", tt.left, tt.right, got, tt.want)
+			if got := scope.ListsConflict(tt.left, tt.right); got != tt.want {
+				t.Fatalf("ListsConflict(%v,%v) = %v; want %v", tt.left, tt.right, got, tt.want)
 			}
 		})
 	}

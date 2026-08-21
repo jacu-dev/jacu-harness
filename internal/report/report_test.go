@@ -42,17 +42,9 @@ func TestReportValidationDigestAndMarkdownAreDeterministic(t *testing.T) {
 	if !strings.HasPrefix(digest, "sha256:") {
 		t.Fatalf("digest = %q; want sha256 prefix", digest)
 	}
-	markdown, err := Markdown(report)
-	if err != nil {
-		t.Fatalf("Markdown: %v", err)
-	}
-	if !strings.Contains(markdown, "```mermaid") || !strings.Contains(markdown, "| run_id | status |") {
-		t.Fatalf("markdown omitted deterministic projections: %q", markdown)
-	}
 	digestAgain, _ := Digest(report)
-	markdownAgain, _ := Markdown(report)
-	if digestAgain != digest || markdownAgain != markdown {
-		t.Fatal("same report produced different digest or Markdown")
+	if digestAgain != digest {
+		t.Fatal("same report produced different digest")
 	}
 	encoded, err := EncodeJSON(report)
 	if err != nil {
@@ -100,12 +92,12 @@ func TestAuditWalkerProjectsRunsMissionsAndProgramsWithoutSensitiveFields(t *tes
 	if projected.Kind != KindAudit || len(projected.Blocks.Steps) != 2 || len(projected.Blocks.Flow.Nodes) < 3 {
 		t.Fatalf("audit projection = %#v; want runs, program, and mission nodes", projected)
 	}
-	markdown, err := Markdown(projected)
+	encoded, err := EncodeJSON(projected)
 	if err != nil {
-		t.Fatalf("Markdown audit: %v", err)
+		t.Fatalf("EncodeJSON audit: %v", err)
 	}
-	if strings.Contains(markdown, "/Users/secret") || strings.Contains(markdown, "verification_commands") {
-		t.Fatalf("audit leaked sensitive or raw structured fields: %q", markdown)
+	if strings.Contains(string(encoded), "/Users/secret") || strings.Contains(string(encoded), "verification_commands") {
+		t.Fatalf("audit leaked sensitive or raw structured fields: %s", encoded)
 	}
 }
 
@@ -177,12 +169,12 @@ func TestAuditReportProjectsTelemetryMetricsWithoutPayloads(t *testing.T) {
 	if !found {
 		t.Fatalf("telemetry metric missing: %+v", projected.Blocks.Metrics)
 	}
-	markdown, err := Markdown(projected)
+	encoded, err := EncodeJSON(projected)
 	if err != nil {
-		t.Fatalf("Markdown: %v", err)
+		t.Fatalf("EncodeJSON: %v", err)
 	}
-	if !strings.Contains(markdown, telemetry.MetricFirstPassVerify) || strings.Contains(markdown, "trace_id") {
-		t.Fatalf("telemetry projection missing or leaked event payload: %q", markdown)
+	if !strings.Contains(string(encoded), telemetry.MetricFirstPassVerify) || strings.Contains(string(encoded), "trace_id") {
+		t.Fatalf("telemetry projection missing or leaked event payload: %s", encoded)
 	}
 }
 

@@ -58,6 +58,14 @@ not DAG waves and keep their existing walker.
 - **WHEN** a flow wave would exceed the cap
 - **THEN** the flow blocks with a typed finding and does not spawn the extra nodes
 
+### Requirement: Path classification lives in internal/scope
+Wave scheduling SHALL classify path-list conflicts through `internal/scope`.
+It SHALL not keep a second copy of that verdict.
+
+#### Scenario: scheduler uses scope
+- **WHEN** two nodes declare allowed paths
+- **THEN** `scope.ListsConflict` decides whether they share a wave
+
 ### Requirement: Capability governance
 
 Every executed node SHALL delegate to the existing capability seam. The flow

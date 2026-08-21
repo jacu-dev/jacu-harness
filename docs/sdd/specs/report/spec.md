@@ -30,6 +30,15 @@ reconstruct state, and it SHALL not mutate runstate or the project worktree.
 - **THEN** the projected status, identities, and flow remain derived from the
   structured fields and no Markdown is read
 
+### Requirement: reportgen owns Markdown projection
+`jacu report` and `jacu_report` SHALL call `internal/reportgen` for the
+Markdown projection. That package SHALL contain no MCP types. Structured JSON
+in `internal/report` remains the source of state.
+
+#### Scenario: both surfaces call one projector
+- **WHEN** `jacu report` and `jacu_report` run
+- **THEN** both call `reportgen.Markdown`
+
 ### Requirement: Deterministic projections
 For the same structured state, canonical JSON, the report digest, and Markdown
 output SHALL be byte-identical. Runs, flow nodes, flow edges, metrics, and table

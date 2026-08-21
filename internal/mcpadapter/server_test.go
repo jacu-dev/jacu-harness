@@ -179,30 +179,7 @@ func TestProjectInspectToolHasConcreteDataOutputSchema(t *testing.T) {
 		t.Fatalf("list tools: %v", err)
 	}
 	tool := findTool(t, tools.Tools, "jacu_project_inspect")
-
-	rawSchema, err := json.Marshal(tool.OutputSchema)
-	if err != nil {
-		t.Fatalf("marshal outputSchema: %v", err)
-	}
-	var schema map[string]any
-	if err := json.Unmarshal(rawSchema, &schema); err != nil {
-		t.Fatalf("decode outputSchema: %v", err)
-	}
-	properties, ok := schema["properties"].(map[string]any)
-	if !ok {
-		t.Fatalf("outputSchema.properties = %T; want object", schema["properties"])
-	}
-	data, ok := properties["data"].(map[string]any)
-	if !ok {
-		t.Fatalf("outputSchema.properties.data = %T; want object schema", properties["data"])
-	}
-	if data["type"] != "object" {
-		t.Fatalf("outputSchema.properties.data.type = %v; want object", data["type"])
-	}
-	dataProperties, ok := data["properties"].(map[string]any)
-	if !ok {
-		t.Fatalf("outputSchema.properties.data.properties = %T; want object", data["properties"])
-	}
+	dataProperties := concreteDataProperties(t, tool)
 	if _, ok := dataProperties["project_id"]; !ok {
 		t.Fatal("outputSchema.properties.data.properties.project_id ausente")
 	}
@@ -237,29 +214,7 @@ func TestMissionCompileToolMetadataAndConcreteOutputSchema(t *testing.T) {
 		t.Fatalf("openWorldHint = %v; want false explícito", annotations.OpenWorldHint)
 	}
 
-	rawSchema, err := json.Marshal(tool.OutputSchema)
-	if err != nil {
-		t.Fatalf("marshal outputSchema: %v", err)
-	}
-	var schema map[string]any
-	if err := json.Unmarshal(rawSchema, &schema); err != nil {
-		t.Fatalf("decode outputSchema: %v", err)
-	}
-	properties, ok := schema["properties"].(map[string]any)
-	if !ok {
-		t.Fatalf("outputSchema.properties = %T; want object", schema["properties"])
-	}
-	data, ok := properties["data"].(map[string]any)
-	if !ok {
-		t.Fatalf("outputSchema.properties.data = %T; want object schema", properties["data"])
-	}
-	if data["type"] != "object" {
-		t.Fatalf("outputSchema.properties.data.type = %v; want object", data["type"])
-	}
-	dataProperties, ok := data["properties"].(map[string]any)
-	if !ok {
-		t.Fatalf("outputSchema.properties.data.properties = %T; want object", data["properties"])
-	}
+	dataProperties := concreteDataProperties(t, tool)
 	if _, ok := dataProperties["mission_id"]; !ok {
 		t.Fatal("outputSchema.properties.data.properties.mission_id ausente")
 	}
@@ -653,19 +608,42 @@ func concreteDataProperties(t *testing.T, tool *mcp.Tool) map[string]any {
 	if err := json.Unmarshal(rawSchema, &schema); err != nil {
 		t.Fatalf("decode outputSchema: %v", err)
 	}
+	schema = resolveJSONSchema(schema, schema)
 	properties, ok := schema["properties"].(map[string]any)
 	if !ok {
 		t.Fatalf("outputSchema.properties = %T; want object", schema["properties"])
 	}
 	data, ok := properties["data"].(map[string]any)
-	if !ok || data["type"] != "object" {
+	if !ok {
 		t.Fatalf("outputSchema.properties.data = %#v; want concrete object schema", properties["data"])
+	}
+	data = resolveJSONSchema(data, schema)
+	if data["type"] != "object" {
+		t.Fatalf("outputSchema.properties.data = %#v; want concrete object schema", data)
 	}
 	dataProperties, ok := data["properties"].(map[string]any)
 	if !ok || len(dataProperties) == 0 {
 		t.Fatalf("outputSchema.properties.data.properties = %#v; want non-empty object", data["properties"])
 	}
 	return dataProperties
+}
+
+func resolveJSONSchema(node, root map[string]any) map[string]any {
+	ref, _ := node["$ref"].(string)
+	if !strings.HasPrefix(ref, "#/$defs/") {
+		return node
+	}
+	defs, _ := root["$defs"].(map[string]any)
+	if defs == nil {
+		if nested, ok := node["$defs"].(map[string]any); ok {
+			defs = nested
+		}
+	}
+	resolved, _ := defs[strings.TrimPrefix(ref, "#/$defs/")].(map[string]any)
+	if resolved == nil {
+		return node
+	}
+	return resolved
 }
 
 func callToolEnvelope(t *testing.T, ctx context.Context, session *mcp.ClientSession, name string, arguments map[string]any) map[string]any {

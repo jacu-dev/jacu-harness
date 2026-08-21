@@ -59,24 +59,33 @@ decisions; the ceiling may only decrease (I6).
 **Allowed**
 
 ```
-docs/sdd/009-core-surface/**
-docs/sdd/010-repo-governance/**
-docs/sdd/011-workspace-contract/**
+internal/scope/**
+internal/reportgen/**
+internal/report/**
+internal/telemetry/**
+internal/capability/sdd/**
+internal/capability/workspace/**
+internal/capability/orchestration/**
+internal/capability/report/**
+internal/mcpadapter/**
+cmd/jacu/**
+scripts/verify.sh
 docs/sdd/012-structural-debt/**
-docs/sdd/013-model-panel/**
-docs/sdd/014-report-visual/**
-docs/sdd/015-program-closeout/**
+docs/sdd/specs/**
 docs/sdd/PROGRAM.md
-.cursor/agent-board.md
 ```
 
 **Forbidden**
 
 ```
-cmd/**
-internal/**
 .github/**
 docs/adr/**
+docs/sdd/009-core-surface/**
+docs/sdd/010-repo-governance/**
+docs/sdd/011-workspace-contract/**
+docs/sdd/013-model-panel/**
+docs/sdd/014-report-visual/**
+docs/sdd/015-program-closeout/**
 ```
 
 ## Requirements
@@ -164,14 +173,14 @@ Delta: ADDED
 
 | # | Task | Files | Verify | Status | Evidence |
 |---|---|---|---|---|---|
-| T1 | RED: `ScopesConflict` lives in `internal/scope` | `internal/scope/` | `go test ./internal/scope ./internal/capability/sdd ./internal/capability/workspace -race` | todo | |
-| T2 | GREEN: move `ScopesConflict` to `internal/scope` | `internal/scope/`, `internal/capability/sdd/`, `internal/capability/workspace/` | `go test ./internal/scope ./internal/capability/sdd ./internal/capability/workspace -race` | todo | |
-| T3 | Extract `internal/reportgen` | `internal/reportgen/`, `internal/report/` | `go test ./internal/reportgen ./internal/report -race` | todo | |
-| T4 | I6 script and ratchet in `scripts/verify.sh` | `scripts/verify.sh` | `bash scripts/verify.sh` | todo | |
-| T5 | Orchestration boundary test | `internal/capability/orchestration/` | `go test ./internal/capability/orchestration -run Boundary -race` | todo | |
-| T6 | `$defs`/`$ref` compaction | `internal/mcpadapter/` | `go test -tags=e2e ./test/e2e/ -run Governed` | todo | |
-| T7 | Remove stats `git log` revert heuristic | `internal/telemetry/stats.go` | `go test ./internal/telemetry -race` | todo | |
-| T8 | Update living specs after implementation | `docs/sdd/specs/` | `jacu sdd lint --all` | todo | |
+| T1 | RED: `ScopesConflict` lives in `internal/scope` | `internal/scope/` | `go test ./internal/scope ./internal/capability/sdd ./internal/capability/workspace -race` | done | `internal/scope` + callers |
+| T2 | GREEN: move `ScopesConflict` to `internal/scope` | `internal/scope/`, `internal/capability/sdd/`, `internal/capability/workspace/` | `go test ./internal/scope ./internal/capability/sdd ./internal/capability/workspace -race` | done | sdd + workspace + orchestration call `scope` |
+| T3 | Extract `internal/reportgen` | `internal/reportgen/`, `internal/report/` | `go test ./internal/reportgen ./internal/report -race` | done | CLI and `jacu_report` call `reportgen.Markdown` |
+| T4 | I6 script and ratchet in `scripts/verify.sh` | `scripts/verify.sh` | `bash scripts/verify.sh` | done | `assert_i6` + `seed_i6`; ceiling 26722 |
+| T5 | Orchestration boundary test | `internal/capability/orchestration/` | `go test ./internal/capability/orchestration -run Boundary -race` | done | `TestOrchestrationBoundaryRejectsExtraFilesAndImports` |
+| T6 | `$defs`/`$ref` compaction | `internal/mcpadapter/` | `go test ./internal/mcpadapter -run Catalogue -race` | done | tools/list envelope compacted; 13 tools |
+| T7 | Remove stats `git log` revert heuristic | `internal/telemetry/stats.go` | `go test ./internal/telemetry -race` | done | revert metric is `no-data` |
+| T8 | Update living specs after implementation | `docs/sdd/specs/` | `jacu sdd lint --all` | done | report, orchestration, telemetry notes |
 
 ## Done
 
