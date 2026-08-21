@@ -8,13 +8,17 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
+	ctxpack "github.com/jacu-dev/jacu-harness/internal/capability/context"
+	"github.com/jacu-dev/jacu-harness/internal/capability/ledger"
+	"github.com/jacu-dev/jacu-harness/internal/capability/missioncompile"
 	sddcap "github.com/jacu-dev/jacu-harness/internal/capability/sdd"
 )
 
 const (
-	contextUsage            = "context: usage is context --sdd [--json]"
+	contextUsage            = "context: usage is context --sdd [--json] | context pack|explain [--json] [--input JSON] [--budget N]"
 	contextNoActiveCode     = "no_active_sdd"
 	contextMultipleCode     = "multiple_active_sdd"
 	contextUnreadableCode   = "sdd_unreadable"
@@ -28,6 +32,9 @@ type admittedSDD struct {
 }
 
 func runContext(root string, args []string, stdout, stderr io.Writer) int {
+	if len(args) > 0 && (args[0] == "pack" || args[0] == "explain") {
+		return runContextAdmission(root, args[0], args[1:], stdout, stderr)
+	}
 	jsonOut := false
 	sddFlag := false
 	for _, arg := range args {
@@ -176,4 +183,98 @@ func admitFromProgram(root *os.Root, living []admittedSDD) (admittedSDD, string,
 	default:
 		return admittedSDD{}, contextNoActiveCode, fmt.Errorf("no living SDD is active")
 	}
+}
+
+func runContextAdmission(root, command string, args []string, stdout, stderr io.Writer) int {
+	jsonOut := false
+	budget := ctxpack.DefaultBudget
+	inputJSON := ""
+	for index := 0; index < len(args); index++ {
+		switch args[index] {
+		case "--json":
+			jsonOut = true
+		case "--budget":
+			raw, next, valueErr := contextArgValue(args, index)
+			if valueErr != nil {
+				return usageSurface(stderr, "--budget requires a value", contextUsage)
+			}
+			parsed, err := strconv.ParseInt(raw, 10, 64)
+			if err != nil || parsed < 0 {
+				return usageSurface(stderr, "--budget requires a non-negative integer", contextUsage)
+			}
+			budget = parsed
+			index = next
+		case "--input":
+			raw, next, valueErr := contextArgValue(args, index)
+			if valueErr != nil {
+				return usageSurface(stderr, "--input requires a value", contextUsage)
+			}
+			inputJSON = raw
+			index = next
+		default:
+			return usageSurface(stderr, "context: unknown option "+args[index], contextUsage)
+		}
+	}
+	var in missioncompile.Input
+	if inputJSON == "" {
+		return usageSurface(stderr, "context: --input is required", contextUsage)
+	}
+	if err := json.Unmarshal([]byte(inputJSON), &in); err != nil {
+		_, _ = fmt.Fprintf(stderr, "context: malformed input\n")
+		return 2
+	}
+	spec := ctxpack.Spec{
+		Objective:      in.Objective,
+		Acceptance:     in.AcceptanceCriteria,
+		AllowedPaths:   in.AllowedPaths,
+		ForbiddenPaths: in.ForbiddenPaths,
+		RequiredPaths:  append([]string{}, in.Context.Refs...),
+		Verification:   in.VerificationCommands,
+		BudgetBytes:    budget,
+	}
+	pack, err := ctxpack.PackRoot(root, spec)
+	if err != nil {
+		_, _ = fmt.Fprintf(stderr, "context: %s\n", err)
+		return 1
+	}
+	lost := ctxpack.CheckAnchors(pack)
+	ctxpack.EmitAnchor(root, lost)
+	decision := ledger.Decide(budget, pack, nil)
+	ledger.Emit(root, decision)
+	ctxpack.EmitPack(root, pack, decision.CoverageBPS, decision.ItemsRequired, decision.ItemsIncluded)
+	if lost > 0 {
+		decision.Verdict = ledger.VerdictRefuse
+		decision.Reason = ledger.ReasonAnchors
+	}
+	if decision.Verdict != ledger.VerdictRefuse {
+		ctxpack.EmitHandoff(root, decision.ItemsIncluded)
+	}
+	payload := map[string]any{"pack": pack, "decision": decision, "command": command}
+	if jsonOut {
+		encoded, encodeErr := json.Marshal(payload)
+		if encodeErr != nil {
+			_, _ = fmt.Fprintf(stderr, "context: %s\n", encodeErr)
+			return 2
+		}
+		_, _ = stdout.Write(append(encoded, '\n'))
+	} else {
+		_, _ = fmt.Fprintln(stdout, decision.Verdict)
+		_, _ = fmt.Fprintf(stdout, "coverage_bps=%d items_required=%d items_included=%d\n", decision.CoverageBPS, decision.ItemsRequired, decision.ItemsIncluded)
+		if command == "explain" {
+			for _, item := range decision.Included {
+				_, _ = fmt.Fprintf(stdout, "included %s %d\n", item.Path, item.Bytes)
+			}
+		}
+	}
+	if decision.Verdict == ledger.VerdictRefuse {
+		return 1
+	}
+	return 0
+}
+
+func contextArgValue(args []string, index int) (string, int, error) {
+	if index+1 >= len(args) {
+		return "", index, fmt.Errorf("%s requires a value", args[index])
+	}
+	return args[index+1], index + 1, nil
 }

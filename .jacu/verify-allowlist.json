@@ -16,6 +16,12 @@
     {
       "program": "jacu",
       "required_arg_prefix": [
+        "context"
+      ]
+    },
+    {
+      "program": "jacu",
+      "required_arg_prefix": [
         "clarity"
       ]
     },
