@@ -71,27 +71,50 @@ concurrency:
 toque esses caminhos é recusado com `GH013`. Merge de PR passa. Se precisar
 mesmo, **peça ao dono** — existe uma porta, e ela é ato dele, não seu.
 
-
 ## Pull request
 
 **Nunca abra como draft.** Draft **bloqueia** o auto-merge — o GitHub recusa
 enquanto o PR não estiver pronto para revisão. Se sua ferramenta abre em draft
 por padrão, marque como pronto (`gh pr ready <n>`) logo em seguida.
 
-O fluxo é abrir e deixar a esteira decidir:
+**O método de merge se deriva, não se adivinha.** As flags do repositório
+(`allow_*_merge`) são metade da história: quando um ruleset de branch declara
+`allowed_merge_methods`, **quem manda é o ruleset** — e aqui os dois lados
+divergem. Em `homebrew-jacu` as três flags são `true` e ainda assim só squash
+entra, porque o ruleset `main-tap-protect` restringe. Quem lê só as flags pede
+`--merge` e toma recusa **depois** de o PR já estar aberto.
+
+O método efetivo é a interseção dos dois lados. Este comando lê os dois e
+imprime a flag pronta:
 
 ```bash
-gh pr create --title "..." --body "..."      # sem --draft
-gh pr merge --auto --squash                  # entra sozinho quando os checks passarem
+repo=jacu-dev/<repo>
+metodo=$(gh api "/repos/$repo/rules/branches/$(gh api "/repos/$repo" --jq .default_branch)" \
+  --jq '[.[] | select(.type == "pull_request") | (.parameters.allowed_merge_methods // ["merge","squash","rebase"])]' \
+  | jq -r --argjson flags "$(gh api "/repos/$repo" \
+      --jq '[{m:"merge",v:.allow_merge_commit},{m:"squash",v:.allow_squash_merge},{m:"rebase",v:.allow_rebase_merge}]
+             | map(select(.v).m)')" \
+    'reduce .[] as $r ($flags; . - (. - $r))
+     | ["squash","merge","rebase"] - (["squash","merge","rebase"] - .)
+     | "--" + (.[0] // "NENHUM-METODO-PERMITIDO")')
 ```
 
-Confira o método de merge que o repositório aceita antes — eles diferem:
+Com ele na mão, o fluxo é abrir e deixar a esteira decidir:
 
 ```bash
-gh api /repos/jacu-dev/<repo> --jq '{squash:.allow_squash_merge,merge:.allow_merge_commit,rebase:.allow_rebase_merge}'
+gh pr create --title "..." --body "..."   # sem --draft
+gh pr merge --auto "$metodo"              # entra sozinho quando os checks passarem
 ```
 
-`ecouto` só aceita merge commit; `homebrew-jacu` só squash.
+**Não tente "deixar o gh escolher".** `gh pr merge --auto` sem flag de método
+não cai no padrão do repositório: fora de terminal interativo ele morre com
+*"--merge, --rebase, or --squash required when not running interactively"*
+(medido no gh 2.97). Só fila de merge dispensa o método, e nenhum repositório da
+organização usa fila.
+
+Hoje o comando responde `--merge` no `ecouto` — o único sem squash — e
+`--squash` em todos os outros. **Rode o comando mesmo assim**: isto aqui é foto
+do dia, o ruleset é a verdade.
 
 Vários repositórios exigem branch atualizada (`strict_required_status_checks_policy`).
 Se o PR ficar `BEHIND`, atualize contra a `main` — não force merge e não
