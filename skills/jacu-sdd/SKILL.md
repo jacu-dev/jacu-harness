@@ -9,7 +9,16 @@ The native SDD rite is a repository contract. The host writes the prose; the
 binary only parses, lints, identifies, and gates it.
 
 1. Start a change with `jacu sdd new <lowercase-slug>`. It creates the next
-   `docs/sdd/<NNN>-<slug>/sdd.md` from the repository template.
+   `docs/sdd/<NNN>-<slug>/sdd.md` from the repository template. Then create
+   the integration branch for it from `main`: `git switch -c sdd/<NNN> main`.
+   Every run of this SDD opens from that branch's HEAD and merges back into it
+   locally. The SDD document itself is the first commit on the branch.
+   A `full` ceremony SDD declares an `## Entregas` section: each delivery is
+   the smallest set of tasks that leaves `main` working and delivers
+   something observable, and names what goes red if it is wrong. One pull
+   request per delivery, from `sdd/<NNN>` to `main`. A task is never a merge
+   point; a pull request that does not close a declared delivery is a
+   fragment and must not be opened.
 2. Read the change's `sdd.md`, its referenced ADRs, and its declared scope.
    Do not invent prose, widen scope, or duplicate an ADR inside the SDD.
 3. Run `jacu sdd lint` after edits. Use `--all` for the corpus and
@@ -29,6 +38,8 @@ binary only parses, lints, identifies, and gates it.
 9. `jacu sdd close <directory>` is the final verification step. It refuses
    unfinished tasks, missing evidence, lint BLOCKs, or a missing manual archive;
    it never performs the archive move or deletes user-created paths.
+10. After the last delivery merges into `main`, delete `sdd/<NNN>` locally and
+   on `origin`. An integration branch that outlives its SDD is drift.
 
 Archive is currently a manual `git mv` plus lock regeneration. The CLI does
 not close or archive a change.

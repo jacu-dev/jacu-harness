@@ -1,0 +1,65 @@
+{
+  "sdd_id": "sdd_6cdd3ff71a31b0ca",
+  "content_sha256": "6cdd3ff71a31b0cae77525b4805a6b2d6829b1345f43f64e8e9a99ac48e53c38",
+  "requirements": [
+    {
+      "name": "Autonomy never arms auto-merge",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Prose-only pull requests skip the suite with a recorded reason",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Runs integrate locally into the SDD branch",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`go run ./cmd/jacu sdd lint --all`",
+      "status": "done"
+    },
+    {
+      "number": "T2",
+      "verify": "`go run ./cmd/jacu sdd lint --all`",
+      "status": "done"
+    },
+    {
+      "number": "T3",
+      "verify": "`go run ./cmd/jacu sdd lint --all`",
+      "status": "done"
+    },
+    {
+      "number": "T4",
+      "verify": "`go test ./internal/capability/workspace -run Autonomy`",
+      "status": "todo"
+    },
+    {
+      "number": "T5",
+      "verify": "`go test ./internal/capability/workspace -run Autonomy`",
+      "status": "todo"
+    },
+    {
+      "number": "T6",
+      "verify": "`go test ./internal/capability/workspace -run Autonomy -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T7",
+      "verify": "docs-only probe PR under 60s; code PR runs verify",
+      "status": "todo"
+    },
+    {
+      "number": "T8",
+      "verify": "probe PR blocked",
+      "status": "todo"
+    },
+    {
+      "number": "T9",
+      "verify": "`go run ./cmd/jacu sdd lint --all`",
+      "status": "todo"
+    }
+  ]
+}

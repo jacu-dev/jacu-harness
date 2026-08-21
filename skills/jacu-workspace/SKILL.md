@@ -46,9 +46,15 @@ A reviewed diff plus explicit human approval gates the apply.
    worktree changed after review, return to the diff step and request approval
    again.
 
-7. Report the returned commit, warnings, and branch to the human for merge. Do
-   not merge automatically. If the session produced a new decision or gotcha,
-   use `jacu-memory` to offer durable knowledge.
+7. Report the returned commit, warnings, and branch to the human. The run
+   branch is based on the checkout's HEAD, and while an SDD is being worked
+   that HEAD is the integration branch `sdd/<NNN>` (see `jacu-sdd`). The next
+   step is a **local** merge of the run branch into `sdd/<NNN>`, done by the
+   human or on explicit instruction — never a pull request per run, never a
+   pull request per task. A pull request is opened only when a delivery
+   declared in the SDD is complete, from `sdd/<NNN>` to `main`, and the human
+   arms auto-merge, not the session. If the session produced a new decision
+   or gotcha, use `jacu-memory` to offer durable knowledge.
 
 8. When abandoning a run — scope rejected in review or mission abandoned —
    call `jacu_discard` with the active `run_id`; never leave an orphaned
