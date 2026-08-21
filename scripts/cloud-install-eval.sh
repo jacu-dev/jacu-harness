@@ -157,5 +157,9 @@ if ! grep -q 'unreachable host: jacu-unreachable.example' "$fail_log"; then
   cat "$fail_log" >&2
   exit 1
 fi
+if grep -E 'jacu doctor \|\| true' "$root/scripts/cloud-install.sh"; then
+  echo "cloud-install-eval: release-mode doctor must not be swallowed" >&2
+  exit 1
+fi
 
 echo "cloud-install-eval: OK"
