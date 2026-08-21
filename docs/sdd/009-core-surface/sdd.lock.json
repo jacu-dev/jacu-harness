@@ -1,0 +1,108 @@
+{
+  "sdd_id": "sdd_c05dd61157c6d8dd",
+  "content_sha256": "c05dd61157c6d8ddc160529f1d1856c962b794139dca2cd163f86ea177fb70ac",
+  "requirements": [
+    {
+      "name": "Every capability has a transport-free core",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Every capability is reachable without an MCP host",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Invariants I4 and I5 fail the build on a seeded violation",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Progress is observable while the work happens",
+      "delta": "ADDED"
+    },
+    {
+      "name": "The name matches what the thing is",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`go test ./internal/mcpadapter/ -run Surface`",
+      "status": "todo"
+    },
+    {
+      "number": "T2",
+      "verify": "`go test ./... -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T3",
+      "verify": "`go test ./... -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T4",
+      "verify": "`go test ./... -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T5",
+      "verify": "`go test ./... -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T6",
+      "verify": "`go test ./... -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T7",
+      "verify": "`go test ./... -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T8",
+      "verify": "`bash scripts/verify.sh`",
+      "status": "todo"
+    },
+    {
+      "number": "T9",
+      "verify": "`go test ./cmd/jacu -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T10",
+      "verify": "`go test ./internal/mcpadapter/ -run Surface`",
+      "status": "todo"
+    },
+    {
+      "number": "T11",
+      "verify": "`bash scripts/verify.sh`",
+      "status": "todo"
+    },
+    {
+      "number": "T12",
+      "verify": "`bash scripts/verify.sh`",
+      "status": "todo"
+    },
+    {
+      "number": "T13",
+      "verify": "`go test -tags=e2e ./test/e2e/`",
+      "status": "todo"
+    },
+    {
+      "number": "T14",
+      "verify": "`go build ./...`",
+      "status": "done"
+    },
+    {
+      "number": "T15",
+      "verify": "`bash scripts/e2e.sh`",
+      "status": "done"
+    },
+    {
+      "number": "T16",
+      "verify": "`test -f docs/adr/ADR-028-open-source-export.md`",
+      "status": "done"
+    }
+  ]
+}

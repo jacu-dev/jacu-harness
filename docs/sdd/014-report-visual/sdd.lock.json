@@ -1,0 +1,63 @@
+{
+  "sdd_id": "sdd_0a1af228ab4809aa",
+  "content_sha256": "0a1af228ab4809aad2011894ded4b0403cde26b3324913f5c5b5bfc314c550af",
+  "requirements": [
+    {
+      "name": "Headless export binds no port",
+      "delta": "ADDED"
+    },
+    {
+      "name": "MCP census unchanged",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Pure factory, JSON in, HTML out",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Serve mode is session-scoped localhost after the HTTP ADR",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Two ADRs gate factory code",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`wc -l` under 120; owner ratifies separately",
+      "status": "todo"
+    },
+    {
+      "number": "T2",
+      "verify": "`wc -l` under 120; owner ratifies separately",
+      "status": "todo"
+    },
+    {
+      "number": "T3",
+      "verify": "`go test ./internal/reportgen -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T4",
+      "verify": "`go test ./internal/reportgen -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T5",
+      "verify": "`go test ./internal/reportgen ./cmd/jacu -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T6",
+      "verify": "`test -f docs/relatorios/sdd-014-execucao.md`",
+      "status": "todo"
+    },
+    {
+      "number": "T7",
+      "verify": "`go test -tags=e2e ./test/e2e/ -run Governed`",
+      "status": "todo"
+    }
+  ]
+}

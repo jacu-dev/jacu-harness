@@ -1,0 +1,72 @@
+{
+  "sdd_id": "sdd_21562a9dade95c34",
+  "content_sha256": "21562a9dade95c3423c3042c47c26ea70b6669e20012be64a7189acdbc206847",
+  "requirements": [
+    {
+      "name": "Catalogue compaction via $defs/$ref",
+      "delta": "ADDED"
+    },
+    {
+      "name": "I6 size ratchet",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Orchestration boundary test",
+      "delta": "ADDED"
+    },
+    {
+      "name": "internal/scope owns ScopesConflict",
+      "delta": "ADDED"
+    },
+    {
+      "name": "reportgen owns headless projection",
+      "delta": "ADDED"
+    },
+    {
+      "name": "stats without git log",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`go test ./internal/scope ./internal/capability/sdd ./internal/capability/workspace -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T2",
+      "verify": "`go test ./internal/scope ./internal/capability/sdd ./internal/capability/workspace -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T3",
+      "verify": "`go test ./internal/reportgen ./internal/report -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T4",
+      "verify": "`bash scripts/verify.sh`",
+      "status": "todo"
+    },
+    {
+      "number": "T5",
+      "verify": "`go test ./internal/capability/orchestration -run Boundary -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T6",
+      "verify": "`go test -tags=e2e ./test/e2e/ -run Governed`",
+      "status": "todo"
+    },
+    {
+      "number": "T7",
+      "verify": "`go test ./internal/telemetry -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T8",
+      "verify": "`jacu sdd lint --all`",
+      "status": "todo"
+    }
+  ]
+}

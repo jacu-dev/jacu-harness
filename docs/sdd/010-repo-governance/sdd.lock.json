@@ -1,0 +1,59 @@
+{
+  "sdd_id": "sdd_529846db139220cc",
+  "content_sha256": "529846db139220cc461a2fc5b6ee4af782ab623808348ee7c81df50b226f0d35",
+  "requirements": [
+    {
+      "name": "Flow fan-out is capped",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Per-run JACU_HOME",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Protected paths refuse apply",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Status is off the write gate",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`wc -l` under 120; owner ratifies separately",
+      "status": "todo"
+    },
+    {
+      "number": "T2",
+      "verify": "`go test ./internal/capability/workspace -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T3",
+      "verify": "`go test ./internal/capability/workspace -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T4",
+      "verify": "`go test ./internal/userstate ./internal/capability/workspace -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T5",
+      "verify": "`go test ./internal/capability/workspace -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T6",
+      "verify": "`go test ./internal/capability/orchestration -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T7",
+      "verify": "`jacu sdd lint --all`",
+      "status": "todo"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "sdd_id": "sdd_7724dcf22d068402",
+  "content_sha256": "7724dcf22d0684027205183d91bdec4c71fc0ee2e364fa132eed94a941cbfbce",
+  "requirements": [
+    {
+      "name": "003, 004 and 008 stay honest",
+      "delta": "ADDED"
+    },
+    {
+      "name": "ADR ratification is owner-gated",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Close 001 and 002 when the gate allows",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Living agent-facing docs are English",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Net-cost protocol exists before any gain claim",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`jacu sdd lint --all`",
+      "status": "todo"
+    },
+    {
+      "number": "T2",
+      "verify": "`jacu sdd close`",
+      "status": "todo"
+    },
+    {
+      "number": "T3",
+      "verify": "`jacu sdd lint`",
+      "status": "todo"
+    },
+    {
+      "number": "T4",
+      "verify": "`test -f docs/sdd/015-program-closeout/ratification.md`",
+      "status": "todo"
+    },
+    {
+      "number": "T5",
+      "verify": "`jacu sdd lint --all`",
+      "status": "todo"
+    },
+    {
+      "number": "T6",
+      "verify": "`test -f docs/sdd/015-program-closeout/net-cost-protocol.md`",
+      "status": "todo"
+    },
+    {
+      "number": "T7",
+      "verify": "`jacu sdd lint --all`",
+      "status": "todo"
+    }
+  ]
+}
