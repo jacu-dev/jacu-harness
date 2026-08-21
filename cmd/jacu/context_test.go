@@ -37,7 +37,7 @@ func TestReportJSONIsQualityAuditObject(t *testing.T) {
 	if _, ok := payload["status"]; ok {
 		t.Fatalf("quality.json must not be the capability envelope: %q", stdout.String())
 	}
-	if !strings.Contains(string(stdout.Bytes()), `"schema_version"`) {
+	if !strings.Contains(stdout.String(), `"schema_version"`) {
 		t.Fatal("quality.json omitted schema_version")
 	}
 	_ = headlessreport.QualityJSONName

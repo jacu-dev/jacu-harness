@@ -162,9 +162,9 @@ func runReport(root string, args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	if jsonOnly {
-		encoded, err := headlessreport.EncodeJSON(report)
-		if err != nil {
-			_, _ = fmt.Fprintln(stderr, "encode", headlessreport.QualityJSONName, "failed:", err)
+		encoded, encodeErr := headlessreport.EncodeJSON(report)
+		if encodeErr != nil {
+			_, _ = fmt.Fprintln(stderr, "encode", headlessreport.QualityJSONName, "failed:", encodeErr)
 			return 1
 		}
 		_, _ = stdout.Write(append(encoded, '\n'))
