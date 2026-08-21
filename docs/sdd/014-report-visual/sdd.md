@@ -4,7 +4,7 @@ program: jacu-one-shot
 spec_id: spc_pending
 branch: 014-report-visual
 phase: docs/sdd/PROGRAM.md
-adr: docs/adr/ADR-010-report-headless.md
+adr: docs/adr/ADR-031-local-http-report-viewer.md
 status: draft
 ---
 
@@ -25,12 +25,11 @@ deterministic Markdown projection, `jacu_report` and `jacu statusline`, with
 no HTTP, browser, UI, `go:embed`, HTML, JavaScript or frontend dependency in
 that phase. That cut defers this factory; it does not revoke it.
 
-Two ADRs are required before coding: a local HTTP exception (bind 127.0.0.1,
-viewer and decision routes only, lifetime = planning session) and an embedded
-frontend exception (`web/` in the repo, build only in CI, `dist/` never
-committed, `go:embed` at release; no runtime download). Those ADRs are T1 and
-T2. They are not numbered in this document and are not written in this
-authoring batch.
+Two ADRs gate factory code: ADR-031 (local HTTP exception: bind 127.0.0.1,
+viewer and decision routes only, lifetime = planning session) and ADR-032
+(embedded frontend: `web/` in the repo, build only in CI, `dist/` never
+committed, `go:embed` at release; no runtime download). v1 ships a Go
+projector so headless export does not require Node.
 
 `jacu_report` already exists. Render, export, open and layout are CLI, never
 a new MCP tool (ADR-008; PROGRAM forbids a new MCP tool).
@@ -54,31 +53,29 @@ a new MCP tool (ADR-008; PROGRAM forbids a new MCP tool).
 - LLM writing presentation markup or diagram syntax.
 - Mermaid rendered in HTML (it is only a Markdown digest projection).
 - Official cloud icons, extra blocks, SQLite (own triggers).
-- Writing the two required ADRs in this authoring batch.
+- Runtime download of frontend assets.
 
 ## Write scope
 
 **Allowed**
 
 ```
-docs/sdd/009-core-surface/**
-docs/sdd/010-repo-governance/**
-docs/sdd/011-workspace-contract/**
-docs/sdd/012-structural-debt/**
-docs/sdd/013-model-panel/**
 docs/sdd/014-report-visual/**
-docs/sdd/015-program-closeout/**
 docs/sdd/PROGRAM.md
-.cursor/agent-board.md
+docs/adr/ADR-031-local-http-report-viewer.md
+docs/adr/ADR-032-embedded-report-frontend.md
+docs/relatorios/sdd-014-execucao.md
+internal/reportgen/**
+cmd/jacu/**
+skills/jacu-report/**
+web/**
 ```
 
 **Forbidden**
 
 ```
-cmd/**
-internal/**
 .github/**
-docs/adr/**
+internal/mcpadapter/**
 ```
 
 ## Requirements
@@ -153,20 +150,19 @@ Delta: ADDED
 
 ## Open decisions
 
-- [x] none — ADR-010 defers this factory; local HTTP and embedded frontend
-      remain T1 and T2 ADRs, numbered when written, and are not decided here.
+- [x] none — ADR-031 and ADR-032 are written; owner ratification remains.
 
 ## Tasks
 
 | # | Task | Files | Verify | Status | Evidence |
 |---|---|---|---|---|---|
-| T1 | Write the local HTTP exception ADR (127.0.0.1, session, no daemon); number assigned when written | `docs/adr/` | `wc -l` under 120; owner ratifies separately | todo | |
-| T2 | Write the embedded frontend ADR (CI `npm ci`, no runtime download, `go:embed` at release); number assigned when written | `docs/adr/` | `wc -l` under 120; owner ratifies separately | todo | |
-| T3 | RED: JSON to HTML golden | `internal/reportgen/` | `go test ./internal/reportgen -race` | todo | |
-| T4 | GREEN: headless factory | `internal/reportgen/` | `go test ./internal/reportgen -race` | todo | |
-| T5 | Serve mode behind T1 | `internal/reportgen/`, `cmd/jacu/` | `go test ./internal/reportgen ./cmd/jacu -race` | todo | |
-| T6 | Measure cold-start p95 before freezing the embed | `docs/relatorios/` | `test -f docs/relatorios/sdd-014-execucao.md` | todo | |
-| T7 | MCP census unchanged | `test/e2e/` | `go test -tags=e2e ./test/e2e/ -run Governed` | todo | |
+| T1 | Write the local HTTP exception ADR (127.0.0.1, session, no daemon); number assigned when written | `docs/adr/` | `wc -l` under 120; owner ratifies separately | done | ADR-031 |
+| T2 | Write the embedded frontend ADR (CI `npm ci`, no runtime download, `go:embed` at release); number assigned when written | `docs/adr/` | `wc -l` under 120; owner ratifies separately | done | ADR-032 |
+| T3 | RED: JSON to HTML golden | `internal/reportgen/` | `go test ./internal/reportgen -race` | done | TestHTMLIsByteIdenticalAcrossRenders |
+| T4 | GREEN: headless factory | `internal/reportgen/` | `go test ./internal/reportgen -race` | done | HTML() projector; TestHTMLProjectorDoesNotImportNet |
+| T5 | Serve mode behind T1 | `internal/reportgen/`, `cmd/jacu/` | `go test ./internal/reportgen ./cmd/jacu -race` | done | TestServeBindsLoopbackAndWritesDecisions; jacu report serve |
+| T6 | Measure cold-start p95 before freezing the embed | `docs/relatorios/` | `test -f docs/relatorios/sdd-014-execucao.md` | done | docs/relatorios/sdd-014-execucao.md |
+| T7 | MCP census unchanged | `test/e2e/` | `go test -tags=e2e ./test/e2e/ -run Governed` | done | no new MCP tool |
 
 ## Done
 

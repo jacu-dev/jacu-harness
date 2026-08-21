@@ -1,0 +1,8 @@
+{
+  "name": "jacu-report-canvas",
+  "private": true,
+  "description": "Source-only canvas for the SDD-014 report factory. CI may run npm ci; dist/ is never committed.",
+  "scripts": {
+    "build": "echo 'canvas build is CI-only; headless export uses the Go projector'"
+  }
+}

@@ -44,7 +44,7 @@ func usage(args []string) {
 	fmt.Fprintln(os.Stderr, "  flow       execute a compiled orchestration graph")
 	fmt.Fprintln(os.Stderr, "  doctor     report versions, or emit a host pack with --emit <host> [--repo PATH]")
 	fmt.Fprintln(os.Stderr, "  init       install skills and emit/apply a host pack into named paths")
-	fmt.Fprintln(os.Stderr, "  report     project structured workspace state as Markdown or quality.json")
+	fmt.Fprintln(os.Stderr, "  report     project quality.json or Markdown, or render/serve HTML")
 	fmt.Fprintln(os.Stderr, "  context    admit the active living SDD, or pack a mission later")
 	fmt.Fprintln(os.Stderr, "  clarity    compile a spec readback probe, ingest answers, and gate")
 	fmt.Fprintln(os.Stderr, "  stats      print local telemetry metrics")

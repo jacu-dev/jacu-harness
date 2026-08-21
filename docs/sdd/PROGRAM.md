@@ -79,7 +79,7 @@ One SDD open at a time. Order is dependency, not preference.
 | 006 | `context-admission` | per-task budget, ledger refusing pre-dispatch | **doing** · after 005 |
 | 013 | `model-panel` | wires `modelcontrol` — **finish it, do not remove it** | **doing** · after 006 |
 | 007 | `surface-profile` | surface profile only | deferred · entry conditions in its `sdd.md` · its `jacu init` half moved to 017 |
-| 014 | `report-visual` | self-contained HTML factory | written, no code · needs 2 ADRs before coding |
+| 014 | `report-visual` | self-contained HTML factory | **doing** · after 013 · ADR-031 and ADR-032 written |
 | 015 | `program-closeout` | closes 001-004 and 008, ratifies ADRs, unifies doc language | last · written, no code |
 
 ## Owner-only work
