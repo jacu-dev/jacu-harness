@@ -15,7 +15,7 @@ func TestInspectJSONExitCodes(t *testing.T) {
 	binary := buildBinary(t)
 	root := initCLIGitRepo(t)
 
-	command := exec.Command(binary, "inspect", "--json")
+	command := exec.Command(binary, "inspect", "--json") // #nosec G204 -- binary is built by buildBinary and receives fixed test argv.
 	command.Dir = root
 	command.Env = isolatedUserStateEnv(t)
 	output, err := command.Output()
@@ -30,7 +30,7 @@ func TestInspectJSONExitCodes(t *testing.T) {
 		t.Fatalf("inspect status = %#v", envelope["status"])
 	}
 
-	bad := exec.Command(binary, "inspect", "--bogus")
+	bad := exec.Command(binary, "inspect", "--bogus") // #nosec G204 -- binary is built by buildBinary and receives fixed test argv.
 	bad.Dir = root
 	bad.Env = isolatedUserStateEnv(t)
 	_, badErr := bad.CombinedOutput()
@@ -43,7 +43,7 @@ func TestWorkspaceStatusJSONAndReportJSON(t *testing.T) {
 	binary := buildBinary(t)
 	root := initCLIGitRepo(t)
 
-	status := exec.Command(binary, "workspace", "status", "--json")
+	status := exec.Command(binary, "workspace", "status", "--json") // #nosec G204 -- binary is built by buildBinary and receives fixed test argv.
 	status.Dir = root
 	status.Env = isolatedUserStateEnv(t)
 	output, err := status.Output()
@@ -54,7 +54,7 @@ func TestWorkspaceStatusJSONAndReportJSON(t *testing.T) {
 		t.Fatalf("workspace status JSON missing status: %q", output)
 	}
 
-	report := exec.Command(binary, "report", "--json")
+	report := exec.Command(binary, "report", "--json") // #nosec G204 -- binary is built by buildBinary and receives fixed test argv.
 	report.Dir = root
 	report.Env = isolatedUserStateEnv(t)
 	reportOut, err := report.Output()
@@ -82,7 +82,7 @@ func TestWorkspaceStatusJSONFromLinkedWorktree(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	status := exec.Command(binary, "workspace", "status", "--json")
+	status := exec.Command(binary, "workspace", "status", "--json") // #nosec G204 -- binary is built by buildBinary and receives fixed test argv.
 	status.Dir = worktree
 	status.Env = isolatedUserStateEnv(t)
 	var stderr bytes.Buffer
@@ -105,7 +105,7 @@ func initCLIGitRepo(t *testing.T) string {
 	root := t.TempDir()
 	run := func(args ...string) {
 		t.Helper()
-		cmd := exec.Command("git", args...)
+		cmd := exec.Command("git", args...) // #nosec G204 -- fixed git binary with test-controlled arguments
 		cmd.Dir = root
 		cmd.Env = append(os.Environ(), "GIT_AUTHOR_NAME=Jacu Test", "GIT_AUTHOR_EMAIL=jacu@example.test", "GIT_COMMITTER_NAME=Jacu Test", "GIT_COMMITTER_EMAIL=jacu@example.test")
 		if output, err := cmd.CombinedOutput(); err != nil {

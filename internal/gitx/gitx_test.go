@@ -66,7 +66,7 @@ func TestOwningRepositoryResolvesLinkedWorktree(t *testing.T) {
 		t.Fatalf("RevParseHead: %v", err)
 	}
 	worktree := filepath.Join(t.TempDir(), "run")
-	if err := git.WorktreeAdd(context.Background(), repo, worktree, "jacu/run-owning", baseSHA); err != nil {
+	if err = git.WorktreeAdd(context.Background(), repo, worktree, "jacu/run-owning", baseSHA); err != nil {
 		t.Fatalf("WorktreeAdd: %v", err)
 	}
 	t.Cleanup(func() {
@@ -104,25 +104,25 @@ func TestWorktreeAddLockUnlockAndRemove(t *testing.T) {
 	worktree := filepath.Join(t.TempDir(), "run")
 	branch := "jacu/run-test"
 
-	if err := git.WorktreeAdd(context.Background(), repo, worktree, branch, baseSHA); err != nil {
+	if err = git.WorktreeAdd(context.Background(), repo, worktree, branch, baseSHA); err != nil {
 		t.Fatalf("WorktreeAdd: %v", err)
 	}
-	if _, err := os.Stat(worktree); err != nil {
+	if _, err = os.Stat(worktree); err != nil {
 		t.Fatalf("worktree stat: %v", err)
 	}
-	if err := git.WorktreeLock(context.Background(), repo, worktree); err != nil {
+	if err = git.WorktreeLock(context.Background(), repo, worktree); err != nil {
 		t.Fatalf("WorktreeLock: %v", err)
 	}
 	if list := runTestGit(t, repo, "worktree", "list", "--porcelain"); !strings.Contains(list, "locked") {
 		t.Fatalf("worktree list missing lock: %s", list)
 	}
-	if err := git.WorktreeUnlock(context.Background(), repo, worktree); err != nil {
+	if err = git.WorktreeUnlock(context.Background(), repo, worktree); err != nil {
 		t.Fatalf("WorktreeUnlock: %v", err)
 	}
-	if err := git.WorktreeRemove(context.Background(), repo, worktree); err != nil {
+	if err = git.WorktreeRemove(context.Background(), repo, worktree); err != nil {
 		t.Fatalf("WorktreeRemove: %v", err)
 	}
-	if _, err := os.Stat(worktree); !os.IsNotExist(err) {
+	if _, err = os.Stat(worktree); !os.IsNotExist(err) {
 		t.Fatalf("worktree remains after remove: %v", err)
 	}
 }
@@ -139,7 +139,7 @@ func TestWorktreePruneRemovesMissingWorktreeMetadata(t *testing.T) {
 	}
 	worktree := filepath.Join(t.TempDir(), "orphan")
 
-	if err := git.WorktreeAdd(context.Background(), repo, worktree, "jacu/run-orphan", baseSHA); err != nil {
+	if err = git.WorktreeAdd(context.Background(), repo, worktree, "jacu/run-orphan", baseSHA); err != nil {
 		t.Fatalf("WorktreeAdd: %v", err)
 	}
 	if err := os.RemoveAll(worktree); err != nil {
@@ -163,7 +163,7 @@ func TestDiffAndNumstat(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RevParseHead: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(repo, "README.md"), []byte("fixture\nsecond line\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, "README.md"), []byte("fixture\nsecond line\n"), 0o600); err != nil {
 		t.Fatalf("write change: %v", err)
 	}
 
@@ -193,21 +193,21 @@ func TestReadOnlyNumstatIncludesTrackedUntrackedUnusualAndBinaryWithoutMutatingI
 	if err != nil {
 		t.Fatalf("RevParseHead: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(repo, "README.md"), []byte("fixture\ntracked line\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, "README.md"), []byte("fixture\ntracked line\n"), 0o600); err != nil {
 		t.Fatalf("write tracked change: %v", err)
 	}
 	const unusualPath = "odd\tline\nname.txt"
-	if err := os.WriteFile(filepath.Join(repo, unusualPath), []byte("first\nsecond\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, unusualPath), []byte("first\nsecond\n"), 0o600); err != nil {
 		t.Fatalf("write unusual untracked file: %v", err)
 	}
 	const binaryPath = "artifact.bin"
-	if err := os.WriteFile(filepath.Join(repo, binaryPath), []byte{0x00, 0x01, 0x02, 0xff}, 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, binaryPath), []byte{0x00, 0x01, 0x02, 0xff}, 0o600); err != nil {
 		t.Fatalf("write binary untracked file: %v", err)
 	}
 
 	indexPath := filepath.Join(repo, ".git", "index")
 	statusBefore := runTestGitRaw(t, repo, "status", "--porcelain=v1", "-z")
-	indexBefore, err := os.ReadFile(indexPath)
+	indexBefore, err := os.ReadFile(indexPath) // #nosec G304 -- indexPath is the test repository .git/index
 	if err != nil {
 		t.Fatalf("read index before: %v", err)
 	}
@@ -225,7 +225,7 @@ func TestReadOnlyNumstatIncludesTrackedUntrackedUnusualAndBinaryWithoutMutatingI
 	wantFiles := map[string]bool{"README.md": true, unusualPath: true, binaryPath: true}
 	assertUniquePhysicalFiles(t, files, wantFiles)
 
-	indexAfter, err := os.ReadFile(indexPath)
+	indexAfter, err := os.ReadFile(indexPath) // #nosec G304 -- indexPath is the test repository .git/index
 	if err != nil {
 		t.Fatalf("read index after: %v", err)
 	}
@@ -248,7 +248,7 @@ func TestReadOnlyNumstatDoesNotCreateMissingIndex(t *testing.T) {
 		t.Fatalf("New: %v", err)
 	}
 	const deletedPath = "deleted.txt"
-	if err := os.WriteFile(filepath.Join(repo, deletedPath), []byte("delete me\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, deletedPath), []byte("delete me\n"), 0o600); err != nil {
 		t.Fatalf("write tracked deletion fixture: %v", err)
 	}
 	runTestGit(t, repo, "add", deletedPath)
@@ -258,25 +258,25 @@ func TestReadOnlyNumstatDoesNotCreateMissingIndex(t *testing.T) {
 		t.Fatalf("RevParseHead: %v", err)
 	}
 	indexPath := filepath.Join(repo, ".git", "index")
-	if err := os.Remove(indexPath); err != nil {
+	if err = os.Remove(indexPath); err != nil {
 		t.Fatalf("remove index fixture: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(repo, "README.md"), []byte("fixture\ntracked addition\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, "README.md"), []byte("fixture\ntracked addition\n"), 0o600); err != nil {
 		t.Fatalf("write tracked modification: %v", err)
 	}
-	if err := os.Remove(filepath.Join(repo, deletedPath)); err != nil {
+	if err = os.Remove(filepath.Join(repo, deletedPath)); err != nil {
 		t.Fatalf("remove tracked fixture: %v", err)
 	}
 	const textPath = "untracked.txt"
-	if err := os.WriteFile(filepath.Join(repo, textPath), []byte("one\ntwo\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, textPath), []byte("one\ntwo\n"), 0o600); err != nil {
 		t.Fatalf("write untracked text: %v", err)
 	}
 	const unusualPath = "odd\tline\nname.txt"
-	if err := os.WriteFile(filepath.Join(repo, unusualPath), []byte("odd\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, unusualPath), []byte("odd\n"), 0o600); err != nil {
 		t.Fatalf("write unusual untracked file: %v", err)
 	}
 	const binaryPath = "artifact.bin"
-	if err := os.WriteFile(filepath.Join(repo, binaryPath), []byte{0x00, 0x01, 0xff}, 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, binaryPath), []byte{0x00, 0x01, 0xff}, 0o600); err != nil {
 		t.Fatalf("write untracked binary: %v", err)
 	}
 
@@ -290,7 +290,7 @@ func TestReadOnlyNumstatDoesNotCreateMissingIndex(t *testing.T) {
 	assertUniquePhysicalFiles(t, files, map[string]bool{
 		"README.md": true, deletedPath: true, textPath: true, unusualPath: true, binaryPath: true,
 	})
-	if _, err := os.Lstat(indexPath); !os.IsNotExist(err) {
+	if _, err = os.Lstat(indexPath); !os.IsNotExist(err) {
 		t.Fatalf("missing index was created: %v", err)
 	}
 }
@@ -306,7 +306,7 @@ func TestReadOnlyNumstatUsesFixedTemporaryIndexInvocations(t *testing.T) {
 		t.Fatalf("RevParseHead: %v", err)
 	}
 	for _, path := range []string{"one.txt", "two.txt", "three.txt"} {
-		if err := os.WriteFile(filepath.Join(repo, path), []byte(path+"\n"), 0o600); err != nil {
+		if err = os.WriteFile(filepath.Join(repo, path), []byte(path+"\n"), 0o600); err != nil {
 			t.Fatalf("write %s: %v", path, err)
 		}
 	}
@@ -314,15 +314,15 @@ func TestReadOnlyNumstatUsesFixedTemporaryIndexInvocations(t *testing.T) {
 	logPath := filepath.Join(t.TempDir(), "git-invocations.log")
 	wrapper := filepath.Join(t.TempDir(), "git-wrapper")
 	script := fmt.Sprintf("#!/bin/sh\nprintf '%%s\\t%%s\\n' \"$GIT_INDEX_FILE\" \"$1\" >> %q\nexec %q \"$@\"\n", logPath, git.bin)
-	if err := os.WriteFile(wrapper, []byte(script), 0o700); err != nil {
+	if err = os.WriteFile(wrapper, []byte(script), 0o700); err != nil { // #nosec G306 -- test wrapper must be executable
 		t.Fatalf("write git wrapper: %v", err)
 	}
 	instrumentedGit := &Git{bin: wrapper}
-	if _, _, _, err := instrumentedGit.ReadOnlyNumstat(context.Background(), repo, baseSHA); err != nil {
+	if _, _, _, err = instrumentedGit.ReadOnlyNumstat(context.Background(), repo, baseSHA); err != nil {
 		t.Fatalf("ReadOnlyNumstat: %v", err)
 	}
 
-	content, err := os.ReadFile(logPath)
+	content, err := os.ReadFile(logPath) // #nosec G304 -- logPath is created in this test TempDir
 	if err != nil {
 		t.Fatalf("read invocation log: %v", err)
 	}
@@ -346,7 +346,7 @@ func TestReadOnlyNumstatUsesFixedTemporaryIndexInvocations(t *testing.T) {
 	if filepath.Clean(temporaryIndex) == filepath.Join(repo, ".git", "index") {
 		t.Fatalf("temporary index points at real index: %q", temporaryIndex)
 	}
-	if _, err := os.Stat(filepath.Dir(temporaryIndex)); !os.IsNotExist(err) {
+	if _, err = os.Stat(filepath.Dir(temporaryIndex)); !os.IsNotExist(err) { // #nosec G703 -- temporaryIndex is parsed from the test wrapper log
 		t.Fatalf("temporary index directory not cleaned: %v", err)
 	}
 }
@@ -418,23 +418,23 @@ func TestDiffReadersUseFixedTemporaryIndexInvocations(t *testing.T) {
 			if err != nil {
 				t.Fatalf("RevParseHead: %v", err)
 			}
-			if err := os.Remove(filepath.Join(repo, "deleted.txt")); err != nil {
+			if err = os.Remove(filepath.Join(repo, "deleted.txt")); err != nil {
 				t.Fatalf("remove tracked fixture: %v", err)
 			}
-			if err := os.WriteFile(filepath.Join(repo, "new.txt"), []byte("new one\nnew two\n"), 0o600); err != nil {
+			if err = os.WriteFile(filepath.Join(repo, "new.txt"), []byte("new one\nnew two\n"), 0o600); err != nil {
 				t.Fatalf("write untracked fixture: %v", err)
 			}
 
 			logPath := filepath.Join(t.TempDir(), "git-invocations.log")
 			wrapper := filepath.Join(t.TempDir(), "git-wrapper")
 			script := fmt.Sprintf("#!/bin/sh\nprintf '%%s\\t%%s\\n' \"$GIT_INDEX_FILE\" \"$1\" >> %q\nexec %q \"$@\"\n", logPath, git.bin)
-			if err := os.WriteFile(wrapper, []byte(script), 0o700); err != nil {
+			if err = os.WriteFile(wrapper, []byte(script), 0o700); err != nil { // #nosec G306 -- test wrapper must be executable
 				t.Fatalf("write git wrapper: %v", err)
 			}
 			instrumentedGit := &Git{bin: wrapper}
 			test.call(t, instrumentedGit, repo, baseSHA)
 
-			content, err := os.ReadFile(logPath)
+			content, err := os.ReadFile(logPath) // #nosec G304 -- logPath is created in this test TempDir
 			if err != nil {
 				t.Fatalf("read invocation log: %v", err)
 			}
@@ -458,7 +458,7 @@ func TestDiffReadersUseFixedTemporaryIndexInvocations(t *testing.T) {
 			if filepath.Clean(temporaryIndex) == filepath.Join(repo, ".git", "index") {
 				t.Fatalf("temporary index points at real index: %q", temporaryIndex)
 			}
-			if _, err := os.Stat(filepath.Dir(temporaryIndex)); !os.IsNotExist(err) {
+			if _, err = os.Stat(filepath.Dir(temporaryIndex)); !os.IsNotExist(err) { // #nosec G703 -- temporaryIndex is parsed from the test wrapper log
 				t.Fatalf("temporary index directory not cleaned: %v", err)
 			}
 		})
@@ -477,22 +477,22 @@ func TestDiffTemporaryIndexCleansUpAfterEveryCommandFailure(t *testing.T) {
 			if err != nil {
 				t.Fatalf("RevParseHead: %v", err)
 			}
-			if err := os.WriteFile(filepath.Join(repo, "new.txt"), []byte("new\n"), 0o600); err != nil {
+			if err = os.WriteFile(filepath.Join(repo, "new.txt"), []byte("new\n"), 0o600); err != nil {
 				t.Fatalf("write untracked fixture: %v", err)
 			}
 
 			logPath := filepath.Join(t.TempDir(), "git-invocations.log")
 			wrapper := filepath.Join(t.TempDir(), "git-wrapper")
 			script := fmt.Sprintf("#!/bin/sh\nprintf '%%s\\t%%s\\n' \"$GIT_INDEX_FILE\" \"$1\" >> %q\nif [ \"$1\" = %q ]; then exit 17; fi\nexec %q \"$@\"\n", logPath, failureCommand, git.bin)
-			if err := os.WriteFile(wrapper, []byte(script), 0o700); err != nil {
+			if err = os.WriteFile(wrapper, []byte(script), 0o700); err != nil { // #nosec G306 -- test wrapper must be executable
 				t.Fatalf("write git wrapper: %v", err)
 			}
 			instrumentedGit := &Git{bin: wrapper}
-			if _, err := instrumentedGit.DiffSnapshot(context.Background(), repo, baseSHA); err == nil {
+			if _, err = instrumentedGit.DiffSnapshot(context.Background(), repo, baseSHA); err == nil {
 				t.Fatalf("DiffSnapshot succeeded when %s failed", failureCommand)
 			}
 
-			content, err := os.ReadFile(logPath)
+			content, err := os.ReadFile(logPath) // #nosec G304 -- logPath is created in this test TempDir
 			if err != nil {
 				t.Fatalf("read invocation log: %v", err)
 			}
@@ -512,7 +512,7 @@ func TestDiffTemporaryIndexCleansUpAfterEveryCommandFailure(t *testing.T) {
 					t.Fatalf("temporary index changed between invocations: %q vs %q", temporaryIndex, parts[0])
 				}
 			}
-			if _, err := os.Stat(filepath.Dir(temporaryIndex)); !os.IsNotExist(err) {
+			if _, err = os.Stat(filepath.Dir(temporaryIndex)); !os.IsNotExist(err) { // #nosec G703 -- temporaryIndex is parsed from the test wrapper log
 				t.Fatalf("temporary index directory not cleaned after %s failure: %v", failureCommand, err)
 			}
 		})
@@ -546,14 +546,14 @@ func TestDiffSnapshotCapturesPatchAndNumstatInSingleGitInvocation(t *testing.T) 
 	if err != nil {
 		t.Fatalf("RevParseHead: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(repo, "new.txt"), []byte("first line\ndiff --git content line\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, "new.txt"), []byte("first line\ndiff --git content line\n"), 0o600); err != nil {
 		t.Fatalf("write new file: %v", err)
 	}
 
 	logPath := filepath.Join(t.TempDir(), "diff-invocations.log")
 	wrapper := filepath.Join(t.TempDir(), "git-wrapper")
 	script := fmt.Sprintf("#!/bin/sh\nif [ \"$1\" = \"diff\" ]; then\n  printf 'diff\\n' >> %q\nfi\nexec %q \"$@\"\n", logPath, git.bin)
-	if err := os.WriteFile(wrapper, []byte(script), 0o700); err != nil {
+	if err = os.WriteFile(wrapper, []byte(script), 0o700); err != nil { // #nosec G306 -- test wrapper must be executable
 		t.Fatalf("write git wrapper: %v", err)
 	}
 	instrumentedGit := &Git{bin: wrapper}
@@ -568,7 +568,7 @@ func TestDiffSnapshotCapturesPatchAndNumstatInSingleGitInvocation(t *testing.T) 
 	if !strings.Contains(snapshot.Patch, "+first line") || !strings.Contains(snapshot.Patch, "+diff --git content line") {
 		t.Fatalf("snapshot patch missing content:\n%s", snapshot.Patch)
 	}
-	logContent, err := os.ReadFile(logPath)
+	logContent, err := os.ReadFile(logPath) // #nosec G304 -- logPath is created in this test TempDir
 	if err != nil {
 		t.Fatalf("read diff invocation log: %v", err)
 	}
@@ -588,7 +588,7 @@ func TestDiffSnapshotIncludesBinaryPatchAndPhysicalPath(t *testing.T) {
 		t.Fatalf("RevParseHead: %v", err)
 	}
 	const path = "artifact.bin"
-	if err := os.WriteFile(filepath.Join(repo, path), []byte{0x00, 0x01, 0x02, 0x03, 0xff}, 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, path), []byte{0x00, 0x01, 0x02, 0x03, 0xff}, 0o600); err != nil {
 		t.Fatalf("write binary: %v", err)
 	}
 
@@ -615,7 +615,7 @@ func TestDiffSnapshotPreservesTabAndNewlineInPhysicalPath(t *testing.T) {
 		t.Fatalf("RevParseHead: %v", err)
 	}
 	const path = "odd\tline\nname.txt"
-	if err := os.WriteFile(filepath.Join(repo, path), []byte("physical path\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, path), []byte("physical path\n"), 0o600); err != nil {
 		t.Fatalf("write unusual path: %v", err)
 	}
 
@@ -634,7 +634,7 @@ func TestCommitAllPreservesMessageAndReturnsSHA(t *testing.T) {
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(repo, "README.md"), []byte("updated\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, "README.md"), []byte("updated\n"), 0o600); err != nil {
 		t.Fatalf("write change: %v", err)
 	}
 	message := "Update fixture\n\nAcceptance criteria:\n- README updated\n\nJacu-Run: run_test\nJacu-Mission: msn_test\n"
@@ -666,7 +666,7 @@ func TestCommitTreeUsesPinnedTreeWhenIndexChangesLater(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RevParseHead: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(repo, "README.md"), []byte("validated tree\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, "README.md"), []byte("validated tree\n"), 0o600); err != nil {
 		t.Fatalf("write validated tree: %v", err)
 	}
 	treeSHA, err := git.StageTree(context.Background(), repo)
@@ -681,10 +681,10 @@ func TestCommitTreeUsesPinnedTreeWhenIndexChangesLater(t *testing.T) {
 		t.Fatalf("pinned tree patch missing validated content:\n%s", patch)
 	}
 
-	if err := os.WriteFile(filepath.Join(repo, "README.md"), []byte("late staged tree\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, "README.md"), []byte("late staged tree\n"), 0o600); err != nil {
 		t.Fatalf("write late tree: %v", err)
 	}
-	if err := git.StageAll(context.Background(), repo); err != nil {
+	if err = git.StageAll(context.Background(), repo); err != nil {
 		t.Fatalf("StageAll late tree: %v", err)
 	}
 	commitSHA, err := git.CommitTree(context.Background(), repo, baseSHA, treeSHA, "commit pinned tree\n")
@@ -712,14 +712,14 @@ func TestCommitTreeRejectsHeadDifferentFromExpectedParent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RevParseHead: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(repo, "README.md"), []byte("validated tree\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, "README.md"), []byte("validated tree\n"), 0o600); err != nil {
 		t.Fatalf("write validated tree: %v", err)
 	}
 	treeSHA, err := git.StageTree(context.Background(), repo)
 	if err != nil {
 		t.Fatalf("StageTree: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(repo, "README.md"), []byte("injected head\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, "README.md"), []byte("injected head\n"), 0o600); err != nil {
 		t.Fatalf("write injected head: %v", err)
 	}
 	runTestGit(t, repo, "add", "README.md")
@@ -744,7 +744,7 @@ func TestUpdateHeadCASMovesHeadFromExpectedCommit(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RevParseHead base: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(repo, "README.md"), []byte("applied\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, "README.md"), []byte("applied\n"), 0o600); err != nil {
 		t.Fatalf("write applied change: %v", err)
 	}
 	appliedSHA, err := git.CommitAll(context.Background(), repo, "applied commit\n")
@@ -770,7 +770,7 @@ func TestUpdateHeadCASRejectsUnexpectedCurrentHead(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RevParseHead base: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(repo, "README.md"), []byte("applied\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, "README.md"), []byte("applied\n"), 0o600); err != nil {
 		t.Fatalf("write applied change: %v", err)
 	}
 	appliedSHA, err := git.CommitAll(context.Background(), repo, "applied commit\n")
@@ -798,17 +798,17 @@ func TestWorktreeRemoveUsesGitForceForAuthorizedDirtyWorktree(t *testing.T) {
 		t.Fatalf("RevParseHead: %v", err)
 	}
 	worktree := filepath.Join(t.TempDir(), "dirty-run")
-	if err := git.WorktreeAdd(context.Background(), repo, worktree, "jacu/run-dirty", baseSHA); err != nil {
+	if err = git.WorktreeAdd(context.Background(), repo, worktree, "jacu/run-dirty", baseSHA); err != nil {
 		t.Fatalf("WorktreeAdd: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(worktree, "README.md"), []byte("dirty after commit\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(worktree, "README.md"), []byte("dirty after commit\n"), 0o600); err != nil {
 		t.Fatalf("write dirty worktree: %v", err)
 	}
 
-	if err := git.WorktreeRemove(context.Background(), repo, worktree); err != nil {
+	if err = git.WorktreeRemove(context.Background(), repo, worktree); err != nil {
 		t.Fatalf("WorktreeRemove dirty authorized worktree: %v", err)
 	}
-	if _, err := os.Stat(worktree); !os.IsNotExist(err) {
+	if _, err = os.Stat(worktree); !os.IsNotExist(err) {
 		t.Fatalf("dirty worktree remains after Git removal: %v", err)
 	}
 }
@@ -827,10 +827,10 @@ func TestDetectsSubmodulesAndLFS(t *testing.T) {
 	if git.UsesLFS(ctx, repo) {
 		t.Fatal("UsesLFS = true before fixture")
 	}
-	if err := os.WriteFile(filepath.Join(repo, ".gitmodules"), []byte("[submodule \"dep\"]\n\tpath = dep\n\turl = ../dep\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, ".gitmodules"), []byte("[submodule \"dep\"]\n\tpath = dep\n\turl = ../dep\n"), 0o600); err != nil {
 		t.Fatalf("write .gitmodules: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(repo, ".gitattributes"), []byte("*.bin filter=lfs diff=lfs merge=lfs -text\n"), 0o600); err != nil {
+	if err = os.WriteFile(filepath.Join(repo, ".gitattributes"), []byte("*.bin filter=lfs diff=lfs merge=lfs -text\n"), 0o600); err != nil {
 		t.Fatalf("write .gitattributes: %v", err)
 	}
 
@@ -854,7 +854,7 @@ func TestCountAheadAndBranchDelete(t *testing.T) {
 	}
 	for i := 1; i <= 2; i++ {
 		content := []byte(strings.Repeat("advance\n", i))
-		if err := os.WriteFile(filepath.Join(repo, "README.md"), content, 0o600); err != nil {
+		if err = os.WriteFile(filepath.Join(repo, "README.md"), content, 0o600); err != nil {
 			t.Fatalf("write advance %d: %v", i, err)
 		}
 		runTestGit(t, repo, "add", "README.md")
@@ -871,7 +871,7 @@ func TestCountAheadAndBranchDelete(t *testing.T) {
 
 	const branch = "jacu/run-delete"
 	runTestGit(t, repo, "branch", branch)
-	if err := git.BranchDelete(context.Background(), repo, branch); err != nil {
+	if err = git.BranchDelete(context.Background(), repo, branch); err != nil {
 		t.Fatalf("BranchDelete: %v", err)
 	}
 	branches := runTestGit(t, repo, "for-each-ref", "--format=%(refname:short)", "refs/heads/")

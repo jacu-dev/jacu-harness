@@ -126,7 +126,7 @@ func TestSurfaceCapabilityPackagesImportMCPOnlyFromToolGo(t *testing.T) {
 		if filepath.Base(path) == "tool.go" {
 			return nil
 		}
-		source, err := os.ReadFile(path)
+		source, err := os.ReadFile(path) // #nosec G304,G122 -- path is walked from repository-owned capability packages
 		if err != nil {
 			return err
 		}
@@ -161,8 +161,8 @@ func assertEnvelopeParity(t *testing.T, mcpEnvelope map[string]any, runResult ca
 		t.Fatalf("marshal run envelope: %v", err)
 	}
 	var cliEnvelope map[string]any
-	if err := json.Unmarshal(cliJSON, &cliEnvelope); err != nil {
-		t.Fatalf("unmarshal run envelope: %v", err)
+	if unmarshalErr := json.Unmarshal(cliJSON, &cliEnvelope); unmarshalErr != nil {
+		t.Fatalf("unmarshal run envelope: %v", unmarshalErr)
 	}
 	delete(mcpEnvelope, "trace_id")
 	delete(cliEnvelope, "trace_id")
@@ -182,7 +182,7 @@ func assertEnvelopeParity(t *testing.T, mcpEnvelope map[string]any, runResult ca
 func readCommandSurface(t *testing.T) (mainGo, usageGo string) {
 	t.Helper()
 	root := repoRoot(t)
-	mainBytes, err := os.ReadFile(filepath.Join(root, "cmd", "jacu", "main.go"))
+	mainBytes, err := os.ReadFile(filepath.Join(root, "cmd", "jacu", "main.go")) // #nosec G304 -- repository-owned cmd/jacu/main.go
 	if err != nil {
 		t.Fatalf("read main.go: %v", err)
 	}

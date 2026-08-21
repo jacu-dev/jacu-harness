@@ -96,8 +96,8 @@ func decodeSurfaceInput(opts surfaceOptions, dest any) error {
 		return err
 	}
 	var merged map[string]any
-	if err := json.Unmarshal(encoded, &merged); err != nil {
-		return err
+	if unmarshalErr := json.Unmarshal(encoded, &merged); unmarshalErr != nil {
+		return unmarshalErr
 	}
 	for key, value := range opts.flags {
 		merged[key] = value
