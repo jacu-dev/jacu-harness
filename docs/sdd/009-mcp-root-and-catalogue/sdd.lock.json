@@ -1,0 +1,83 @@
+{
+  "sdd_id": "sdd_94634f1a55f187c3",
+  "content_sha256": "94634f1a55f187c386695db1b26507b35f1c4a77077707a683d92eda4e2ae3b2",
+  "requirements": [
+    {
+      "name": "Failure is visible on the wire",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Recall paginates",
+      "delta": "ADDED"
+    },
+    {
+      "name": "The catalogue describes every tool and input",
+      "delta": "ADDED"
+    },
+    {
+      "name": "The server resolves the repository from the host",
+      "delta": "ADDED"
+    },
+    {
+      "name": "`sdd status` tolerates an unlocked SDD",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`go test ./cmd/jacu/... -run TestProjectRoot`",
+      "status": "todo"
+    },
+    {
+      "number": "T2",
+      "verify": "`go test ./internal/mcpadapter/... -run TestRoots`",
+      "status": "todo"
+    },
+    {
+      "number": "T3",
+      "verify": "`go test ./internal/mcpadapter/...`",
+      "status": "todo"
+    },
+    {
+      "number": "T4",
+      "verify": "`go test ./test/e2e -run TestRootFromHost`",
+      "status": "todo"
+    },
+    {
+      "number": "T5",
+      "verify": "`go test ./internal/... -run TestIsError`",
+      "status": "todo"
+    },
+    {
+      "number": "T6",
+      "verify": "`go test ./test/e2e -run TestGovernedChange`",
+      "status": "todo"
+    },
+    {
+      "number": "T7",
+      "verify": "`go test ./test/hosteval -run TestCatalogue`",
+      "status": "todo"
+    },
+    {
+      "number": "T8",
+      "verify": "`go test ./test/hosteval -run TestCatalogue`",
+      "status": "todo"
+    },
+    {
+      "number": "T9",
+      "verify": "`go test ./internal/capability/memory/... -run TestRecallPaginates`",
+      "status": "todo"
+    },
+    {
+      "number": "T10",
+      "verify": "`go run ./cmd/jacu sdd status` with an unlocked directory present",
+      "status": "todo"
+    },
+    {
+      "number": "T11",
+      "verify": "`go run ./cmd/jacu sdd lint --all`",
+      "status": "todo"
+    }
+  ]
+}
