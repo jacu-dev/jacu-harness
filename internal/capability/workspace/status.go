@@ -77,6 +77,7 @@ func WorkspaceStatusWithTasks(ctx context.Context, root string, manager *verify.
 	if err := ctx.Err(); err != nil {
 		return StatusResult{}, err
 	}
+	root = gitx.OwningRepository(root)
 	runs, err := runstate.List(root)
 	if err != nil {
 		return StatusResult{}, err

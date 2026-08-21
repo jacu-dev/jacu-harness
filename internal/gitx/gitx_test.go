@@ -55,6 +55,42 @@ func TestHasCommitsReturnsFalseForEmptyRepository(t *testing.T) {
 	}
 }
 
+func TestOwningRepositoryResolvesLinkedWorktree(t *testing.T) {
+	repo := newTestRepo(t)
+	git, err := New()
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	baseSHA, err := git.RevParseHead(context.Background(), repo)
+	if err != nil {
+		t.Fatalf("RevParseHead: %v", err)
+	}
+	worktree := filepath.Join(t.TempDir(), "run")
+	if err := git.WorktreeAdd(context.Background(), repo, worktree, "jacu/run-owning", baseSHA); err != nil {
+		t.Fatalf("WorktreeAdd: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = git.WorktreeUnlock(context.Background(), repo, worktree)
+		_ = git.WorktreeRemove(context.Background(), repo, worktree)
+	})
+
+	got := OwningRepository(worktree)
+	want, err := filepath.EvalSymlinks(repo)
+	if err != nil {
+		want = repo
+	}
+	gotResolved, err := filepath.EvalSymlinks(got)
+	if err != nil {
+		gotResolved = got
+	}
+	if gotResolved != want {
+		t.Fatalf("OwningRepository(worktree) = %q; want %q", gotResolved, want)
+	}
+	if OwningRepository(repo) != repo && OwningRepository(repo) != want {
+		t.Fatalf("OwningRepository(repo) = %q; want the repository itself", OwningRepository(repo))
+	}
+}
+
 func TestWorktreeAddLockUnlockAndRemove(t *testing.T) {
 	repo := newTestRepo(t)
 	git, err := New()

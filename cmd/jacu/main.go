@@ -14,6 +14,7 @@ import (
 
 	"github.com/jacu-dev/jacu-harness/internal/capability/missioncompile"
 	storagecap "github.com/jacu-dev/jacu-harness/internal/capability/storage"
+	"github.com/jacu-dev/jacu-harness/internal/gitx"
 	"github.com/jacu-dev/jacu-harness/internal/mcpadapter"
 	"github.com/jacu-dev/jacu-harness/internal/project"
 	headlessreport "github.com/jacu-dev/jacu-harness/internal/report"
@@ -417,5 +418,9 @@ func projectRoot() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.EvalSymlinks(root)
+	root, err = filepath.EvalSymlinks(root)
+	if err != nil {
+		return "", err
+	}
+	return gitx.OwningRepository(root), nil
 }

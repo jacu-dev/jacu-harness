@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/jacu-dev/jacu-harness/internal/capability/verify"
+	"github.com/jacu-dev/jacu-harness/internal/gitx"
 	capabilityruntime "github.com/jacu-dev/jacu-harness/internal/runtime"
 )
 
@@ -14,6 +15,7 @@ func RunOpen(ctx context.Context, root string, in OpenInput) capabilityruntime.R
 }
 
 func RunStatus(ctx context.Context, root string, in StatusInput) capabilityruntime.Result {
+	root = gitx.OwningRepository(root)
 	manager, err := verify.NewTaskManager(root)
 	if err != nil {
 		return capabilityruntime.ExecuteInput(ctx, workspaceStatusCapabilityWithTaskManager(root, nil), in)

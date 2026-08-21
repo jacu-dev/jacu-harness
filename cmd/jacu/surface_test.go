@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -65,6 +67,36 @@ func TestWorkspaceStatusJSONAndReportJSON(t *testing.T) {
 	}
 	if envelope["status"] != "ok" {
 		t.Fatalf("report status = %#v", envelope["status"])
+	}
+}
+
+func TestWorkspaceStatusJSONFromLinkedWorktree(t *testing.T) {
+	binary := buildBinary(t)
+	repo := initCLIGitRepo(t)
+	worktree := filepath.Join(t.TempDir(), "run_linked")
+	if err := os.MkdirAll(worktree, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	link := fmt.Sprintf("gitdir: %s\n", filepath.Join(repo, ".git", "worktrees", "run_linked"))
+	if err := os.WriteFile(filepath.Join(worktree, ".git"), []byte(link), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	status := exec.Command(binary, "workspace", "status", "--json")
+	status.Dir = worktree
+	status.Env = isolatedUserStateEnv(t)
+	var stderr bytes.Buffer
+	status.Stderr = &stderr
+	output, err := status.Output()
+	if err != nil {
+		t.Fatalf("workspace status --json from linked worktree: %v\nstdout=%s\nstderr=%s", err, output, stderr.String())
+	}
+	var envelope map[string]any
+	if err := json.Unmarshal(output, &envelope); err != nil {
+		t.Fatalf("stdout is not JSON: %v; stdout=%q stderr=%q", err, output, stderr.String())
+	}
+	if envelope["status"] != "ok" {
+		t.Fatalf("status = %#v summary = %#v; want ok", envelope["status"], envelope["summary"])
 	}
 }
 

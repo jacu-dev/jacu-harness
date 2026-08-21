@@ -138,6 +138,32 @@ func TestStatusReportsUnreachableBasePerRunWithoutHidingHealthyRun(t *testing.T)
 	}
 }
 
+func TestStatusFromLinkedWorktreeListsSameRuns(t *testing.T) {
+	repo, opened := openFixture(t)
+	defer cleanupWorktree(t, repo, opened.WorktreePath)
+
+	fromRepo, err := WorkspaceStatus(context.Background(), repo)
+	if err != nil {
+		t.Fatalf("WorkspaceStatus(repo): %v", err)
+	}
+	fromWorktree, err := WorkspaceStatus(context.Background(), opened.WorktreePath)
+	if err != nil {
+		t.Fatalf("WorkspaceStatus(worktree): %v", err)
+	}
+	if fromWorktree.Status != "ok" {
+		t.Fatalf("worktree status = %q summary = %q; want ok", fromWorktree.Status, fromWorktree.Summary)
+	}
+	if len(fromWorktree.Data.Runs) != len(fromRepo.Data.Runs) || len(fromWorktree.Data.Runs) != 1 {
+		t.Fatalf("runs from worktree = %#v; from repo = %#v", fromWorktree.Data.Runs, fromRepo.Data.Runs)
+	}
+	if fromWorktree.Data.Runs[0].RunID != opened.RunID || fromWorktree.Data.Runs[0].Status != fromRepo.Data.Runs[0].Status {
+		t.Fatalf("worktree run = %#v; repo run = %#v", fromWorktree.Data.Runs[0], fromRepo.Data.Runs[0])
+	}
+	if fromWorktree.Data.Runs[0].BaseBehind != fromRepo.Data.Runs[0].BaseBehind {
+		t.Fatalf("BaseBehind from worktree = %d; from repo = %d", fromWorktree.Data.Runs[0].BaseBehind, fromRepo.Data.Runs[0].BaseBehind)
+	}
+}
+
 func TestStatusCountsTrackedAndUntrackedLinesWithoutMutatingRepository(t *testing.T) {
 	repo, opened := openFixture(t)
 	defer cleanupWorktree(t, repo, opened.WorktreePath)
