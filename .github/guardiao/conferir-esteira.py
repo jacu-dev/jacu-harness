@@ -124,13 +124,25 @@ def main() -> int:
             # 2. A regra do `needs` vale só para o AGREGADOR, não para todo job
             #    exigido: `verify` é job de trabalho e não deve depender de quem
             #    o agrega. Quem é agregador se descobre pela versão da branch
-            #    default — é o job exigido que já tinha `needs`.
+            #    default — um pull request não se declara não-agregador.
+            #
+            #    O sinal é ler `needs.<job>.result`: é o que um agregador faz e
+            #    nenhum job de trabalho faz. Ter `needs` não serve — `verify`
+            #    passou a ter um quando o classificador `changed-code` entrou, e
+            #    com isso todo pull request que tocasse a esteira ficava preso
+            #    num erro que pedia para `verify` depender de quem o agrega.
             def lista(v):
                 if isinstance(v, str):
                     return [v]
                 return list(v or [])
 
-            era_agregador = bool(lista((base.get(exigido) or {}).get("needs")))
+            def le_resultado_de_outro(corpo) -> bool:
+                if not isinstance(corpo, dict):
+                    return False
+                texto = json.dumps(corpo)
+                return "needs." in texto and ".result" in texto
+
+            era_agregador = le_resultado_de_outro(base.get(exigido))
             if not era_agregador:
                 continue
 
