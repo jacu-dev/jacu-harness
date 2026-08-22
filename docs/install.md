@@ -58,7 +58,14 @@ before writing `~/.local/bin/jacu`.
 `--dry-run` and `--rollback` are supported. Offline assets:
 `JACU_RELEASE_DIR`.
 
-Requires `curl`, `cosign`, `tar` and `shasum`.
+Requires `curl`, `cosign` **2.5.0 or newer**, `tar` and `shasum`.
+
+The releases are signed with a Sigstore bundle v0.3, which carries the
+certificate under `verificationMaterial.certificate`. cosign only learned to
+read that in 2.5.0; an older build looks for `x509CertificateChain`, finds
+nothing, and aborts with `bundle does not contain cert for verification,
+please provide public key` — which says nothing about the version. The
+installer checks the version up front and says so instead.
 
 ## go install
 

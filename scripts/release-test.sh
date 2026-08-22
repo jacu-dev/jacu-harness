@@ -53,6 +53,17 @@ if ! grep -q 'exclude-drafts' scripts/install.sh; then
   echo "release test: install.sh must ignore draft GitHub Releases" >&2
   exit 1
 fi
+# A cosign older than 2.5.0 cannot read the Sigstore bundle v0.3 GoReleaser
+# writes, and aborts with a message that names neither cosign nor its version.
+# v0.4.0 shipped without this gate and a clean machine could not install it.
+if ! grep -q 'COSIGN_MIN_VERSION' scripts/install.sh; then
+  echo "release test: install.sh must refuse a cosign too old for the bundle format" >&2
+  exit 1
+fi
+if ! grep -q '2\.5\.0' docs/install.md; then
+  echo "release test: docs/install.md must state the minimum cosign version" >&2
+  exit 1
+fi
 if ! grep -q 'scripts/install\.sh' scripts/collect-release-assets.sh \
   || ! grep -q 'install\.sh' scripts/collect-release-assets.sh; then
   echo "release test: asset collection must publish install.sh as a release asset" >&2
