@@ -265,6 +265,29 @@ After merge: a docs-only pull request finishes in under a minute, and a
 non-prose skip fails the aggregator. What goes red if wrong: a probe pull
 request with a `skipped` verify and no `prose-only` reason.
 
+Delivered in #42 and corrected in #45. This SDD assumed prose was cheap
+because nothing verifies it. In this repository nearly everything does:
+`cmd/jacu/rename_test.go` walks README, CONTRIBUTING, `skills/`,
+`docs/reference` and `docs/adr`; `internal/mcpadapter` validates every
+`SKILL.md`; provenance and the memory bridge read `AGENTS.md`; and
+`sdd lint --all` checks each `sdd.md` against its lock. Skipping `verify`
+outright let a broken `SKILL.md` or a stale `sdd.lock.json` merge green and
+fail the *next* code pull request. So a prose pull request does not skip
+verification — it runs `scripts/verify-prose.sh`, which drops only what code
+alone can break (race detector, release and install rehearsals, Go linters).
+
+Measured: probe #47, one new Markdown file, green in **51s** against ~4
+minutes for the same pull request through the code lane.
+
+Two esteira fixes fell out of it, both of them regressions this SDD caused:
+
+- #44 and #46 — the guardian decided which required job was *the aggregator*
+  by asking whether it already had a `needs`. Giving `verify` a `needs` for
+  the classifier made it look like a second aggregator, and every pull
+  request touching `.github/workflows/` was refused with a demand that
+  `verify` depend on the job that aggregates it. An aggregator is now
+  recognised by reading `needs.<job>.result` **inside its `steps`**.
+
 ## Tasks
 
 | # | Task | Files | Verify | Status | Evidence |
@@ -276,8 +299,8 @@ request with a `skipped` verify and no `prose-only` reason.
 | T5 | Executor: next mission opens from the advanced HEAD; `deliver_at_end` in the program schema | `internal/capability/workspace/autonomy_executor.go`, `internal/capability/missioncompile/program.go` | `go test ./internal/capability/workspace -run Autonomy` | done | `ExecuteProgramWithDelivery`; `deliver_at_end` omitempty |
 | T6 | Tests: N missions → N local merges, zero `gh`; conflict → escalated; `deliver_at_end` → one deliver call | `internal/capability/workspace/autonomy_integration_test.go`, `autonomy_apply_test.go` | `go test ./internal/capability/workspace -run Autonomy -race` | done | `TestAutonomyProgramMergesLocallyWithoutRemote` |
 | T6a | `jacu deliver [--base main] [--title …] [--json]`: preconditions, push, `gh pr create`, print URL, never `--auto`; exit codes documented | `cmd/jacu/deliver.go`, `cmd/jacu/deliver_test.go`, `docs/reference/cli.md` | `go test ./cmd/jacu -run Deliver` | done | `TestDeliverPushesAndCreatesOnePullRequest` |
-| T7 | `changed-code` job in `ci.yml`; `verify` gated on it; aggregator reads the reason | `.github/workflows/ci.yml` | docs-only probe PR under 60s; code PR runs verify | done | job + aggregator in this PR |
-| T8 | Probe PR with `verify` skipped for a non-prose reason is refused | `.github/workflows/ci.yml` | probe PR blocked | todo | after T7 is on main |
+| T7 | `changed-code` job in `ci.yml`; `verify` gated on it; aggregator reads the reason | `.github/workflows/ci.yml` | docs-only probe PR under 60s; code PR runs verify | done | #42, corrected by #45 (see below) |
+| T8 | Probe PR with `verify` skipped for a non-prose reason is refused | `.github/workflows/ci.yml` | probe PR blocked | done | probe #48 red: `verify skipped without a green prose lane`; probe #47 green in 51s |
 | T9 | `AGENTS.md` of this repository names `sdd/<NNN>`, the local merge, `jacu deliver`, and the one-PR-per-delivery rule; CHANGELOG Unreleased/Changed | `AGENTS.md`, `CHANGELOG.md` | `go run ./cmd/jacu sdd lint --all` | done | Pull request section + Unreleased |
 | T10 | `jacu-autonomy`: §5 describes the local merge and `jacu deliver`; §7 and §9 lose the personal name | `skills/jacu-autonomy/SKILL.md` | `go run ./cmd/jacu sdd lint --all` | done | edited with this SDD |
 | T11 | Decide the legacy tool alias `jacu_workspace_status`: drop it (frees catalogue bytes for SDD-009) or keep it and say why in `tool.go` | `internal/capability/workspace/tool.go`, `skills/jacu-workspace/SKILL.md` | `go test ./test/e2e -run TestGovernedChange` | done | keep; ADR-008 comment |
@@ -289,7 +312,11 @@ request with a `skipped` verify and no `prose-only` reason.
 |---|---|
 | Core | an SDD with three tasks produces one pull request, opened by the owner, from `sdd/<NNN>`; the run branches never reach `origin` |
 | Runtime | `grep -rn 'gh.*pr' internal/capability/` returns nothing; a program of N missions leaves `origin` untouched; `jacu deliver` is the only path that pushes |
-| Esteira | docs-only pull request: `verify` skipped with reason `prose-only`, aggregator green in under a minute; any other skip is red |
+| Esteira | docs-only pull request: `verify` skipped with reason `prose-only`, the prose lane green in its place, aggregator green in under a minute; any other skip is red |
+
+All three observed. Core and Runtime landed in #41; Esteira in #42 and #45,
+proven by probes #47 (green, 51s) and #48 (red, `verify skipped without a
+green prose lane`), both closed without merge.
 
 ## Follow-ups
 

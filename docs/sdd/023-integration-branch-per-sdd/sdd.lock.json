@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_2ab448501c400805",
-  "content_sha256": "2ab448501c40080555e9eee0c80427375f43d28a990726d6289b4ea251a23e3b",
+  "sdd_id": "sdd_e25b8a0418ed1c2e",
+  "content_sha256": "e25b8a0418ed1c2e13fa64d812b924c982ef550937d85b36fb2a8a037f0ea813",
   "requirements": [
     {
       "name": "Autonomy integrates locally and never reaches origin",
@@ -63,7 +63,7 @@
     {
       "number": "T8",
       "verify": "probe PR blocked",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T9",
