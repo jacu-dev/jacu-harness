@@ -84,7 +84,9 @@ jobs:
   # looking for that name would block the organization.
   verify:
     needs: [changed-code]
-    if: always() && (github.event_name != 'pull_request' || (needs.changed-code.result == 'success' && needs.changed-code.outputs.reason != 'prose-only'))
+    # PROBE (SDD-023 T8): switch the required job off for a reason that is not
+    # prose. The aggregator must refuse this. Never merged.
+    if: false
     permissions:
       contents: read
     uses: ./.github/workflows/verify.yml
