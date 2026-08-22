@@ -265,7 +265,7 @@ After merge: a docs-only pull request finishes in under a minute, and a
 non-prose skip fails the aggregator. What goes red if wrong: a probe pull
 request with a `skipped` verify and no `prose-only` reason.
 
-Delivered in #42 and corrected in #45. This SDD assumed prose was cheap
+Delivered in #42, corrected in #45 and #50. This SDD assumed prose was cheap
 because nothing verifies it. In this repository nearly everything does:
 `cmd/jacu/rename_test.go` walks README, CONTRIBUTING, `skills/`,
 `docs/reference` and `docs/adr`; `internal/mcpadapter` validates every
@@ -276,10 +276,20 @@ fail the *next* code pull request. So a prose pull request does not skip
 verification — it runs `scripts/verify-prose.sh`, which drops only what code
 alone can break (race detector, release and install rehearsals, Go linters).
 
-Measured: probe #47, one new Markdown file, green in **51s** against ~4
-minutes for the same pull request through the code lane.
+The lane lives **inside** the `verify` job, not in an `if:` on it. That was
+the third mistake and the one that mattered most: `verify / verify` is a
+required status check, and a skipped required check is not red, it is
+*absent* — the aggregator reported green while GitHub reported `BLOCKED`,
+and no prose pull request could ever have merged. #49 sat on it until #50
+moved the choice inside. Keeping the job means the gitleaks history sweep
+and provenance-lint run on a prose pull request too, and those are exactly
+what prose can break: commit convention and AI attribution.
 
-Two esteira fixes fell out of it, both of them regressions this SDD caused:
+Measured: probe #47, one new Markdown file, green in **51s** against ~4
+minutes for the same pull request through the code lane. After #50, #49
+itself — docs-only — published `verify / verify` green in **32s**.
+
+Three esteira fixes fell out of it, all of them regressions this SDD caused:
 
 - #44 and #46 — the guardian decided which required job was *the aggregator*
   by asking whether it already had a `needs`. Giving `verify` a `needs` for
@@ -287,6 +297,10 @@ Two esteira fixes fell out of it, both of them regressions this SDD caused:
   request touching `.github/workflows/` was refused with a demand that
   `verify` depend on the job that aggregates it. An aggregator is now
   recognised by reading `needs.<job>.result` **inside its `steps`**.
+- #50 — the required check went missing on a prose pull request, described
+  above. With no job left that can be skipped, the aggregator went back to
+  accepting only `success`: the #36 rule whole again, and simpler than the
+  two-way version that replaced it for a few hours.
 
 ## Tasks
 

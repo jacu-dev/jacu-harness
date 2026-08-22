@@ -24,10 +24,15 @@ All notable changes to JACU are recorded here. The format follows Keep a Changel
 - A pull request whose diff is only prose runs `scripts/verify-prose.sh`
   instead of the full `verify` lane: `go test ./...`, `jacu sdd lint --all`
   and `git diff --check`, without the race detector, the release and install
-  rehearsals or the Go linters. Measured at 51s against ~4 minutes. It is a
+  rehearsals or the Go linters. Measured at 32s against ~4 minutes. It is a
   cheaper lane, not an exemption — nearly every document here is read by a
   test, and skipping verification outright let a broken `SKILL.md` or a stale
-  `sdd.lock.json` merge green.
+  `sdd.lock.json` merge green. The choice happens inside the `verify` job,
+  which always runs: `verify / verify` is a required status check, and a
+  skipped required check is not red but absent, so gating the job itself made
+  every prose pull request unmergeable. Keeping the job also keeps the
+  gitleaks history sweep and provenance-lint on a prose pull request, which
+  is where commit convention and AI attribution are checked.
 - The esteira guardian recognises the aggregator by reading
   `needs.<job>.result` inside its `steps`, not by whether the job already had
   a `needs`. The old rule mistook any gated job for an aggregator.
