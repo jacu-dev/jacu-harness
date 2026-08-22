@@ -1,0 +1,89 @@
+{
+  "sdd_id": "sdd_a610007b048a8e56",
+  "content_sha256": "a610007b048a8e56470e51ecee06fd4aa5b20d5e7ebe1f9b56e28d1e6bf9b2a3",
+  "requirements": [
+    {
+      "name": "Autonomy integrates locally and never reaches origin",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Delivery is an explicit CLI act",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Prose-only pull requests skip the suite with a recorded reason",
+      "delta": "ADDED"
+    },
+    {
+      "name": "Runs integrate locally into the SDD branch",
+      "delta": "ADDED"
+    }
+  ],
+  "tasks": [
+    {
+      "number": "T1",
+      "verify": "`go run ./cmd/jacu sdd lint --all`",
+      "status": "done"
+    },
+    {
+      "number": "T2",
+      "verify": "`go run ./cmd/jacu sdd lint --all`",
+      "status": "done"
+    },
+    {
+      "number": "T3",
+      "verify": "`go run ./cmd/jacu sdd lint --all`",
+      "status": "done"
+    },
+    {
+      "number": "T4",
+      "verify": "`go test ./internal/capability/workspace -run Autonomy`",
+      "status": "todo"
+    },
+    {
+      "number": "T5",
+      "verify": "`go test ./internal/capability/workspace -run Autonomy`",
+      "status": "todo"
+    },
+    {
+      "number": "T6",
+      "verify": "`go test ./internal/capability/workspace -run Autonomy -race`",
+      "status": "todo"
+    },
+    {
+      "number": "T6a",
+      "verify": "`go test ./cmd/jacu -run Deliver`",
+      "status": "todo"
+    },
+    {
+      "number": "T7",
+      "verify": "docs-only probe PR under 60s; code PR runs verify",
+      "status": "todo"
+    },
+    {
+      "number": "T8",
+      "verify": "probe PR blocked",
+      "status": "todo"
+    },
+    {
+      "number": "T9",
+      "verify": "`go run ./cmd/jacu sdd lint --all`",
+      "status": "todo"
+    },
+    {
+      "number": "T10",
+      "verify": "`go run ./cmd/jacu sdd lint --all`",
+      "status": "done"
+    },
+    {
+      "number": "T11",
+      "verify": "`go test ./test/e2e -run TestGovernedChange`",
+      "status": "todo"
+    },
+    {
+      "number": "T12",
+      "verify": "`go test ./internal/capability/verify ./internal/report`",
+      "status": "todo"
+    }
+  ]
+}

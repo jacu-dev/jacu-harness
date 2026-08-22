@@ -20,6 +20,13 @@ strings.
 
 On BLOCK, stop. On WARN, follow `next_actions`, refine, and compile again.
 
+An objective is a mission only if its result can be observed or a test can
+assert it. Three questions before compiling; a "no" to any of them means the
+objective is a fragment of a delivery, not a mission: can the result be
+observed? If work stopped here forever, is `main` no worse? What goes red if
+it is wrong? A fragment is folded into the delivery it belongs to (see
+`jacu-sdd`), not compiled on its own — and it never becomes a pull request.
+
 Before dispatching any compiled mission, run `jacu preflight --json` for
 the mission's verification commands and declared paths. Treat exit `0` as a
 pass, exit `1` as a predictable interruption that must be reported once and
