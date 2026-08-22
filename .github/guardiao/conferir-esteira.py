@@ -126,11 +126,19 @@ def main() -> int:
             #    o agrega. Quem é agregador se descobre pela versão da branch
             #    default — um pull request não se declara não-agregador.
             #
-            #    O sinal é ler `needs.<job>.result`: é o que um agregador faz e
-            #    nenhum job de trabalho faz. Ter `needs` não serve — `verify`
-            #    passou a ter um quando o classificador `changed-code` entrou, e
-            #    com isso todo pull request que tocasse a esteira ficava preso
-            #    num erro que pedia para `verify` depender de quem o agrega.
+            #    O sinal é ler `needs.<job>.result` **dentro dos `steps`**: é o
+            #    que um agregador faz com o resultado alheio, e nenhum job de
+            #    trabalho faz. Duas coisas não servem como sinal:
+            #
+            #      - ter `needs`: `verify` passou a ter um quando o classificador
+            #        `changed-code` entrou;
+            #      - citar `needs.<job>.result` no `if:` do próprio job: isso é
+            #        se condicionar a outro, não agregá-lo, e `verify` faz
+            #        exatamente isso para pular numa mudança só de prosa.
+            #
+            #    Com qualquer um dos dois, todo pull request que tocasse a
+            #    esteira ficava preso num erro que pedia para `verify` depender
+            #    de quem o agrega.
             def lista(v):
                 if isinstance(v, str):
                     return [v]
@@ -139,7 +147,7 @@ def main() -> int:
             def le_resultado_de_outro(corpo) -> bool:
                 if not isinstance(corpo, dict):
                     return False
-                texto = json.dumps(corpo)
+                texto = json.dumps(lista(corpo.get("steps")))
                 return "needs." in texto and ".result" in texto
 
             era_agregador = le_resultado_de_outro(base.get(exigido))
