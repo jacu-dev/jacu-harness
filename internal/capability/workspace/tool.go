@@ -84,6 +84,7 @@ func registerWorkspaceTools(server *mcp.Server, root string, gate workspaceOpera
 func registerWorkspaceToolsWithTaskManager(server *mcp.Server, root string, gate workspaceOperationGate, manager *verify.TaskManager) {
 	registerOpenTool(server, root, gate)
 	registerStatusToolWithTaskManager(server, root, gate, WorkspaceStatusToolName, manager)
+	// ADR-008: keep the 13-tool catalogue. Dropping jacu_workspace_status is SDD-009, with spec, e2e, and ADR.
 	registerStatusToolWithTaskManager(server, root, gate, WorkspaceStatusAlias, manager)
 	registerDiffTool(server, root, gate)
 	registerApplyTool(server, root, gate)

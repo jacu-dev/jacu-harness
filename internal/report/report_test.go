@@ -62,6 +62,49 @@ func TestReportValidationDigestAndMarkdownAreDeterministic(t *testing.T) {
 	}
 }
 
+func TestReportJSONHasExactlyEightV1BlockKeys(t *testing.T) {
+	report := Report{
+		SchemaVersion: "1",
+		Kind:          KindAudit,
+		Title:         "Workspace audit",
+		Summary:       "one active run",
+		Blocks: ReportBlocks{
+			Summary:  []string{"one active run"},
+			Steps:    []ReportStep{{ID: "run_a", Label: "Fix parser", Status: "open"}},
+			Decision: []DecisionPoint{},
+			Risks:    []string{},
+			Flow: FlowBlock{
+				Nodes: []FlowNode{{ID: "run_a", Label: "Fix parser", Kind: "run"}},
+				Edges: []FlowEdge{},
+			},
+			Chart:   []ChartPoint{{Label: "open", Value: 1}},
+			Table:   TableBlock{Columns: []string{"run_id", "status"}, Rows: [][]string{{"run_a", "open"}}},
+			Metrics: []Metric{{Name: "runs", Value: 1}},
+		},
+	}
+	encoded, err := EncodeJSON(report)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var payload map[string]any
+	if err := json.Unmarshal(encoded, &payload); err != nil {
+		t.Fatal(err)
+	}
+	blocks, ok := payload["blocks"].(map[string]any)
+	if !ok {
+		t.Fatalf("blocks = %#v", payload["blocks"])
+	}
+	want := []string{"summary", "steps", "decision", "risks", "flow", "chart", "table", "metrics"}
+	if len(blocks) != 8 {
+		t.Fatalf("block keys = %d %#v; want exactly 8", len(blocks), blocks)
+	}
+	for _, key := range want {
+		if _, exists := blocks[key]; !exists {
+			t.Fatalf("missing v1 block %q in %#v", key, blocks)
+		}
+	}
+}
+
 func TestAuditWalkerProjectsRunsMissionsAndProgramsWithoutSensitiveFields(t *testing.T) {
 	root := t.TempDir()
 	first := runstate.Run{

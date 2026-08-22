@@ -2,6 +2,7 @@ package workspace
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -234,6 +235,29 @@ func applyUnlocked(ctx context.Context, root string, in ApplyInput, hostName str
 		},
 	}
 	emitWorkspaceApplyTelemetry(root, run, execution.Data.Verdict, int64(len(fullDiff)), len(snapshot.Files))
+	if policyPresent {
+		evidence := ""
+		diff := ""
+		if run.Audit != nil {
+			evidence = run.Audit.EvidenceDigest
+			diff = run.Audit.DiffDigest
+		}
+		integration := integrateAutonomyWithIdentity(ctx, root, run.Branch, run.Mission.Objective, diff, evidence, receiptRef, run.RunID, run.MissionID, run.Audit)
+		if integration.Escalated {
+			result.Warnings = append(result.Warnings, integration.Warning)
+			result.NextActions = []string{"resolve local merge into sdd/<NNN>; worktree preserved"}
+			if integration.PreserveWorktree {
+				return result, nil
+			}
+		} else {
+			result.NextActions = []string{"jacu deliver --base main"}
+			if shouldDeliverAfterApply(run) {
+				if deliverErr := callAutonomyDeliver(ctx, root); deliverErr != nil {
+					result.Warnings = append(result.Warnings, "deliver_at_end failed: "+deliverErr.Error())
+				}
+			}
+		}
+	}
 	if err := git.WorktreeUnlock(ctx, root, run.Worktree); err != nil {
 		result.Warnings = append(result.Warnings, "worktree cleanup failed: "+err.Error())
 		return result, nil
@@ -243,6 +267,36 @@ func applyUnlocked(ctx context.Context, root string, in ApplyInput, hostName str
 		return result, nil
 	}
 	return result, nil
+}
+
+var autonomyDeliver func(context.Context, string) error
+
+func SetAutonomyDeliver(fn func(context.Context, string) error) {
+	autonomyDeliver = fn
+}
+
+// AutonomyDeliverConfigured reports whether a surface wired delivery. When it
+// is false a program with deliver_at_end merges every mission locally and then
+// warns instead of opening the pull request.
+func AutonomyDeliverConfigured() bool {
+	return autonomyDeliver != nil
+}
+
+func callAutonomyDeliver(ctx context.Context, root string) error {
+	if autonomyDeliver == nil {
+		return errors.New("deliver is not wired")
+	}
+	return autonomyDeliver(ctx, root)
+}
+
+func shouldDeliverAfterApply(run runstate.Run) bool {
+	if run.Mission.Program == nil || !run.Mission.Program.DeliverAtEnd {
+		return false
+	}
+	if len(run.ProgramMissionIDs) == 0 {
+		return true
+	}
+	return run.ProgramCursor+1 >= len(run.ProgramMissionIDs)
 }
 
 func persistAutonomyAudit(root string, run *runstate.Run, fullDiff, verdict, evidenceDigest, receiptRef string, iterations int, warnings []string) error {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -209,6 +210,51 @@ func TestTaskManagerCancelsQueuedTaskWithoutExecutingIt(t *testing.T) {
 	defer mu.Unlock()
 	if started["run_2222222222222222"] {
 		t.Fatal("queued cancelled task was executed")
+	}
+}
+
+func TestCancelledVerifyRequestReturnsNotRunVerdict(t *testing.T) {
+	root, _ := seedRun(t, "run_1111111111111111", [][]string{{"printf", "x"}}, runstate.StatusOpen)
+	initGitWorkTree(t, root)
+	started := make(chan struct{})
+	release := make(chan struct{})
+	manager, err := NewTaskManagerWithConfig(root, TaskConfig{
+		MaxConcurrent: 1,
+		Executor: func(ctx context.Context, input Input) Envelope {
+			if input.RunID == "run_1111111111111111" {
+				close(started)
+				<-release
+			}
+			return Envelope{Status: "ok", Data: Data{Verdict: VerdictPass, Commands: []Result{}}}
+		},
+	})
+	if err != nil {
+		t.Fatalf("new manager: %v", err)
+	}
+	first, err := manager.Start(context.Background(), Input{RunID: "run_1111111111111111", Async: true})
+	if err != nil {
+		t.Fatalf("start first: %v", err)
+	}
+	<-started
+	second, err := manager.Start(context.Background(), Input{RunID: "run_2222222222222222", Async: true})
+	if err != nil {
+		t.Fatalf("start second: %v", err)
+	}
+	result := RunWithManager(context.Background(), root, Input{RunID: "run_2222222222222222", TaskID: second.TaskID, Cancel: true}, manager)
+	data, ok := result.Data.(Data)
+	if !ok || data.Verdict != VerdictNotRun || result.Status != "accepted" {
+		t.Fatalf("cancel envelope = %#v; want accepted not_run", result)
+	}
+	close(release)
+	waitForTask(t, manager, first.TaskID, TaskDone)
+}
+
+func initGitWorkTree(t *testing.T, root string) {
+	t.Helper()
+	cmd := exec.Command("git", "init") // #nosec G204 -- tests pin git init in a temp dir.
+	cmd.Dir = root
+	if output, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v\n%s", err, output)
 	}
 }
 

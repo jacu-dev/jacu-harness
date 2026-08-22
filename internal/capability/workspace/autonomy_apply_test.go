@@ -3,7 +3,6 @@ package workspace
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -11,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jacu-dev/jacu-harness/internal/runner"
 	"github.com/jacu-dev/jacu-harness/internal/runstate"
 )
 
@@ -40,27 +38,12 @@ func TestPolicySatisfiedApplyStaysLocalAndNeverInvokesRemote(t *testing.T) {
 	if _, writeReceiptErr := WriteReviewReceipt(repo, receipt); writeReceiptErr != nil {
 		t.Fatal(writeReceiptErr)
 	}
-	oldRunner := autonomyRunCommand
-	defer func() { autonomyRunCommand = oldRunner }()
-	var remoteCalls [][]string
-	autonomyRunCommand = func(_ context.Context, name string, args ...string) error {
-		remoteCalls = append(remoteCalls, append([]string{name}, args...))
-		return errors.New("remote command must not run")
-	}
-	oldWatcher := autonomyWatchCheckEvidence
-	defer func() { autonomyWatchCheckEvidence = oldWatcher }()
-	autonomyWatchCheckEvidence = func(context.Context, runner.CheckEvidenceRequest) (runner.CheckEvidence, error) {
-		t.Fatal("Apply must not watch hosted checks")
-		return runner.CheckEvidence{}, errors.New("hosted checks must not run")
-	}
+	runGit(t, repo, "checkout", "-b", "sdd/023")
 	result, err := Apply(context.Background(), repo, ApplyInput{RunID: opened.RunID}, "Claude Code")
 	if err != nil || result.Status != "ok" {
 		t.Fatalf("Apply = %#v err %v", result, err)
 	}
-	if len(remoteCalls) != 0 {
-		t.Fatalf("Apply invoked remote commands %#v", remoteCalls)
-	}
-	wantNext := []string{"merge " + result.Data.Branch + " into main when ready"}
+	wantNext := []string{"jacu deliver --base main"}
 	if !reflect.DeepEqual(result.NextActions, wantNext) {
 		t.Fatalf("NextActions = %#v, want local merge only", result.NextActions)
 	}
@@ -94,14 +77,7 @@ func TestPolicySatisfiedApplyPersistsAuditAndIntegrates(t *testing.T) {
 	if _, writeReceiptErr := WriteReviewReceipt(repo, receipt); writeReceiptErr != nil {
 		t.Fatal(writeReceiptErr)
 	}
-	oldRunner := autonomyRunCommand
-	defer func() { autonomyRunCommand = oldRunner }()
-	autonomyRunCommand = func(context.Context, string, ...string) error { return nil }
-	oldWatcher := autonomyWatchCheckEvidence
-	defer func() { autonomyWatchCheckEvidence = oldWatcher }()
-	autonomyWatchCheckEvidence = func(context.Context, runner.CheckEvidenceRequest) (runner.CheckEvidence, error) {
-		return runner.CheckEvidence{Status: runner.CheckStatusPassed, Checks: []runner.CheckRun{{Name: "verify", Bucket: "pass", State: "SUCCESS"}}}, nil
-	}
+	runGit(t, repo, "checkout", "-b", "sdd/023")
 	result, err := Apply(context.Background(), repo, ApplyInput{RunID: opened.RunID}, "Claude Code")
 	if err != nil || result.Status != "ok" {
 		t.Fatalf("Apply = %#v err %v", result, err)
@@ -129,77 +105,5 @@ func TestAutonomyAuditShapeHasNoSessionClaim(t *testing.T) {
 	}
 	if strings.Contains(string(encoded), "session") {
 		t.Fatalf("audit claims session separation: %s", encoded)
-	}
-}
-
-func TestAutonomyIntegrationCommandsHaveNoProductionTagMutation(t *testing.T) {
-	commands := autonomyIntegrationCommands("jacu/run-0123456789abcdef", "autonomy review")
-	if got := commands[1]; !reflect.DeepEqual(got, []string{"gh", "pr", "merge", "jacu/run-0123456789abcdef", "--auto", "--squash"}) {
-		t.Fatalf("integration merge command = %q, want squash policy", got)
-	}
-	for _, command := range commands {
-		for _, arg := range command {
-			if strings.Contains(arg, "tag") || strings.HasPrefix(arg, "v") {
-				t.Fatalf("integration command contains production tag operation: %q", command)
-			}
-		}
-	}
-}
-
-func TestAutonomyIntegrationEscalatesOnMergeConflict(t *testing.T) {
-	oldRunner := autonomyRunCommand
-	defer func() { autonomyRunCommand = oldRunner }()
-	var calls [][]string
-	autonomyRunCommand = func(_ context.Context, name string, args ...string) error {
-		calls = append(calls, append([]string{name}, args...))
-		if name == "gh" && len(args) > 1 && args[0] == "pr" && args[1] == "merge" {
-			return errors.New("merge conflict")
-		}
-		return nil
-	}
-	result := integrateAutonomy(context.Background(), "/repo", "jacu/run-0123456789abcdef", "objective", "sha256:diff", "sha256:evidence", "receipt.json")
-	if !result.Escalated || !result.PreserveWorktree || len(calls) != 3 {
-		t.Fatalf("integration result = %#v calls = %#v", result, calls)
-	}
-}
-
-func TestAutonomyIntegrationPreservesWorktreeForPendingChecks(t *testing.T) {
-	oldRunner := autonomyRunCommand
-	oldWatcher := autonomyWatchCheckEvidence
-	defer func() {
-		autonomyRunCommand = oldRunner
-		autonomyWatchCheckEvidence = oldWatcher
-	}()
-	autonomyRunCommand = func(context.Context, string, ...string) error { return nil }
-	autonomyWatchCheckEvidence = func(context.Context, runner.CheckEvidenceRequest) (runner.CheckEvidence, error) {
-		return runner.CheckEvidence{Status: runner.CheckStatusPending}, nil
-	}
-	result := integrateAutonomy(context.Background(), "/repo", "jacu/run-0123456789abcdef", "objective", "sha256:diff", "sha256:evidence", "receipt.json")
-	if !result.Escalated || !result.PreserveWorktree || result.Evidence == nil {
-		t.Fatalf("integration result = %#v; pending checks must preserve worktree", result)
-	}
-}
-
-func TestAutonomyIntegrationCompilesScopedMissionForRealFailure(t *testing.T) {
-	oldRunner := autonomyRunCommand
-	oldWatcher := autonomyWatchCheckEvidence
-	defer func() {
-		autonomyRunCommand = oldRunner
-		autonomyWatchCheckEvidence = oldWatcher
-	}()
-	autonomyRunCommand = func(context.Context, string, ...string) error { return nil }
-	autonomyWatchCheckEvidence = func(context.Context, runner.CheckEvidenceRequest) (runner.CheckEvidence, error) {
-		return runner.CheckEvidence{
-			Status: runner.CheckStatusFailed,
-			Failures: []runner.CheckFailureEvidence{{
-				Check:          runner.CheckRun{Name: "lint", State: "FAILURE", Workflow: "CI"},
-				EvidenceDigest: "sha256:failure",
-				Annotations:    []runner.CheckAnnotation{{Path: "internal/runner/ci.go"}},
-			}},
-		}, nil
-	}
-	result := integrateAutonomy(context.Background(), "/repo", "jacu/run-0123456789abcdef", "objective", "sha256:diff", "sha256:evidence", "receipt.json")
-	if !result.Escalated || !result.PreserveWorktree || len(result.Remediations) != 1 || result.Remediations[0].Mission == nil {
-		t.Fatalf("integration result = %#v; expected a compiled remediation mission", result)
 	}
 }

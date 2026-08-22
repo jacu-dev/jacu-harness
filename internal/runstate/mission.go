@@ -16,6 +16,7 @@ type MissionInput struct {
 type ProgramInput struct {
 	OpenQuestions []string              `json:"open_questions"`
 	Missions      []ProgramMissionInput `json:"missions"`
+	DeliverAtEnd  bool                  `json:"deliver_at_end,omitempty"`
 }
 
 type ProgramMissionInput struct {
@@ -58,4 +59,5 @@ type Program struct {
 	ProgramID     string   `json:"program_id"`
 	MissionIDs    []string `json:"mission_ids"`
 	OpenQuestions []string `json:"open_questions"`
+	DeliverAtEnd  bool     `json:"deliver_at_end,omitempty"`
 }

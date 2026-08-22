@@ -36,6 +36,15 @@ type MissionOutcome struct {
 }
 
 func ExecuteProgram(ctx context.Context, missions []ProgramMission, execute func(int) (MissionOutcome, error)) ([]runstate.ProgramMissionState, error) {
+	return ExecuteCompiledProgram(ctx, nil, missions, execute, nil)
+}
+
+func ExecuteCompiledProgram(ctx context.Context, program *runstate.Program, missions []ProgramMission, execute func(int) (MissionOutcome, error), deliver func() error) ([]runstate.ProgramMissionState, error) {
+	deliverAtEnd := program != nil && program.DeliverAtEnd
+	return ExecuteProgramWithDelivery(ctx, missions, execute, deliverAtEnd, deliver)
+}
+
+func ExecuteProgramWithDelivery(ctx context.Context, missions []ProgramMission, execute func(int) (MissionOutcome, error), deliverAtEnd bool, deliver func() error) ([]runstate.ProgramMissionState, error) {
 	if err := validateProgramQueue(missions); err != nil {
 		return nil, err
 	}
@@ -115,7 +124,27 @@ func ExecuteProgram(ctx context.Context, missions []ProgramMission, execute func
 	for _, mission := range ordered {
 		result = append(result, states[mission.Index])
 	}
+	if deliverAtEnd && deliver != nil && programReadyToDeliver(result) {
+		if err := deliver(); err != nil {
+			return result, err
+		}
+	}
 	return result, nil
+}
+
+func programReadyToDeliver(states []runstate.ProgramMissionState) bool {
+	if len(states) == 0 {
+		return false
+	}
+	for _, state := range states {
+		if state.Status != MissionApplied {
+			return false
+		}
+		if state.Audit == nil || state.Audit.Verdict != "pass" {
+			return false
+		}
+	}
+	return true
 }
 
 func PersistProgramExecution(root string, run *runstate.Run, states []runstate.ProgramMissionState) error {

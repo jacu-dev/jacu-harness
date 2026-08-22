@@ -167,6 +167,19 @@ jacu provenance --history <base>..<head> --json
 Scan files and commit history for authorship traces. The refused patterns are
 listed in CONTRIBUTING → Provenance. CI runs both on every PR.
 
+## deliver
+
+```
+jacu deliver [--base main] [--title text] [--json]
+```
+
+Push the current `sdd/<NNN>` branch and open one pull request against `--base`
+(default `main`). Prints the pull request URL. Never arms auto-merge and never
+runs `gh pr merge`.
+
+Exit codes: `0` success; `1` push or `gh` failed; `2` usage error, dirty tree,
+or checkout is not `sdd/<NNN>` (no push in that case).
+
 ## storage
 
 ```
