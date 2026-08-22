@@ -2,39 +2,27 @@ package workspace
 
 import (
 	"context"
-	"errors"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/jacu-dev/jacu-harness/internal/runner"
 	"github.com/jacu-dev/jacu-harness/internal/telemetry"
 )
 
 func TestAutonomyEscalationAndAutoApplyEmitClosedEvents(t *testing.T) {
 	base := t.TempDir()
 	t.Setenv("JACU_HOME", base)
-	root := t.TempDir()
-	oldRunner := autonomyRunCommand
-	oldWatcher := autonomyWatchCheckEvidence
-	defer func() {
-		autonomyRunCommand = oldRunner
-		autonomyWatchCheckEvidence = oldWatcher
-	}()
+	repo := newWorkspaceGitRepo(t)
+	checkoutBranch(t, repo, "sdd/023")
+	createRunRewrite(t, repo, "jacu/run-conflict", "README.md", "run\n")
+	rewriteFile(t, repo, "README.md", "integration\n", "integration rewrite")
+	_ = integrateAutonomyWithIdentity(context.Background(), repo, "jacu/run-conflict", "objective", "sha256:diff", "sha256:evidence", "receipt.json", "run_0123456789abcdef", "msn_0123456789abcdef", nil)
 
-	autonomyRunCommand = func(_ context.Context, name string, args ...string) error {
-		if name == "gh" && len(args) > 1 && args[0] == "pr" && args[1] == "merge" {
-			return errors.New("merge conflict")
-		}
-		return nil
-	}
-	_ = integrateAutonomyWithIdentity(context.Background(), root, "jacu/run-0123456789abcdef", "objective", "sha256:diff", "sha256:evidence", "receipt.json", "run_0123456789abcdef", "msn_0123456789abcdef", nil)
-
-	autonomyRunCommand = func(context.Context, string, ...string) error { return nil }
-	autonomyWatchCheckEvidence = func(context.Context, runner.CheckEvidenceRequest) (runner.CheckEvidence, error) {
-		return runner.CheckEvidence{Status: runner.CheckStatusPassed}, nil
-	}
-	_ = integrateAutonomyWithIdentity(context.Background(), root, "jacu/run-0123456789abcdef", "objective", "sha256:diff", "sha256:evidence", "receipt.json", "run_0123456789abcdef", "msn_0123456789abcdef", nil)
+	clean := newWorkspaceGitRepo(t)
+	checkoutBranch(t, clean, "sdd/023")
+	createRunRewrite(t, clean, "jacu/run-ok", "ok.txt", "ok\n")
+	runWorkspaceGit(t, clean, "checkout", "sdd/023")
+	_ = integrateAutonomyWithIdentity(context.Background(), clean, "jacu/run-ok", "objective", "sha256:diff", "sha256:evidence", "receipt.json", "run_0123456789abcdef", "msn_0123456789abcdef", nil)
 
 	events, err := telemetry.NewStoreAt(base).ReadSince(time.Unix(0, 0).UTC())
 	if err != nil {

@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_a610007b048a8e56",
-  "content_sha256": "a610007b048a8e56470e51ecee06fd4aa5b20d5e7ebe1f9b56e28d1e6bf9b2a3",
+  "sdd_id": "sdd_2ab448501c400805",
+  "content_sha256": "2ab448501c40080555e9eee0c80427375f43d28a990726d6289b4ea251a23e3b",
   "requirements": [
     {
       "name": "Autonomy integrates locally and never reaches origin",
@@ -38,27 +38,27 @@
     {
       "number": "T4",
       "verify": "`go test ./internal/capability/workspace -run Autonomy`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T5",
       "verify": "`go test ./internal/capability/workspace -run Autonomy`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T6",
       "verify": "`go test ./internal/capability/workspace -run Autonomy -race`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T6a",
       "verify": "`go test ./cmd/jacu -run Deliver`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T7",
       "verify": "docs-only probe PR under 60s; code PR runs verify",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T8",
@@ -68,7 +68,7 @@
     {
       "number": "T9",
       "verify": "`go run ./cmd/jacu sdd lint --all`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T10",
@@ -78,12 +78,12 @@
     {
       "number": "T11",
       "verify": "`go test ./test/e2e -run TestGovernedChange`",
-      "status": "todo"
+      "status": "done"
     },
     {
       "number": "T12",
       "verify": "`go test ./internal/capability/verify ./internal/report`",
-      "status": "todo"
+      "status": "done"
     }
   ]
 }

@@ -6,6 +6,8 @@ All notable changes to JACU are recorded here. The format follows Keep a Changel
 
 ### Added
 
+- `jacu deliver [--base main] [--title text] [--json]`: push `sdd/<NNN>` and
+  open one pull request. Never `--auto`.
 - `.mcp.json` and `.cursor/mcp.json`, so a cloud session gets the `jacu` MCP
   server without hand configuration. The image phase of `scripts/dev-setup.sh`
   also writes the approval into `~/.claude/settings.json`: since Claude Code
@@ -14,6 +16,16 @@ All notable changes to JACU are recorded here. The format follows Keep a Changel
   nobody can accept the workspace trust dialog. Approval names the `jacu`
   server rather than enabling all project servers, and preserves any existing
   settings.
+
+### Changed
+
+- Autonomy merges the run branch into the checkout's `sdd/<NNN>` locally.
+  It does not push, open a pull request, or watch hosted checks.
+
+### Removed
+
+- `gh pr create` and `gh pr merge` from the autonomy integration path.
+  Delivery is `jacu deliver` only.
 
 ### Fixed
 

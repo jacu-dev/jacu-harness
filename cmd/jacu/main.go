@@ -53,12 +53,14 @@ func usage(args []string) {
 	fmt.Fprintln(os.Stderr, "  run        execute one persisted run through a headless provider")
 	fmt.Fprintln(os.Stderr, "  preflight  check compiled mission environment before dispatch")
 	fmt.Fprintln(os.Stderr, "  provenance scan files and history for authorship traces")
+	fmt.Fprintln(os.Stderr, "  deliver    push sdd/<NNN> and open one pull request; never --auto")
 	fmt.Fprintln(os.Stderr, "  storage    inspect or dry-run cleanup of JACU-owned local storage")
 	fmt.Fprintln(os.Stderr, "  version    print the build version")
 	fmt.Fprintln(os.Stderr, "  sdd        author, lint, and inspect native SDD documents")
 }
 
 func main() {
+	wireAutonomyDeliver()
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
 		case "help":
@@ -224,6 +226,13 @@ func main() {
 				os.Exit(1)
 			}
 			os.Exit(runProvenance(root, os.Args[2:], os.Stdout, os.Stderr))
+		case "deliver":
+			root, err := projectRoot()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "resolve project root failed:", err)
+				os.Exit(1)
+			}
+			os.Exit(runDeliver(root, os.Args[2:], os.Stdout, os.Stderr))
 		case "storage":
 			root, err := projectRoot()
 			if err != nil {

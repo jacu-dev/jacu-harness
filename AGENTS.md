@@ -176,6 +176,11 @@ deixa a `main` em oito estados pela metade. O ponto de merge é o menor conjunto
 de tasks que deixa a `main` funcionando **e** entrega algo. Commit por task para
 ter rastro; PR por entrega.
 
+Trabalho de SDD neste repositório fica na branch `sdd/<NNN>` (o mesmo prefixo
+do diretório). Cada run aplica localmente nessa branch. `jacu deliver` é quem
+empurra e abre o PR da entrega — a sessão e o autonomy não abrem PR nem armam
+auto-merge.
+
 **Doc e comentário andam junto com a mudança que descrevem.** PR só de prosa se
 justifica quando a prosa estava errada e enganando alguém — não como rotina.
 Documento propagado para vários repositórios multiplica o erro pelo número de

@@ -15,6 +15,7 @@ func normalizeProgram(program *ProgramInput) *ProgramInput {
 	normalized := &ProgramInput{
 		OpenQuestions: normalizeStrings(program.OpenQuestions),
 		Missions:      make([]ProgramMissionInput, len(program.Missions)),
+		DeliverAtEnd:  program.DeliverAtEnd,
 	}
 	for index, mission := range program.Missions {
 		normalized.Missions[index] = ProgramMissionInput{
@@ -83,10 +84,10 @@ func compileProgram(root string, program *ProgramInput) (*Program, []Lint) {
 		}
 	}
 	if !hasProgramCycle(normalized.Missions) {
-		return &Program{ProgramID: programID(normalized), OpenQuestions: append([]string{}, normalized.OpenQuestions...)}, lints
+		return &Program{ProgramID: programID(normalized), OpenQuestions: append([]string{}, normalized.OpenQuestions...), DeliverAtEnd: normalized.DeliverAtEnd}, lints
 	}
 	lints = append(lints, Lint{Level: "BLOCK", Rule: "program_dependency_cycle", Message: "program mission dependencies contain a cycle", Field: "program.missions"})
-	return &Program{ProgramID: programID(normalized), OpenQuestions: append([]string{}, normalized.OpenQuestions...)}, lints
+	return &Program{ProgramID: programID(normalized), OpenQuestions: append([]string{}, normalized.OpenQuestions...), DeliverAtEnd: normalized.DeliverAtEnd}, lints
 }
 
 func hasProgramCycle(missions []ProgramMissionInput) bool {
