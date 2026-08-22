@@ -4,6 +4,8 @@ All notable changes to JACU are recorded here. The format follows Keep a Changel
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-22
+
 ### Added
 
 - `jacu deliver [--base main] [--title text] [--json]`: push `sdd/<NNN>` and
