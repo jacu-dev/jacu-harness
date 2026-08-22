@@ -33,3 +33,6 @@ coverage.out
 *.key
 *.pem
 !*.pub
+
+__pycache__/
+*.pyc
