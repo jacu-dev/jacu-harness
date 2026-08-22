@@ -6,16 +6,13 @@ name: guardiao
 # repository". Um pull request que altere este proprio arquivo nao altera o que
 # executa — e essa e a unica razao de ele existir.
 #
-# POR QUE ELE EXISTE: em repositorio publico o evento `pull_request` executa o
-# workflow do HEAD do PR, entao um pull request consegue reescrever o portao que
-# ele mesmo precisa passar. E push ruleset NAO alcanca repositorio publico — a
-# doc e explicita ("push rulesets to block pushes to a private or internal
-# repository"), e nao e limitacao de plano, e do produto.
-#
-# NAO E MAIS "SO AQUI": o SDD 005 estendeu o guardiao a toda a organizacao e
-# deletou o `esteira-imutavel-sdd-002`. Aquele ruleset bloqueava o arquivo, e
-# arquivo nao tem autor — para barrar o agente, barrava o dono junto. O guardiao
-# distingue porque le o diff: alterar a esteira e livre, desarma-la reprova.
+# POR QUE SO AQUI, NOS PUBLICOS: em repositorio publico o evento
+# `pull_request` executa o workflow do HEAD do PR, entao um pull request
+# consegue reescrever o portao que ele mesmo precisa passar. E push ruleset NAO
+# alcanca repositorio publico — a doc e explicita ("push rulesets to block
+# pushes to a private or internal repository"), e nao e limitacao de plano, e do
+# produto. Nos privados existe o `esteira-imutavel-sdd-002`; aqui nao existe
+# nada, e este workflow e a unica defesa.
 #
 # TRES COISAS QUE NAO PODEM MUDAR:
 #
