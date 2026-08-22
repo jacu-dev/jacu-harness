@@ -21,6 +21,16 @@ All notable changes to JACU are recorded here. The format follows Keep a Changel
 
 - Autonomy merges the run branch into the checkout's `sdd/<NNN>` locally.
   It does not push, open a pull request, or watch hosted checks.
+- A pull request whose diff is only prose runs `scripts/verify-prose.sh`
+  instead of the full `verify` lane: `go test ./...`, `jacu sdd lint --all`
+  and `git diff --check`, without the race detector, the release and install
+  rehearsals or the Go linters. Measured at 51s against ~4 minutes. It is a
+  cheaper lane, not an exemption — nearly every document here is read by a
+  test, and skipping verification outright let a broken `SKILL.md` or a stale
+  `sdd.lock.json` merge green.
+- The esteira guardian recognises the aggregator by reading
+  `needs.<job>.result` inside its `steps`, not by whether the job already had
+  a `needs`. The old rule mistook any gated job for an aggregator.
 
 ### Removed
 
