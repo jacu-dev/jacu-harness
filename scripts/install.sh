@@ -153,6 +153,8 @@ if [ "$dry_run" = true ]; then
   exit 0
 fi
 
+COSIGN_MIN_VERSION=2.5.0
+
 required_commands=(cosign shasum tar install)
 if [ -z "${JACU_RELEASE_DIR:-}" ]; then
   required_commands+=(curl)
@@ -160,9 +162,32 @@ fi
 for command_name in "${required_commands[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "install.sh: required command missing: $command_name" >&2
+    if [ "$command_name" = cosign ]; then
+      echo "install.sh: cosign ${COSIGN_MIN_VERSION}+ verifies the release signature. Install it from https://github.com/sigstore/cosign/releases" >&2
+    fi
     exit 1
   }
 done
+
+# GoReleaser signs with a Sigstore bundle v0.3, which carries the certificate
+# under `verificationMaterial.certificate`. cosign only learned to read that in
+# 2.5.0; older builds look for `x509CertificateChain`, find nothing, and abort
+# with "bundle does not contain cert for verification, please provide public
+# key" — a message that says nothing about the real cause. Fail here instead,
+# with the version and what to do about it.
+# `|| true` on both stages on purpose: the script runs under `set -o pipefail`,
+# and a cosign that exits non-zero for `version` — a stub, a wrapper, a build
+# that renamed the subcommand — would otherwise abort the install with no
+# message at all. An unreadable version means "skip the check", never "fail".
+cosign_version="$( { cosign version 2>/dev/null || true; } | awk -F'v' '/GitVersion/ {print $2; exit}' || true)"
+if [ -n "$cosign_version" ]; then
+  older_of_two="$(printf '%s\n%s\n' "$COSIGN_MIN_VERSION" "$cosign_version" | sort -V | head -n1)"
+  if [ "$older_of_two" != "$COSIGN_MIN_VERSION" ]; then
+    echo "install.sh: cosign $cosign_version is too old to verify a Sigstore bundle v0.3; need ${COSIGN_MIN_VERSION}+" >&2
+    echo "install.sh: upgrade from https://github.com/sigstore/cosign/releases and retry" >&2
+    exit 1
+  fi
+fi
 if [ -L "$target" ]; then
   echo "install.sh: refusing to replace symlink $target" >&2
   exit 1
