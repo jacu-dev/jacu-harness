@@ -26,8 +26,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Always runs. A `workflow_dispatch` has no pull request to classify and
+  # answers `code`, which is the safe answer: everything runs.
   changed-code:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 2
     permissions:
@@ -44,6 +45,11 @@ jobs:
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
+          if [ -z "${BASE}" ] || [ -z "${HEAD}" ]; then
+            echo "reason=code" >> "${GITHUB_OUTPUT}"
+            echo "reason=code (not a pull request)"
+            exit 0
+          fi
           reason=prose-only
           while IFS= read -r file; do
             [ -z "${file}" ] && continue
@@ -55,43 +61,22 @@ jobs:
           echo "reason=${reason}" >> "${GITHUB_OUTPUT}"
           echo "reason=${reason}"
 
-  # Prose is cheaper, not unchecked. Nearly every document here is read by a
-  # test — living docs, the skill catalogue, provenance, the memory bridge, and
-  # `sdd lint --all` over every SDD and its lock. Skipping `verify` on a prose
-  # pull request without this job would let a broken SKILL.md or a stale
-  # sdd.lock.json reach main green, and break the next code pull request.
-  prose:
-    needs: [changed-code]
-    if: github.event_name == 'pull_request' && needs.changed-code.result == 'success' && needs.changed-code.outputs.reason == 'prose-only'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    env:
-      GOTOOLCHAIN: local
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
-        with:
-          go-version-file: .go-version
-          cache: true
-      - name: scripts/verify-prose.sh
-        run: bash scripts/verify-prose.sh
-
-  # Check context is `verify / verify`. Do not rename: leftover rulesets still
-  # looking for that name would block the organization.
+  # `verify / verify` is a required check, and the job therefore always runs.
+  # Gating the job itself with `if:` was wrong: a skipped required check is not
+  # red, it is *absent*, and the merge waits for it forever. The lane goes
+  # inside instead — a prose pull request still runs `verify`, just the cheap
+  # half of it, and the secrets sweep and provenance-lint run either way.
   verify:
     needs: [changed-code]
-    if: always() && (github.event_name != 'pull_request' || (needs.changed-code.result == 'success' && needs.changed-code.outputs.reason != 'prose-only'))
     permissions:
       contents: read
     uses: ./.github/workflows/verify.yml
+    with:
+      lane: ${{ needs.changed-code.outputs.reason == 'prose-only' && 'prose' || 'full' }}
 
   all-checks-passed:
     if: always()
-    needs: [changed-code, prose, verify]
+    needs: [changed-code, verify]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     permissions: {}
@@ -99,25 +84,18 @@ jobs:
       - name: Aggregate the verify job
         env:
           RESULT: ${{ needs.verify.result }}
-          PROSE: ${{ needs.prose.result }}
           CHANGED: ${{ needs.changed-code.result }}
           REASON: ${{ needs.changed-code.outputs.reason }}
         run: |
           set -euo pipefail
-          echo "verify: ${RESULT} prose: ${PROSE} changed-code: ${CHANGED} reason: ${REASON}"
-          # Exactly two ways to pass, and every other combination is red. A
-          # `skipped` verify is not a pass on its own: the prose lane has to
-          # have run and succeeded in its place, which is what stops a pull
-          # request from switching the gate off by skipping the one job it has
-          # to pass.
+          echo "verify: ${RESULT} changed-code: ${CHANGED} reason: ${REASON}"
+          # Only `success`. `verify` carries no `if:` of its own — it runs on
+          # every pull request and picks a cheaper lane for prose — so it is
+          # never skipped for a legitimate reason, and treating `skipped` as a
+          # pass would turn the one required check into a gate a pull request
+          # could switch off by putting `if: false` on the very job it has to
+          # pass.
           case "${RESULT}" in
             success) exit 0 ;;
-            skipped)
-              if [ "${CHANGED}" = "success" ] && [ "${REASON}" = "prose-only" ] && [ "${PROSE}" = "success" ]; then
-                exit 0
-              fi
-              echo "::error::verify skipped without a green prose lane (changed-code=${CHANGED} reason=${REASON} prose=${PROSE})"
-              exit 1
-              ;;
             *) echo "::error::verify result=${RESULT}"; exit 1 ;;
           esac
