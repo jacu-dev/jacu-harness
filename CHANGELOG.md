@@ -4,6 +4,22 @@ All notable changes to JACU are recorded here. The format follows Keep a Changel
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-08-22
+
+### Fixed
+
+- `scripts/install.sh` refuses a cosign older than 2.5.0 by name instead of
+  letting it fail with `bundle does not contain cert for verification, please
+  provide public key`. GoReleaser signs with a Sigstore bundle v0.3, whose
+  certificate sits under `verificationMaterial.certificate`; cosign only
+  learned to read that shape in 2.5.0, and nothing said so. 0.4.0 could not be
+  installed on a clean machine carrying cosign 2.4.x. Verification itself is
+  unchanged — this is the same fail-closed behaviour, made legible. When
+  cosign prints a version the parse does not recognise the check is skipped,
+  so it never blocks an install that would otherwise have worked.
+  `docs/install.md` states the minimum and `release-test.sh` fails if either
+  the gate or the documented version disappears.
+
 ## [0.4.0] - 2026-08-22
 
 ### Added

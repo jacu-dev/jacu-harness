@@ -5,21 +5,21 @@
 class Jacu < Formula
   desc "Governance harness for coding agents"
   homepage "https://github.com/jacu-dev/jacu-harness"
-  version "0.3.0"
+  version "0.4.0"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/jacu-dev/jacu-harness/releases/download/v0.3.0/jacu_0.3.0_darwin_amd64.tar.gz"
-      sha256 "f73ddf2e6de6117966d92258b5d04f2e7962d37becf238d0ddf57ca4b7f54676"
+      url "https://github.com/jacu-dev/jacu-harness/releases/download/v0.4.0/jacu_0.4.0_darwin_amd64.tar.gz"
+      sha256 "a0457ae4ef76181818183f0a6cace99af94b8c54d71141d3584ec65da2cd20b9"
 
       define_method(:install) do
         bin.install "jacu"
       end
     end
     if Hardware::CPU.arm?
-      url "https://github.com/jacu-dev/jacu-harness/releases/download/v0.3.0/jacu_0.3.0_darwin_arm64.tar.gz"
-      sha256 "c004ae0f42cb3a832774722050cd2a8c9eb168572cd2c09be5f095f48d1866a6"
+      url "https://github.com/jacu-dev/jacu-harness/releases/download/v0.4.0/jacu_0.4.0_darwin_arm64.tar.gz"
+      sha256 "d228862f72ba1bf92707fb98eabc434d7aaad025457faa09549f732360246002"
 
       define_method(:install) do
         bin.install "jacu"
@@ -29,15 +29,15 @@ class Jacu < Formula
 
   on_linux do
     if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
-      url "https://github.com/jacu-dev/jacu-harness/releases/download/v0.3.0/jacu_0.3.0_linux_amd64.tar.gz"
-      sha256 "625d58d0f80ef97e58614fb6949f6c2ded02eacc33021d05f54cf9a0403293f9"
+      url "https://github.com/jacu-dev/jacu-harness/releases/download/v0.4.0/jacu_0.4.0_linux_amd64.tar.gz"
+      sha256 "b7ea9cda373c31e541d4f80cb732851fa47b63859e0dc2b14af8042a9af1ec81"
       define_method(:install) do
         bin.install "jacu"
       end
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/jacu-dev/jacu-harness/releases/download/v0.3.0/jacu_0.3.0_linux_arm64.tar.gz"
-      sha256 "11f1e06fb0474820d1a3476631be255e79730aca90438ca7edb09f6e067f5cef"
+      url "https://github.com/jacu-dev/jacu-harness/releases/download/v0.4.0/jacu_0.4.0_linux_arm64.tar.gz"
+      sha256 "ed3b50a79a48b227f82644a43e8d622d0d3563468970f60eb1d591e1c078b6e7"
       define_method(:install) do
         bin.install "jacu"
       end
