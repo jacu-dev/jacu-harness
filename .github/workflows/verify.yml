@@ -2,6 +2,17 @@ name: verify
 
 on:
   workflow_call:
+    inputs:
+      lane:
+        description: >-
+          `full` runs everything. `prose` runs the checks a documentation-only
+          diff can still break and drops what only code can break. The job
+          itself always runs either way: `verify / verify` is a required check,
+          and a skipped required check is not red, it is absent — the merge
+          would wait forever.
+        type: string
+        default: full
+        required: false
   workflow_dispatch:
 
 permissions:
@@ -53,11 +64,18 @@ jobs:
           rm -f gitleaks "$tarball"
 
       - name: scripts/verify.sh
-        if: hashFiles('scripts/verify.sh') != ''
+        if: inputs.lane != 'prose' && hashFiles('scripts/verify.sh') != ''
         run: bash scripts/verify.sh
 
+      # A prose diff cannot break the race detector or a release rehearsal, but
+      # it can break a living-docs test, a SKILL.md or an sdd.lock.json — this
+      # script runs those and drops only the rest.
+      - name: scripts/verify-prose.sh
+        if: inputs.lane == 'prose' && hashFiles('scripts/verify-prose.sh') != ''
+        run: bash scripts/verify-prose.sh
+
       - name: golangci-lint
-        if: hashFiles('.golangci.yml') != ''
+        if: inputs.lane != 'prose' && hashFiles('.golangci.yml') != ''
         env:
           GOLANGCI_VERSION: v2.11.4
         run: |
@@ -71,21 +89,22 @@ jobs:
           fi
 
       - name: govulncheck
+        if: inputs.lane != 'prose'
         run: |
           set -euo pipefail
           go install golang.org/x/vuln/cmd/govulncheck@v1.7.0
           "$(go env GOPATH)/bin/govulncheck" ./...
 
       - name: scripts/hygiene.sh
-        if: hashFiles('scripts/hygiene.sh') != ''
+        if: inputs.lane != 'prose' && hashFiles('scripts/hygiene.sh') != ''
         run: bash scripts/hygiene.sh
 
       - name: scripts/e2e.sh
-        if: hashFiles('scripts/e2e.sh') != ''
+        if: inputs.lane != 'prose' && hashFiles('scripts/e2e.sh') != ''
         run: bash scripts/e2e.sh -v
 
       - name: scripts/mcp-smoke.sh
-        if: hashFiles('scripts/mcp-smoke.sh') != ''
+        if: inputs.lane != 'prose' && hashFiles('scripts/mcp-smoke.sh') != ''
         run: bash scripts/mcp-smoke.sh
 
       - name: provenance-lint files
