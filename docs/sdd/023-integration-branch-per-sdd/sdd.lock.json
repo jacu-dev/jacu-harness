@@ -1,6 +1,6 @@
 {
-  "sdd_id": "sdd_e25b8a0418ed1c2e",
-  "content_sha256": "e25b8a0418ed1c2e13fa64d812b924c982ef550937d85b36fb2a8a037f0ea813",
+  "sdd_id": "sdd_6435b6c0aedbd844",
+  "content_sha256": "6435b6c0aedbd84432a05b18d1339ef2c97e2b98f9e691bd3258e4a9cf67f141",
   "requirements": [
     {
       "name": "Autonomy integrates locally and never reaches origin",
