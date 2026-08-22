@@ -197,12 +197,31 @@ def main() -> int:
                     erro(nome, f"o job '{job}' do guardião ganhou `if:` — "
                                "job pulado conta como aprovado")
                     erros += 1
-            for proibido in ("head.sha", "head.ref", "github.head_ref"):
-                if proibido in texto:
-                    erro(nome, f"o guardião referencia `{proibido}` — "
-                               "`pull_request_target` roda com token de escrita "
-                               "e não pode materializar código do pull request")
-                    erros += 1
+            # O que mata é MATERIALIZAR o código do pull request, não mencionar
+            # o SHA dele. O guardião precisa do `head.sha` para LER os arquivos
+            # pela API — é assim que ele confere o diff sem executar nada.
+            #
+            # Por isso a checagem é no `with.ref` de um checkout, e não uma
+            # busca de string no arquivo: a versão anterior procurava
+            # "head.sha" em qualquer lugar e reprovava o próprio guardião, que
+            # passa o SHA por `env`. O arquivo ficou congelado — ninguém
+            # conseguia nem corrigir um comentário nele.
+            for job, corpo in jobs.items():
+                if not isinstance(corpo, dict):
+                    continue
+                for passo in corpo.get("steps") or []:
+                    if not isinstance(passo, dict):
+                        continue
+                    if "checkout" not in str(passo.get("uses", "")):
+                        continue
+                    ref = str((passo.get("with") or {}).get("ref", ""))
+                    for proibido in ("head.sha", "head.ref", "github.head_ref"):
+                        if proibido in ref:
+                            erro(nome, f"o checkout do guardião usa `{proibido}` "
+                                       "em `ref:` — `pull_request_target` roda "
+                                       "com token de escrita e não pode "
+                                       "materializar código do pull request")
+                            erros += 1
 
     if erros:
         print()
